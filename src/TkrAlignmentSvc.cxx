@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.30 2004/10/12 19:04:55 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.31 2004/12/26 23:27:13 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -166,9 +166,9 @@ StatusCode TkrAlignmentSvc::getGeometry()
 
     for (tray =1; tray<m_tkrGeom->numLayers(); ++tray) {
         m_tkrGeom->trayToLayer(tray,0,layer,view);
-        zBot = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view);
+        zBot = m_tkrGeom->getLayerZ(layer, view);
         m_tkrGeom->trayToLayer(tray,1,layer,view);
-        zTop = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view);
+        zTop = m_tkrGeom->getLayerZ(layer, view);
         m_trayZ[tray] = 0.5*(zBot+zTop);
         m_faceZ[tray][0] = zBot - m_trayZ[tray];
         m_faceZ[tray][1] = zTop - m_trayZ[tray];
@@ -179,7 +179,7 @@ StatusCode TkrAlignmentSvc::getGeometry()
     //bottom tray
     double trayBotHeight = visitor->getTrayBotHeight();
     m_tkrGeom->trayToLayer(0,1,layer,view);
-    zTop = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view); 
+    zTop = m_tkrGeom->getLayerZ(layer, view); 
     m_trayZ[0] = zTop + 0.5*siThickness - 0.5*trayBotHeight;
     m_faceZ[0][1] = 0.5*(trayBotHeight - siThickness);
     m_faceZ[0][0] = - 0.5*trayBotHeight;
@@ -188,7 +188,7 @@ StatusCode TkrAlignmentSvc::getGeometry()
     double trayTopHeight = visitor->getTrayTopHeight();
     tray = m_tkrGeom->numLayers();
     m_tkrGeom->trayToLayer(tray,0,layer, view);
-    zBot = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view);
+    zBot = m_tkrGeom->getLayerZ(layer, view);
     m_trayZ[tray] = zBot - 0.5*siThickness + 0.5*trayTopHeight;
     m_faceZ[tray][0] = -0.5*(trayTopHeight - siThickness);
     m_faceZ[tray][1] = 0.5*trayTopHeight;
@@ -204,7 +204,7 @@ StatusCode TkrAlignmentSvc::getGeometry()
         for (layer = 0; layer<m_tkrGeom->numLayers(); ++layer ) {
             for (view = 0; view<2; ++view) {
                 std::cout << "rlayer/view z " << layer << " " << view << " "
-                    << m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view) 
+                    << m_tkrGeom->getLayerZ(layer, view) 
                     << std::endl;
             }
         }

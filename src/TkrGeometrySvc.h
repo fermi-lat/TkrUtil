@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.19 2004/11/10 22:27:54 atwood Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.20 2004/12/26 23:27:14 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -87,7 +87,7 @@ public:
     /// returns Z of *Layer* (average of x and y plane)
     /// TkrId of either plane will work
     double getLayerZ     (const idents::TkrId& tkrId) const {
-        return getLayerZ(tkrId.getLayer());
+        return getLayerZ(getLayer(tkrId));
     }
     /// new stuff, based on plane and TkrId;
     int    getPlane (const idents::TkrId& tkrId) const {

@@ -628,7 +628,7 @@ double TkrGeometrySvc::getLayerZ(int digiLayer, int view) const
         break;
     default:
         return 0.5*(m_planeZ[m_layerToPlane[digiLayer][0]] 
-        + m_planeZ[m_layerToPlane[digiLayer][0]]);
+        + m_planeZ[m_layerToPlane[digiLayer][1]]);
     }
 }
 
