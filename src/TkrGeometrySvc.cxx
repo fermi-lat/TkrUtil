@@ -163,20 +163,20 @@ StatusCode TkrGeometrySvc::initialize()
    
        // Get the failure mode service 
     m_tkrFail = 0;
-    if( service( "TkrFailureModeSvc", m_tkrFail, false).isFailure() ) {
+    if( service( "TkrFailureModeSvc", m_tkrFail, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrFailureModeSvc" << endreq;
         log << MSG::INFO << "Will assume it is not required"    << endreq;
     }
 
     // Get the alignment service 
     m_tkrAlign = 0;
-    if( service( "TkrAlignmentSvc", m_tkrAlign, false).isFailure() ) {
+    if( service( "TkrAlignmentSvc", m_tkrAlign, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrAlignmentSvc" << endreq;
         log << MSG::INFO << "Will assume it is not required"    << endreq;
     }
 
     m_badStrips = 0;
-    if( service( "TkrBadStripsSvc", m_badStrips, false).isFailure() ) {
+    if( service( "TkrBadStripsSvc", m_badStrips, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrBadStripsSvc" << endreq;
         log << MSG::INFO << "Will assume it is not required"    << endreq;
     }
