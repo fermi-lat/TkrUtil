@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.10 2005/01/30 07:12:29 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.11 2005/02/11 07:12:54 lsrea Exp $
 
 // Include files
 
@@ -268,12 +268,21 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
         clusIdRange = m_ViewLayerIdMap.equal_range(viewLayerPair);
     //int numIds  = m_ViewLayerIdMap.count(viewLayerPair);
 
+    // Try to avoid too many calls to the data service
+    Event::TkrIdClusterMap* idClusMap = 0;
+    if(type==STANDARDCLUSTERS) 
+    {
+        idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
+                                                         EventModel::TkrRecon::TkrIdClusterMap);
+    }
+    else idClusMap = m_badIdClusMap;
+
     TkrViewLayerIdMap::const_iterator clusIdIter = clusIdRange.first;
     for(; clusIdIter != clusIdRange.second; clusIdIter++)
     {
         const idents::TkrId& newId = (*clusIdIter).second;
 
-        const Event::TkrClusterVec newClus = getClustersX(newId, type);
+        const Event::TkrClusterVec newClus = (*idClusMap)[newId];
 
         clusVec.insert(clusVec.end(),newClus.begin(),newClus.end());
     }
