@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.20 2003/12/03 19:12:26 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.21 2004/06/12 05:03:47 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -300,11 +300,11 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
         for (int tower = 0; tower < NTOWERS; ++tower) {
             bool first = true;
             for (int layer=0; layer<NLAYERS; ++layer) {
-                int index = getIndex(tower, layer, 0, 0, 0);
+                int index = getIndex(tower, layer, 1, 0, 0);
                 if (m_mode=="sim") {
                     if ( !m_simConsts[index].isNull() ) {
                         if (first) std::cout << m_mode <<" consts for tower " << tower 
-                            << ", view 0, ladder 0, wafer 0" << std::endl;
+                            << ", view 1, ladder 0, wafer 0" << std::endl;
                         first = false;
                         std::cout << "layer " << layer << " ";
                         m_simConsts[index].fillStream(std::cout);
@@ -312,7 +312,7 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
                 }   else  {             
                     if ( !m_recConsts[index].isNull() ) {
                         if (first) std::cout << m_mode <<" consts for tower " << tower 
-                            << ", view 0, ladder 0, wafer 0" << std::endl;
+                            << ", view 1, ladder 0, wafer 0" << std::endl;
                         first = false;
                         std::cout << "layer " << layer << " ";
                         m_recConsts[index].fillStream(std::cout);
@@ -374,7 +374,8 @@ StatusCode TkrAlignmentSvc::readFromFile()
     while(!m_dataFile->eof()) {
         getline(*m_dataFile, mystring);
         // upper-case the string
-        mystring = std::string(_strupr(const_cast<char*>(mystring.c_str())));
+        // kill for now, problem with linux compatibility
+        //mystring = std::string(strupr(const_cast<char*>(mystring.c_str())));
 
         #ifdef DEFECT_NO_STRINGSTREAM
         std::istrstream mystream(mystring.c_str());
@@ -420,10 +421,10 @@ StatusCode TkrAlignmentSvc::readFromFile()
 
             AlignmentItem* pItem = new AlignmentItem(iflag, number,consts); 
             m_itemCol.push_back(pItem);
-            int size = m_itemCol.size();
+            //int size = m_itemCol.size();
         }
     }
-    return StatusCode::SUCCESS;
+    return sc;
 }
 
 bool TkrAlignmentSvc::getNextItem(aType type, AlignmentItem& item) 
@@ -583,7 +584,7 @@ void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace)
     // Dependencies: None
     // Caveats: None
 
-    StatusCode sc = StatusCode::SUCCESS;
+    //StatusCode sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
 
     double zPlane = m_faceZ[m_tray][m_face];
@@ -650,7 +651,6 @@ void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder)
     int layer, view;
     m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
 
-    int nPlane = m_pGeoSvc->numViews();
     int nLadder = m_pGeoSvc->nWaferAcross();
     double trayWidth   = m_pGeoSvc->trayWidth();
     double ladderGap   = m_pGeoSvc->ladderGap();
@@ -759,6 +759,11 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     if (m_mode=="sim") {
         m_simConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
             rotX, rotY, rotZ);
+        //if (m_tower==0 && m_tray==10) {
+        //    std::cout << "Index " << index << " " << m_tower << " " << m_tray << " " 
+        //        << m_face << " " << layer << " " << view << std::endl;
+        //    std::cout << " deltaX, rotZ " << deltaX << " " << rotZ << std::endl;
+        //}
     } else {
         m_recConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
             rotX, rotY, rotZ);
@@ -913,7 +918,7 @@ void TkrAlignmentSvc::moveReconHit(int /*tower*/, int /*layer*/, int /*view*/, i
 }
 
 idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
-                                                          HepPoint3D& alignmentPoint) const
+                                                          HepPoint3D& /*alignmentPoint*/) const
 {
     int nXTower, nYTower, ladder, wafer;
     double xTower = truncateCoord(globalPoint.x(), m_pGeoSvc->towerPitch(), 

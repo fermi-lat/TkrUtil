@@ -3,6 +3,7 @@
 
 @verbatim
 
+  v1r12p3  12-Jun-04 LSR fix unix errors, warnings, and a bug... need to revisit...
   v1r12p2  11-Jun-04 LSR Added functionality to AlignmentSvc
                          Can now specify constants for all elements down
                          to the wafer.

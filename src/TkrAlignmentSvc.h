@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.6 2003/05/08 04:25:18 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.7 2004/06/12 05:03:47 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -27,7 +27,7 @@
 namespace {
     const int ntypes = 6;
     const std::string itemType[ntypes] = {"TOWER", "TRAY", "FACE", "LADDER", "WAFER", "NONE"};
-    enum aType {TOWER, TRAY, FACE, LAYER, LADDER, WAFER, NONE};
+    enum aType {TOWER, TRAY, FACE, LADDER, WAFER, NONE};
 }
 
 /// A small class to define an alignment const item
