@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.31 2004/12/26 23:27:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.32 2005/01/02 23:49:13 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -225,7 +225,6 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     if( fileName == "") return sc;
     
     // this method resolves environmental variables in the file name
-    //xml::IFile::extractEnvVar(&fileName);  
 
     int ret = facilities::Util::expandEnvVar(&fileName);
 

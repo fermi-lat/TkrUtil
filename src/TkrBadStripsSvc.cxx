@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.15 2004/10/12 19:04:55 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.16 2004/12/26 23:27:13 lsrea Exp $
 */
 
 
@@ -71,7 +71,6 @@ StatusCode TkrBadStripsSvc::initialize()
 
     // this method resolves environmental variables in the file name
     if (m_badStripsFile!="") {
-        //xml::IFile::extractEnvVar(&m_badStripsFile); 
         int ret =  facilities::Util::expandEnvVar(&m_badStripsFile);
         if (ret>=0) {
             log << MSG::INFO << "Input file for bad strips: " 

@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r1p2   03-Jan-05 LSR convert to xmlBase
   v3r1p1   01-Jan-05 LSR fix bug in getLayerZ(); remove some reverseLayer() calls
   v3r1     26-Dec-04 LSR Cleanup, mods to ToT, Geometry, BadStrips
   v3r0p1   16-Dec-04 TU  Necessary to merge ToT back into main branch for TkrDigi

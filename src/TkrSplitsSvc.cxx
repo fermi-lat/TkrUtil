@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.8 2004/09/18 18:38:42 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.9 2004/10/12 19:04:55 lsrea Exp $
 
 */
 
@@ -23,7 +23,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.8 2004/09
 #include <algorithm>
 #include <fstream>
 #include "facilities/Util.h"
-#include "xml/IFile.h"
+#include "xmlBase/IFile.h"
 
 // declare the service factories for the TkrSplitsSvc
 static SvcFactory<TkrSplitsSvc> a_factory;
@@ -190,7 +190,7 @@ StatusCode TkrSplitsSvc::doInit()
     }
    
     if (m_splitsFile!="") {
-        xml::IFile myFile(m_splitsFile.c_str());
+        xmlBase::IFile myFile(m_splitsFile.c_str());
 
         char buffer[8];
         for (tower=0;tower<NTOWERS;++tower) {

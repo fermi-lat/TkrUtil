@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /home/cvs/SLAC/TkrUtil/src/TkrToTSvc.cxx,v 1.4.2.1 2004/12/14 02:57:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.7 2004/12/16 23:28:30 usher Exp $
 
 */
 
@@ -18,7 +18,6 @@ $Header: /home/cvs/SLAC/TkrUtil/src/TkrToTSvc.cxx,v 1.4.2.1 2004/12/14 02:57:15 
 #include <algorithm>
 #include <fstream>
 #include "facilities/Util.h"
-#include "xml/IFile.h"
 #include "CLHEP/Random/Random.h"
 #include "CLHEP/Random/RandFlat.h"
 #include "CLHEP/Random/RandGauss.h"
