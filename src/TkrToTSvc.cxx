@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.1 2004/03/13 19:40:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.2 2004/03/16 00:47:08 lsrea Exp $
 
 */
 
@@ -41,11 +41,14 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     // declare the properties
 
     declareProperty("ToTFile",          m_ToTFile          = ""  );
-    // The default gain and threshold are chosen to reproduce the 
+    // The default gains and threshold are chosen to reproduce the 
     // previous behavior of the ToT
     declareProperty("defaultGain",      m_defaultGain      = 2.50267833 );
+    declareProperty("defaultGain2",     m_defaultGain2     = 0.0);
     declareProperty("defaultThreshold", m_defaultThreshold = -2.92);
+    declareProperty("defaultQuality",   m_defaultQuality   = 0.0);
     declareProperty("mode"            , m_mode             = "ideal");
+    declareProperty("countsPerMicrosecond", m_countsPerMicrosecond = 5.0);
 }
 
 StatusCode  TkrToTSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -124,6 +127,7 @@ StatusCode TkrToTSvc::doInit()
     int tower, layer, view, strip, chip;
 
     if(m_mode.substr(0,5)=="ideal") {
+    // all gains and thresholds set to the same value, to reproduce the standard MC ToT
         for(tower=0;tower<NTOWERS;++tower) {
             for (layer=0;layer<NLAYERS;++layer) {
                 for (view=0;view<NVIEWS;++view) {
@@ -132,14 +136,20 @@ StatusCode TkrToTSvc::doInit()
                             int theStrip = chip*NSTRIPS + strip;
                             m_ToTGain[tower][layer][view][theStrip] = 
                                 m_defaultGain;
+                            m_ToTGain2[tower][layer][view][theStrip] = 
+                                m_defaultGain2;
                             m_ToTThreshold[tower][layer][view][theStrip] = 
                                 m_defaultThreshold;
+                            m_ToTQuality  [tower][layer][view][theStrip] = 
+                                m_defaultQuality;
                         }
                     }
                 }
             }
     }
     } else if (m_mode.substr(0,2)=="EM") {
+        // thresholds and gains set randomly to reproduce EM1 values
+        // chips and strips are randomized separately
         int mySeed = 123456789;
         HepRandom::setTheSeed(mySeed);
         for(tower=0;tower<NTOWERS;++tower) {
@@ -162,8 +172,12 @@ StatusCode TkrToTSvc::doInit()
 
                             m_ToTGain[tower][layer][view][theStrip] = 
                                 chipGain + devGain;
+                            m_ToTGain2[tower][layer][view][theStrip] = 
+                                m_defaultGain2;
                             m_ToTThreshold[tower][layer][view][theStrip] = 
                                 chipThresh + devThresh;
+                            m_ToTQuality[tower][layer][view][theStrip] = 
+                                m_defaultQuality;
                         }
                     }
                 }

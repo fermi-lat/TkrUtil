@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.1 2004/03/13 19:40:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.2 2004/04/10 05:57:01 lsrea Exp $
 */
 
 #ifndef ITkrToTSvc_H
@@ -15,7 +15,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.1 2004/03
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
 
-static const InterfaceID IID_ITkrToTSvc("ITkrToTSvc", 1 , 0);
+static const InterfaceID IID_ITkrToTSvc("ITkrToTSvc", 2 , 0);
 
 /** @class ITkrToTSvc
 * @brief Interface class for TkrSplitsSvc
@@ -34,6 +34,11 @@ public:
         const int strip) const = 0;
     virtual double getThreshold (const int tower, const int layer, const int view,
         const int strip) const = 0;
+    virtual double getGain2     (const int tower, const int layer, const int view,
+        const int strip) const = 0;
+    virtual double getQuality   (const int tower, const int layer, const int view,
+        const int strip) const = 0;
+    virtual double getCountsPerMicrosecond () const = 0;
 };
 
 #endif // ITkrToTSvc_H

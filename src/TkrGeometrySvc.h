@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.11 2004/03/12 05:49:22 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.12 2004/03/13 19:40:37 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -190,7 +190,7 @@ private:
     double m_aveRadLenRest[NTYPES];
 
     /// Returns minimum trayHeight... I hope we can stop using this soon
-    StatusCode getMinTrayHeight(double trayHeight);
+    StatusCode getMinTrayHeight(double& trayHeight);
 
     /// returns z position of X, Y or average plane for each layer
     StatusCode fillLayerZ();

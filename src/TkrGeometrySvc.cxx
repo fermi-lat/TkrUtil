@@ -297,7 +297,7 @@ const IID&  TkrGeometrySvc::type () const {
 }
 
 
-StatusCode TkrGeometrySvc::getMinTrayHeight(double trayHeight) 
+StatusCode TkrGeometrySvc::getMinTrayHeight(double& trayHeight) 
 {
     // Purpose: fills the m_trayHeight
     // Method:  cycle through zlayer arrays
