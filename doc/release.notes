@@ -2,6 +2,7 @@
 
  * Package TkrUtil
 
+ * v1r5p1   28-feb-03 LSR cleanup of unix errors
  * v1r5     17-feb-03 LSR add TkrCalibAlg, and mods to services to implement
  * v1r4     03-feb-03 LSR add TkrAlignmentSvc
  * v1r3     16-jan-03 LSR move TkrQueryClustersTool, TkrMeritTool to TkrUtil
