@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.4 2003/02/13 19:54:01 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.5 2003/04/11 23:27:15 lsrea Exp $
 */
 
 
@@ -84,6 +84,9 @@ public:
     /// Finds the number of clusters with measured distances 
     /// inside a rectangle of side 2*dX by 2*dY of a point
     virtual int numberOfHitsNear( int layer, double dX, double dY, const Point& x0) = 0;
+    /// Finds the number of clusters within "inDistance" of a point 
+    /// and within one tower.
+    virtual int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0) = 0;
     /// Finds the number of clusters within "inDistance" of a point 
     /// and within one tower.
     virtual int numberOfHitsNear( Event::TkrCluster::view v, int layer, 
