@@ -2,6 +2,7 @@
 @verbatim
  @brief Package TkrUtil
 
+  v1r7p3   10-apr-03 LSR make it 5mm; fix another bug... "tags are cheap"
   v1r7p2   09-apr-03 LSR limit alignment displacement to 3 mm until special cases are coded
   v1r7p1   08-apr-03 LSR fix signs in alignment (first of many, probably)
   v1r7     07-apr-03 LSR Upgrade TkrAlignmentSvc; reorganize ITkrGeometrySvc
