@@ -1,4 +1,4 @@
-// $Header$
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.1 2003/01/16 20:01:10 lsrea Exp $
 
 // Include files
 
@@ -17,7 +17,7 @@
 #include "TkrUtil/ITkrQueryClustersTool.h"
 
 #include <vector>
-#include "geometry/Point.h"
+#include "geometry/Point.h"  
 
 namespace 
 {
@@ -61,6 +61,9 @@ public:
     /// Finds the number of clusters with measured distances 
     /// inside a rectangle of side 2*dX by 2*dY of a point
     int numberOfHitsNear( int layer, double dX, double dY, const Point& x0);
+    /// Finds the number of clusters with measured distances 
+    /// inside a rectangle of side 2*dX by 2*dY of a point which are not used
+    int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0);
     /// Finds the number of clusters within "inDistance" of a point 
     /// and within "one tower."
     int numberOfHitsNear( Event::TkrCluster::view v, int layer, 
@@ -315,6 +318,53 @@ int TkrQueryClustersTool::numberOfHitsNear( int layer, double dX, double dY,
     
     while(nHitsInPlane--)
     {
+        double hitDiffX = x0.x() - yList[nHitsInPlane]->position().x();
+        double hitDiffY = x0.y() - yList[nHitsInPlane]->position().y();
+        
+        if (fabs(hitDiffX) < m_testDistance && fabs(hitDiffY) < dY) numHits++;
+    }
+    
+    return numHits;
+}
+
+int TkrQueryClustersTool::numberOfUUHitsNear( int layer, double dX, double dY, 
+                                       const Point& x0)
+{
+    // Purpose and Method: counts the number of un-used hits in a bilayer 
+    //      within a rectangle of sides 2*dX, 2*dY
+    // Inputs:  layer number, dx, dy, central point
+    // Outputs:  the number of hits that satisfy the criteria
+    // Dependencies: None
+    // Restrictions and Caveats:  None
+    
+    int numHits = 0;
+    
+    if (!validLayer(layer)) return numHits;
+
+    //Look for hits in the X view of desired layer
+    const std::vector<Event::TkrCluster*>& xList = 
+        m_pClus->getHits(Event::TkrCluster::X, layer);
+    int nHitsInPlane = xList.size();
+    
+    while(nHitsInPlane--)
+    {
+        if(xList[nHitsInPlane]->hitFlagged()) continue; 
+
+        double hitDiffX = x0.x() - xList[nHitsInPlane]->position().x();
+        double hitDiffY = x0.y() - xList[nHitsInPlane]->position().y();
+        
+        if (fabs(hitDiffX) < dX && fabs(hitDiffY) < m_testDistance) numHits++;
+    }
+    
+    // Look for hits in the Y view of desired layer
+    const std::vector<Event::TkrCluster*>& yList = 
+        m_pClus->getHits(Event::TkrCluster::Y, layer);
+    nHitsInPlane = yList.size();
+    
+    while(nHitsInPlane--)
+    {
+        if(yList[nHitsInPlane]->hitFlagged()) continue;
+
         double hitDiffX = x0.x() - yList[nHitsInPlane]->position().x();
         double hitDiffY = x0.y() - yList[nHitsInPlane]->position().y();
         
