@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.12 2004/08/24 23:45:45 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.13 2004/09/18 18:05:14 lsrea Exp $
 */
 
 
@@ -45,6 +45,8 @@ Service(name, pSvcLocator)
 StatusCode TkrBadStripsSvc::initialize()
 {
     StatusCode sc = StatusCode::SUCCESS;
+    
+    Service::initialize();
     
     MsgStream log(msgSvc(), name());
 

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.2 2003/04/17 21:40:55 atwood Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/users/TkrGroup/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.3 2004/09/07 21:51:09 usher Exp $
 
 // Include files
 
@@ -11,12 +11,13 @@
 #include "Event/TopLevel/EventModel.h"
 
 #include "Event/Recon/TkrRecon/TkrCluster.h"
-#include "Event/Recon/TkrRecon/TkrClusterCol.h"
+#include "Event/Recon/TkrRecon/TkrCluster.h"
 
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrQueryClustersTool.h"
 
 #include <vector>
+#include <map>
 #include "geometry/Point.h"  
 
 namespace 
@@ -27,6 +28,23 @@ namespace
 
     const double _towerFactor = 0.55;
 }
+
+typedef std::pair<int,int>         TkrViewLayerPair;
+typedef std::vector<idents::TkrId> TkrIdVector;
+
+struct CompareViewLayer
+{
+public:
+    bool operator()(const TkrViewLayerPair left, const TkrViewLayerPair right) const
+    {
+        int leftPlane  = left.first  + 2 * left.second;
+        int rightPlane = right.first + 2 * right.second;
+
+        return leftPlane < rightPlane;
+    }
+};
+
+typedef std::multimap<TkrViewLayerPair,idents::TkrId,CompareViewLayer> TkrViewLayerIdMap;
 
 class TkrQueryClustersTool : public AlgTool, virtual public ITkrQueryClustersTool 
 {
@@ -68,18 +86,24 @@ public:
     /// and within "one tower."
     int numberOfHitsNear( Event::TkrCluster::view v, int layer, 
         double inDistance, const Point& x0) const;
+
+    const Event::TkrClusterVec  getClustersReverseLayer(int view, int layer) const;
+    const Event::TkrClusterVec  getClusters(int view, int layer) const;
+    const Event::TkrClusterVec& getClusters(const idents::TkrId& tkrId) const;
     
 private:
 
     /// Checks that a layer number is in the correct range, and sets some variables
     bool validLayer(int layer) const
     {
-        m_pClus = SmartDataPtr<Event::TkrClusterCol>(m_pEventSvc, 
-        EventModel::TkrRecon::TkrClusterCol);
+        m_idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
+        EventModel::TkrRecon::TkrIdClusterMap);
 
         // check for valid layer
         return (layer>=0 && layer < m_pGeom->numLayers());
     };
+
+    void initIdMap() const;
 
     // some pointers to services
     
@@ -90,7 +114,10 @@ private:
     /// save test distance
     double m_testDistance;
     /// save pointer to clusters
-    mutable Event::TkrClusterCol* m_pClus;
+    mutable Event::TkrIdClusterMap* m_idClusMap;
+
+    /// THE table of life
+    mutable TkrViewLayerIdMap m_ViewLayerIdMap;
 };
 
 // Static factory for instantiation of algtool objects
@@ -105,6 +132,10 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
 {    
     // Declare additional interface
     declareInterface<ITkrQueryClustersTool>(this); 
+
+    //m_pClus     = 0;
+    m_idClusMap = 0;
+    m_ViewLayerIdMap.clear();
 }
 
 StatusCode TkrQueryClustersTool::initialize()
@@ -133,6 +164,74 @@ StatusCode TkrQueryClustersTool::initialize()
     return sc;
 }
 
+void TkrQueryClustersTool::initIdMap() const
+{
+    // This will build the multi map converting view,layer pairs to TkrIds
+    // Loop over views, view = 0 is x, view = 1 is y
+    for(int view = 0; view < m_pGeom->numViews(); view++)
+    {
+        // Loop over layers, layer = 0 is at the bottom/back
+        for(int layer = 0; layer < m_pGeom->numLayers(); layer++)
+        {
+            TkrViewLayerPair viewLayerPair(view,layer);
+            int tray   = 0;
+            int botTop = 0;
+
+            // Convert to tray/bottom/top
+            m_pGeom->layerToTray(layer, view, tray, botTop);
+
+            // Two sets of loops over the towers
+            for(int towerX = 0; towerX < m_pGeom->numXTowers(); towerX++)
+            {
+                for(int towerY = 0; towerY < m_pGeom->numYTowers(); towerY++)
+                {
+                    idents::TkrId tkrId(towerX, towerY, tray, (bool)botTop, view);
+                    m_ViewLayerIdMap.insert(std::pair<TkrViewLayerPair,idents::TkrId>(viewLayerPair,tkrId));
+                }
+            }
+        }
+    }
+}
+
+
+const Event::TkrClusterVec TkrQueryClustersTool::getClustersReverseLayer(int view, int reverseLayer) const
+{
+    int layer = m_pGeom->numLayers() - reverseLayer - 1;
+
+    return getClusters(view, layer);
+}
+
+const Event::TkrClusterVec TkrQueryClustersTool::getClusters(int view, int layer) const
+{
+    Event::TkrClusterVec clusVec;
+
+    if (!validLayer(layer)) return clusVec;
+
+    if (m_ViewLayerIdMap.size() == 0) initIdMap();
+
+    TkrViewLayerPair viewLayerPair(view,layer);
+
+    std::pair<TkrViewLayerIdMap::const_iterator,TkrViewLayerIdMap::const_iterator> 
+        clusIdRange = m_ViewLayerIdMap.equal_range(viewLayerPair);
+    int numIds  = m_ViewLayerIdMap.count(viewLayerPair);
+
+    for(TkrViewLayerIdMap::const_iterator clusIdIter = clusIdRange.first; clusIdIter != clusIdRange.second; clusIdIter++)
+    {
+        const idents::TkrId& newId = (*clusIdIter).second;
+
+        const Event::TkrClusterVec& newClus = getClusters(newId);
+
+        clusVec.insert(clusVec.end(),newClus.begin(),newClus.end());
+    }
+
+    return clusVec;
+}
+    
+const Event::TkrClusterVec& TkrQueryClustersTool::getClusters(const idents::TkrId& tkrId) const
+{
+    return (*m_idClusMap)[tkrId];
+}
+
 Point TkrQueryClustersTool::meanHit(Event::TkrCluster::view v, int layer) const
 {
     // Purpose and Method: Returns the mean position of all clusters in a 
@@ -145,15 +244,20 @@ Point TkrQueryClustersTool::meanHit(Event::TkrCluster::view v, int layer) const
     Point Pini(0.,0.,0);
     
     if (!validLayer(layer)) return Pini;
- 
-    int nhits = m_pClus->nHits(v,layer);
-    if (nhits == 0) return Pini;
-    
-    const std::vector<Event::TkrCluster*>& AuxList = m_pClus->getHits(v,layer);
-    for (int ihit=0; ihit<nhits; ihit++){
-        Pini += AuxList[ihit]->position();
+
+    int view = v == Event::TkrCluster::X ? 0 : 1;
+    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
+    Point Pini3(0.,0.,0.);
+
+    for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
+    {
+        const Event::TkrCluster* cluster = *clusIter;
+        Pini += cluster->position();
     }
-    Point Pini2(Pini.x()/nhits,Pini.y()/nhits,Pini.z()/nhits);
+
+    int nHits = clusters.size();
+    Point Pini2(Pini.x()/nHits,Pini.y()/nHits,Pini.z()/nHits);
+
     return Pini2;
 }
 
@@ -172,8 +276,9 @@ Point TkrQueryClustersTool::meanHitInside(Event::TkrCluster::view v, int layer,
     Point P(0.,0.,0);
     if (!validLayer(layer)) return P;
 
-    const std::vector<Event::TkrCluster*>& AuxList = m_pClus->getHits(v,layer);
-    int nhits = AuxList.size();
+    int view = v == Event::TkrCluster::X ? 0 : 1;
+    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
+    int nhits = clusters.size();
     if (nhits == 0) return P;
     
     double nsum = 0.;
@@ -182,9 +287,9 @@ Point TkrQueryClustersTool::meanHitInside(Event::TkrCluster::view v, int layer,
     double zsum = 0.;
     double hitDistance, twrDistance;
     
-    for (int ihit=0; ihit<nhits; ihit++)
+    for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
     {
-        P = AuxList[ihit]->position();
+        P = (*clusIter)->position();
         
         if        (v == Event::TkrCluster::X) {
             hitDistance = fabs(P.x() - Pcenter.x());
@@ -229,19 +334,21 @@ Point TkrQueryClustersTool::nearestHitOutside(Event::TkrCluster::view v,
     
     if (!validLayer(layer)) return Pnear;
 
-    int nhits = m_pClus->nHits(v,layer);
+    int view = v == Event::TkrCluster::X ? 0 : 1;
+    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
+    int nhits = clusters.size();
     if (nhits == 0) return Pnear;
-    
-    const std::vector<Event::TkrCluster*>& AuxList = m_pClus->getHits(v,layer);
     
     double minDistance = inDistance;
     double maxDistance = 1e6;
     Point Pini(0.,0.,0.);
-    for (int ihit = 0; ihit< nhits; ihit++) 
+    for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
     {
-        if (AuxList[ihit]->hitFlagged()) continue;
+        const Event::TkrCluster* cluster = (*clusIter);
+
+        if (cluster->hitFlagged()) continue;
         
-        Pini = AuxList[ihit]->position();
+        Pini = cluster->position();
         
         // Kludge to prevent crashes when z layer incorrect
         //double zDistance   = fabs(Pini.z() - Pcenter.z());
@@ -266,7 +373,7 @@ Point TkrQueryClustersTool::nearestHitOutside(Event::TkrCluster::view v,
         {
             maxDistance = hitDistance;
             Pnear     = Pini;
-            id        = AuxList[ihit]->id();
+            id        = cluster->id();
         }
     }
     return Pnear;
@@ -300,8 +407,8 @@ int TkrQueryClustersTool::numberOfHitsNear( int layer, double dX, double dY,
     if (!validLayer(layer)) return numHits;
 
     //Look for hits in the X view of desired layer
-    const std::vector<Event::TkrCluster*>& xList = 
-        m_pClus->getHits(Event::TkrCluster::X, layer);
+    int view = idents::TkrId::eMeasureX;
+    const Event::TkrClusterVec xList = getClustersReverseLayer(view, layer);
     int nHitsInPlane = xList.size();
     
     while(nHitsInPlane--)
@@ -313,8 +420,8 @@ int TkrQueryClustersTool::numberOfHitsNear( int layer, double dX, double dY,
     }
     
     // Look for hits in the Y view of desired layer
-    const std::vector<Event::TkrCluster*>& yList = 
-        m_pClus->getHits(Event::TkrCluster::Y, layer);
+    view = idents::TkrId::eMeasureY;
+    const Event::TkrClusterVec yList = getClustersReverseLayer(view, layer);
     nHitsInPlane = yList.size();
     
     while(nHitsInPlane--)
@@ -343,8 +450,7 @@ int TkrQueryClustersTool::numberOfUUHitsNear( int layer, double dX, double dY,
     if (!validLayer(layer)) return numHits;
 
     //Look for hits in the X view of desired layer
-    const std::vector<Event::TkrCluster*>& xList = 
-        m_pClus->getHits(Event::TkrCluster::X, layer);
+    const Event::TkrClusterVec xList = getClustersReverseLayer(idents::TkrId::eMeasureX, layer);
     int nHitsInPlane = xList.size();
     
     while(nHitsInPlane--)
@@ -358,8 +464,7 @@ int TkrQueryClustersTool::numberOfUUHitsNear( int layer, double dX, double dY,
     }
     
     // Look for hits in the Y view of desired layer
-    const std::vector<Event::TkrCluster*>& yList = 
-        m_pClus->getHits(Event::TkrCluster::Y, layer);
+    const Event::TkrClusterVec yList = getClustersReverseLayer(idents::TkrId::eMeasureY, layer);
     nHitsInPlane = yList.size();
     
     while(nHitsInPlane--)
@@ -391,17 +496,18 @@ int TkrQueryClustersTool::numberOfHitsNear( Event::TkrCluster::view v, int layer
     if (!validLayer(layer)) return numHits;
 
     // Look for hits in the desired view of the given layer
-    const std::vector<Event::TkrCluster*> & auxList = m_pClus->getHits(v, layer);
-    int nHitsInPlane = auxList.size();
+    int view = v == Event::TkrCluster::X ? 0 : 1;
+    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
     
-    while(nHitsInPlane--)
+    for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
     {
+        const Event::TkrCluster* cluster = *clusIter;
         double hitDiffV = v == Event::TkrCluster::X 
-            ? x0.x() - auxList[nHitsInPlane]->position().x()
-            : x0.y() - auxList[nHitsInPlane]->position().y();
+            ? x0.x() - cluster->position().x()
+            : x0.y() - cluster->position().y();
         double hitDiffO = v == Event::TkrCluster::X 
-            ? x0.y() - auxList[nHitsInPlane]->position().y()
-            : x0.x() - auxList[nHitsInPlane]->position().x();
+            ? x0.y() - cluster->position().y()
+            : x0.x() - cluster->position().x();
         
         if (fabs(hitDiffV) < inDistance && fabs(hitDiffO) < m_testDistance) 
             numHits++;

@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.8 2003/04/18 21:39:20 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.9 2004/09/12 03:53:07 lsrea Exp $
 */
 
 
@@ -15,7 +15,7 @@
 #include "geometry/Point.h"
 
 #include "Event/Recon/TkrRecon/TkrCluster.h"
-#include "Event/Recon/TkrRecon/TkrClusterCol.h"
+#include "Event/Recon/TkrRecon/TkrCluster.h"
 
 
 // Declaration of the interface ID ( interface id, major version, minor version) 
@@ -93,6 +93,10 @@ public:
     /// and within one tower, in requested layer and view
     virtual int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0) const = 0;
 
+    /// Access clusters by view and layer or by TkrId
+    virtual const Event::TkrClusterVec  getClustersReverseLayer(int view, int layer) const = 0;
+    virtual const Event::TkrClusterVec  getClusters(int view, int layer) const = 0;
+    virtual const Event::TkrClusterVec& getClusters(const idents::TkrId& tkrId) const = 0;
 };
 
 #endif  // _H_ITkrQueryClustersTool
