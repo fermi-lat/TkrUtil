@@ -22,10 +22,11 @@ public:
     static const InterfaceID& interfaceID() { return IID_ITkrFailureModeSvc; }
 
     /// get the list of enabled failure mode conditions
-    virtual int getFailureConditions()=0;
+    virtual int getFailureConditions() const =0;
 
     /// look for object in list of failed objects
-    virtual bool isFailed(int towerId, int layer = -1, int view = -1) = 0;
+    virtual bool isFailed(int towerId, int layer = -1, int view = -1) const = 0;
+    virtual bool empty() const = 0;
 };
 
 #endif // ITkrFailureModeSvc_H

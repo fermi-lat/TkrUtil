@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.5 2003/01/29 23:20:50 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.6 2003/02/07 20:42:35 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -152,15 +152,15 @@ void TkrFailureModeSvc::processTowerList() {
     }
 }
 
-bool TkrFailureModeSvc::towerFailed(int tower) {
+bool TkrFailureModeSvc::towerFailed(int tower) const {
     bool found = false;
     // Search to see if this event id is among the list of ids we want to pause on
-    std::vector<int>::iterator loc = std::find(m_towerList.begin(), m_towerList.end(), tower);                
+    std::vector<int>::const_iterator loc = std::find(m_towerList.begin(), m_towerList.end(), tower);                
     return (loc != m_towerList.end());
 }
 
 
-bool TkrFailureModeSvc::isFailed(int tower, int layer, int view) {
+bool TkrFailureModeSvc::isFailed(int tower, int layer, int view) const {
     // Purpose and Method: check whether given id is in any of the identified lists
     //                     
 
@@ -176,7 +176,7 @@ bool TkrFailureModeSvc::isFailed(int tower, int layer, int view) {
     return found = layerFailed(tower, layer, view);
 }
 
-bool TkrFailureModeSvc::layerFailed(int tower, int layer, int view) {
+bool TkrFailureModeSvc::layerFailed(int tower, int layer, int view)  const {
     // Purpose and Method: look for the given id in the tower list
     //                        
     if (m_layerList.empty()) return false;
@@ -184,13 +184,19 @@ bool TkrFailureModeSvc::layerFailed(int tower, int layer, int view) {
     // just a number, no physical relation to anything!
     int plane = 2*layer + view; 
 
-    
-    std::vector<int> &layerList = m_layerList[tower];
-    
-    // Search to see if this (tower,layer) is among the list
-    std::vector<int>::iterator loc = std::find(layerList.begin(), layerList.end(), plane);                
+    // because layerFailed is const, we have to go thru extra shenanigans to access the 
+    // vector of failed planes.  (because map[] adds an element if it isn't there!)
+    const layerMap myMap;  
+   
+    layerMap::const_iterator iList = m_layerList.find(tower);
+   
+    if (iList==m_layerList.end()) { return false; }
+
+    const std::vector<int> &layerList = iList->second;
+    std::vector<int>::const_iterator loc = std::find(layerList.begin(), layerList.end(), plane);  
     
     return (loc != layerList.end());
 }
+
 
 

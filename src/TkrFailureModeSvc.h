@@ -27,12 +27,14 @@ public:
     StatusCode finalize();
 
     /// get the list of enabled failure mode conditions
-    int getFailureConditions() {return m_failureModes;};
+    int getFailureConditions() const {return m_failureModes;}
+
+    bool empty() const { return m_failureModes==0;}
 
     enum {TOWER_SHIFT, LAYER_SHIFT};
 
     /// Find out if object is marked Failed
-    bool isFailed(int towerId, int layer, int view);
+    bool isFailed(int towerId, int layer, int view) const;
 
     /// queryInterface - for implementing a Service this is necessary
     StatusCode queryInterface(const IID& riid, void** ppvUnknown);
@@ -47,10 +49,10 @@ public:
 private:
 
     /// look for tower in list of dead towers
-    bool towerFailed(int tower);
+    bool towerFailed(int tower) const;
 
     /// look for layer in list of dead layers
-    bool layerFailed(int tower, int layer, int view);
+    bool layerFailed(int tower, int layer, int view) const;
 
     /// process the input list of towers
     void processTowerList();
@@ -58,7 +60,6 @@ private:
     /// process the input list of layer
     void processLayerList();
 
-private:
 
     /// List of towers from jobOptions
     StringArrayProperty m_towerListProperty;
@@ -72,8 +73,10 @@ private:
     /// vector of towers to fail
     std::vector<int> m_towerList;
 
+    typedef std::map <int, std::vector<int> > layerMap;
+
     /// vector of layers to fail
-    std::map <int, std::vector<int> > m_layerList;
+    layerMap  m_layerList;
 
 };
 
