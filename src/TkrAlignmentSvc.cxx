@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.27 2004/09/07 21:20:32 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.27.2.1 2004/09/22 04:47:51 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -542,7 +542,7 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     return sc;
 }
 
-void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray)
+void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray) const
 {
     // Purpose: merges the tower and tray constants
     // Inputs:  tray constants
@@ -613,7 +613,7 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
     return sc;
 }
 
-void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace)
+void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace) const
 {
     // Purpose: merges the tray and face constants
     // Inputs:  face constants
@@ -683,7 +683,7 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     return sc;
 }
 
-void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder)
+void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder) const
 {
     // Purpose: merges the tray and ladder constants
     // Inputs:  ladder constants
@@ -970,8 +970,27 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
     double alphaY = dir.y()/dirZ;
     
     double deltaPointX, deltaPointY;
+
+    AlignmentConsts null;
+    m_faceConsts = null;
+    if(task==FINDTOWERCONSTS) {
+        // need to generate the "face" constants to apply to the "face" coordinates
+        // first get tray and view
+        int tray, face;
+        m_pGeoSvc->layerToTray(layer, view, tray, face);
+        m_tray = tray;
+        m_face = face;
+        // now the input consts
+        m_towerConsts = *consts;
+        // this is for testing
+        //m_towerConsts = AlignmentConsts(0.0, 0.0, 0.0, 0.0, 0.002, 0.0);
+        calculateTrayConsts(null);
+        calculateFaceConsts(null);
+        //std::cout << "tower coord: " << localPoint << std::endl;
+        //std::cout << "calculated face consts: " << m_faceConsts << std::endl;
+    }
   
-    const AlignmentConsts* alConsts = (task==APPLYCONSTS ? getConsts(REC, volId): consts);
+    const AlignmentConsts* alConsts = (task==APPLYCONSTS ? getConsts(REC, volId): &m_faceConsts);
 
     applyDelta(localPoint.x(), localPoint.y(), alphaX, alphaY, alConsts,
         deltaPointX, deltaPointY);

@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.12 2004/09/07 21:20:32 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.12.2.1 2004/09/22 04:47:51 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -204,15 +204,15 @@ private:
     /// fill the tray constants from the tower constants
     StatusCode fillTrayConsts();
     /// do the transformation from tower to tray
-    void calculateTrayConsts(AlignmentConsts& thisTray);
+    void calculateTrayConsts(AlignmentConsts& thisTray) const;
     /// fill the face constants
     StatusCode fillFaceConsts();
     /// do the transformation from tray to face
-    void calculateFaceConsts(AlignmentConsts& thisPlane);
+    void calculateFaceConsts(AlignmentConsts& thisPlane) const;
     /// fill the ladder constants
     StatusCode fillLadderConsts();
     /// do the transformation from face to ladder
-   void calculateLadderConsts(AlignmentConsts& thisLadder);
+   void calculateLadderConsts(AlignmentConsts& thisLadder) const;
 
     /// fill the wafer constants
     StatusCode fillWaferConsts();
@@ -257,25 +257,25 @@ private:
     double m_faceZ[NLAYERS+1] [NVIEWS];
     
     /// holds alignment consts for the towers
-    AlignmentConsts m_towerConsts;
+    mutable AlignmentConsts m_towerConsts;
     /// holds alignment consts for the trays
-    AlignmentConsts m_trayConsts;
+    mutable AlignmentConsts m_trayConsts;
     /// holds alignment consts for the planes
-    AlignmentConsts m_faceConsts;
+    mutable AlignmentConsts m_faceConsts;
     /// holds alignment consts for the ladders
-    AlignmentConsts m_ladderConsts;
+    mutable AlignmentConsts m_ladderConsts;
     /// hold alignment consts for the wafers
-    AlignmentConsts m_waferConsts;
-    
+    mutable AlignmentConsts m_waferConsts;
     /// current element being constructed
+    mutable int m_tower;
+    mutable int m_tray;
+    mutable int m_face;
+    mutable int m_ladder;
+    mutable int m_wafer;
+
     std::string m_mode;
     std::ifstream* m_dataFile;
-    int m_tower;
-    int m_tray;
-    int m_face;
-    int m_ladder;
-    int m_wafer;
-    
+
     ITkrGeometrySvc* m_pGeoSvc;
     IGlastDetSvc* m_pDetSvc;
 
