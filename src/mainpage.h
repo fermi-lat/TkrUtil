@@ -78,12 +78,7 @@
   TkrQueryClustersTool allows algorithms to access certain quantities based on,
   but not immediately available in the TDS.
  
-  @section TkrMeritTool TkrMeritTool
-  TkrMeritTool consolidates various calculations to generate various quantities
-  required by merit. It is accessed through the abstract interface IReconTool,
-  which is found in the Recon package.
- 
-  @section jobOptions jobOptions
+ @section jobOptions jobOptions
  *
   @param TkrCalibAlg.calibFlavor
   Sets the overall flavor of calibration requested. Defaults to "ideal", which does nothing.

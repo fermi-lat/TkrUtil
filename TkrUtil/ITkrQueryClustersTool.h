@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.7 2003/04/18 20:27:36 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.8 2003/04/18 21:39:20 lsrea Exp $
 */
 
 
@@ -47,7 +47,7 @@ static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 2 , 
   // in execute
 
   ITkrQueryClustersTool pQuery;
-  StatusCode sc = m_pToolSvc->retrieveTool("TkrMeritTool", pQuery);
+  StatusCode sc = m_pToolSvc->retrieveTool("TkrQueryClustersTool", pQuery);
       if( sc.isFailure() ) {
           log << MSG::ERROR << "Unable to find a TkrQueryClustersTool" << endreq;
       }
