@@ -3,6 +3,12 @@
 
 @verbatim
 
+  On branch v2r0p2-gr-45-patches
+  ------------------------------
+  v2r0p2gr1 11-Sep-04 LSR First checkin... add Service::initialize() calls
+
+  On main branch
+  ------------------------------
   v2r0p2   11-Sep-04 LSR Remove TkrMeritTool, remove extraneous random output
   v2r0     07-Sep-04 LSR Alignment seems to be working, new interface
   v1r12p10 31-Aug-04 LSR Add methods TkrGeometrySvc::getBottom(Top)TrayFlag()... 

@@ -36,7 +36,7 @@ StatusCode TkrGeometrySvc::initialize()
     
     StatusCode sc = StatusCode::SUCCESS;
     
-    //Service::initialize();
+    Service::initialize();
     setProperties();
     MsgStream log(msgSvc(), name());
 
