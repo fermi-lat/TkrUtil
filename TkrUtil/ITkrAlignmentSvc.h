@@ -32,7 +32,7 @@ public:
     AlignmentConsts (double deltaX=0., double deltaY=0., double deltaZ=0.,
         double rotX=0., double rotY=0., double rotZ=0.):
         m_deltaX(deltaX), m_deltaY(deltaY), m_deltaZ(deltaZ),
-H        m_rotX(rotX), m_rotY(rotY), m_rotZ(rotZ)
+        m_rotX(rotX), m_rotY(rotY), m_rotZ(rotZ)
     {}
     
     ~AlignmentConsts() {} 
