@@ -369,7 +369,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         Point stepPoint = track->getStepPosition(istep);
         id = track->getStepVolumeId(istep);
         std::string idName = id.name();
-        double arclen = track->getStepArcLen(istep);
+        //double arclen = track->getStepArcLen(istep);
         radlen = track->getStepRadLength(istep);
         /*
         std::cout << "step " << istep << " rl " << radlen 
