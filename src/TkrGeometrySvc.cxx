@@ -301,8 +301,49 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
 
     StatusCode sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
+    
+    double stayClear;
 
-    Point startPoint = Point(40., 40., 700.);
+    if(m_pDetSvc->getNumericConstByName("TKRVertStayClear", &stayClear).isFailure()) {
+        log << MSG::DEBUG ;
+        if(log.isActive()) log << "Couldn't find TKRVertStayClear";
+        log << endreq;
+        return StatusCode::FAILURE;
+    }
+
+    // get the z coordinate of the top silicon in the bottom tray 
+    //         (should be pretty safe!)
+    // don't make any assumptions about the view in the bottom tray
+    idents::VolumeIdentifier bottom;
+    HepTransform3D botTransform;
+    bottom.init(0,0);
+    bottom.append(0);bottom.append(0); bottom.append(0); bottom.append(1); // tower 0
+    bottom.append(0);                // tray 0
+    idents::VolumeIdentifier idBot;
+    for (int view = 0; view<2; ++view) {
+        idBot = bottom;
+        idBot.append(view);          // try both views
+        idBot.append(1);             // top silicon (*most* bottom trays have one!)
+        idBot.append(0); idBot.append(0);  // wafer
+        //std::cout << "view " << view << " idBot " << idBot.name() << std::endl;
+        if(sc = m_pDetSvc->getTransform3DByID(idBot, &botTransform).isSuccess()) {
+            break;
+        }
+    }
+    if (sc.isFailure()) {
+        log << MSG::DEBUG ;
+        if(log.isActive()) log << "Couldn't find bottom tray silicon";
+        log << endreq;
+        return sc; }
+
+    double zBot;
+    zBot = (botTransform.getTranslation()).z();
+
+    // this is always above the tracker
+    double propTop = stayClear+zBot;
+    Point startPoint = Point(40., 40., propTop);
+
+    //Point startPoint = Point(40., 40., 640.);
     Vector startDir  = Vector(0., 0., -1.);
 
     int i, ind;
@@ -319,7 +360,12 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
 
     IPropagator* track = m_G4PropTool;
     track->setStepStart(startPoint, startDir);
-    track->step(699.);
+    // if the top were at the top of the stayclear, stayClear would be enuf
+    // 100 mm gets you from the middle of the bottom closeout to below the tracker
+    double propRange = stayClear+100.;
+    double propBot = propTop - propRange;
+    track->step(propRange);
+    log << MSG::INFO  << "Propagator goes from "<< propTop << " to " << propBot << std::endl;
     
     int numSteps = track->getNumberSteps();
     int istep = 0;
