@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.5 2004/10/09 04:42:51 lsrea Exp $
+$Header: /home/cvs/SLAC/TkrUtil/src/TkrToTSvc.cxx,v 1.4.2.1 2004/12/14 02:57:15 lsrea Exp $
 
 */
 
@@ -47,8 +47,12 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     declareProperty("defaultGain2",     m_defaultGain2     = 0.0);
     declareProperty("defaultThreshold", m_defaultThreshold = -2.92);
     declareProperty("defaultQuality",   m_defaultQuality   = 0.0);
+    declareProperty("defaultMuonFactor", m_defaultMuonFactor = 1.0);
     declareProperty("mode"            , m_mode             = "ideal");
     declareProperty("countsPerMicrosecond", m_countsPerMicrosecond = 5.0);
+    declareProperty("mevPerMip"       , m_mevPerMip        = 0.155);
+    declareProperty("fCPerMip"        , m_fCPerMip         = 4.667);
+    declareProperty("maxToT"          , m_maxToT           = 250);
 }
 
 StatusCode  TkrToTSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -117,8 +121,9 @@ StatusCode TkrToTSvc::doInit()
 
     // can be removed when geometry is iterfaced here
 
-    const int nChips  = m_tkrGeom->chipsPerLadder();
-    const int nStrips = m_tkrGeom->ladderNStrips()/nChips;
+    const int nChipsPerLadder = m_tkrGeom->chipsPerLadder();
+    const int nChips  = nChipsPerLadder*m_tkrGeom->nWaferAcross();
+    const int nStrips = m_tkrGeom->ladderNStrips()/nChipsPerLadder;
     const int numLayers = m_tkrGeom->numLayers();
 
     int tower, layer, view, strip, chip;
@@ -139,6 +144,8 @@ StatusCode TkrToTSvc::doInit()
                                 m_defaultThreshold;
                             m_ToTQuality  [tower][layer][view][theStrip] = 
                                 m_defaultQuality;
+                            m_ToTMuonFactor[tower][layer][view][theStrip] = 
+                                m_defaultMuonFactor;
                         }
                     }
                 }
@@ -175,6 +182,8 @@ StatusCode TkrToTSvc::doInit()
                                 chipThresh + devThresh;
                             m_ToTQuality[tower][layer][view][theStrip] = 
                                 m_defaultQuality;
+                            m_ToTMuonFactor[tower][layer][view][theStrip] = 
+                                m_defaultMuonFactor;
                         }
                     }
                 }
@@ -188,6 +197,38 @@ StatusCode TkrToTSvc::doInit()
     }
 
     return sc;
+}
+
+double TkrToTSvc::getCharge(double ToT, int tower, int layer, int view, int strip) const
+{
+    double gain      = m_ToTGain[tower][layer][view][strip];
+    double gain2     = m_ToTGain2[tower][layer][view][strip];
+    double threshold = m_ToTThreshold[tower][layer][view][strip];
+    double charge;
+    // constants are for: ToT = threshold + charge*(gain + charge*gain2))
+    // here is the inverse:
+    double term = (threshold-ToT/m_countsPerMicrosecond)/gain;
+    double test = gain2/gain;
+    if (fabs(test)>1.e-6) {
+        // just the quadratic formula
+        charge = 0.5*(-1.0 + sqrt(1.0 - 4.*test*term))/test;
+    } else {
+        // degenerate case
+        charge = -term*(1.0 + test*term);
+    }
+    return charge;
+}
+
+double TkrToTSvc::getMipsFromToT(double ToT, int tower, int layer, int view, int strip) const
+{
+    double muonFactor = m_ToTMuonFactor[tower][layer][view][strip];
+    return muonFactor/getFCPerMip()*getCharge(ToT, tower, layer, view, strip);
+}
+
+double TkrToTSvc::getMipsFromCharge(double charge, int tower, int layer, int view, int strip) const
+{
+    double muonFactor = m_ToTMuonFactor[tower][layer][view][strip];
+    return muonFactor/getFCPerMip()*charge;
 }
 
 StatusCode TkrToTSvc::finalize() {
