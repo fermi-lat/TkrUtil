@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.1.1.1 2002/12/05 20:17:19 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.2 2003/01/06 18:22:48 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -174,7 +174,7 @@ bool TkrFailureModeSvc::layerFailed(int tower, int layer, int view) {
     std::vector<int> &layerList = m_layerList[tower];
     
     // Search to see if this (tower,layer) is among the list
-    int *loc = std::find(layerList.begin(), layerList.end(), plane);                
+    std::vector<int>::iterator loc = std::find(layerList.begin(), layerList.end(), plane);                
     
     return (loc != layerList.end());
 }
