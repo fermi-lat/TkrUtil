@@ -1,9 +1,13 @@
 
 #ifndef _H_ITkrQueryClustersTool
-#define _H_ITkrQueryCLustersTool
+#define _H_ITkrQueryClustersTool
 
 #include "GaudiKernel/IAlgTool.h"
 
+#include "geometry/Point.h"
+
+#include "Event/Recon/TkrRecon/TkrCluster.h"
+#include "Event/Recon/TkrRecon/TkrClusterCol.h"
 
 
 // Declaration of the interface ID ( interface id, major version, minor version) 
@@ -13,7 +17,7 @@ static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 1 , 
 * @brief Abstract interface for methods to query TkrClusters
 *
 * @author Leon Rochester
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.2 2003/01/27 00:37:46 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.3 2003/02/01 15:53:21 lsrea Exp $
 *
 * Example of usage:
 *
