@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.12 2005/02/25 16:20:29 usher Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.13 2005/03/01 00:57:46 lsrea Exp $
 
 // Include files
 
@@ -280,7 +280,10 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
         idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
                                                          EventModel::TkrRecon::TkrIdClusterMap);
     }
-    else idClusMap = m_badIdClusMap;
+    else {
+        if(!m_badIdClusMap) return clusVec;
+        idClusMap = m_badIdClusMap;
+    }
 
     TkrViewLayerIdMap::const_iterator clusIdIter = clusIdRange.first;
     for(; clusIdIter != clusIdRange.second; clusIdIter++)
