@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/users/TkrGroup/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.3 2004/09/07 21:51:09 usher Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.4 2004/09/18 18:38:42 usher Exp $
 
 // Include files
 
@@ -59,18 +59,18 @@ public:
     StatusCode initialize();
     
     /// returns the mean space point for a given view and layer
-    Point meanHit(Event::TkrCluster::view v, int layer) const;
+    Point meanHit(int v, int layer) const;
     /** returns the mean space point for a given layer, view, within 
     * "inDistance" of a point Pini in the measurement view, and within 
     * "one tower" in the other view.
     */
-    Point meanHitInside (Event::TkrCluster::view v, int layer, 
+    Point meanHitInside (int v, int layer, 
         double inDistance, const Point& Pini) const;
     /** returns the nearest point outside of "inDistance" of a point "Pini"
     * in the measured view, within "one tower" in the other view, and a ref. 
     * to the id
     */
-    Point nearestHitOutside(Event::TkrCluster::view v, int layer, 
+    Point nearestHitOutside(int v, int layer, 
         double inDistance, const Point& Pini, int& id) const;
     
     /// Finds the number of clusters with measured distances 
@@ -84,8 +84,7 @@ public:
     int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0) const;
     /// Finds the number of clusters within "inDistance" of a point 
     /// and within "one tower."
-    int numberOfHitsNear( Event::TkrCluster::view v, int layer, 
-        double inDistance, const Point& x0) const;
+    int numberOfHitsNear( int v, int layer, double inDistance, const Point& x0) const;
 
     const Event::TkrClusterVec  getClustersReverseLayer(int view, int layer) const;
     const Event::TkrClusterVec  getClusters(int view, int layer) const;
@@ -185,7 +184,7 @@ void TkrQueryClustersTool::initIdMap() const
             {
                 for(int towerY = 0; towerY < m_pGeom->numYTowers(); towerY++)
                 {
-                    idents::TkrId tkrId(towerX, towerY, tray, (bool)botTop, view);
+                    idents::TkrId tkrId(towerX, towerY, tray, botTop == 1, view);
                     m_ViewLayerIdMap.insert(std::pair<TkrViewLayerPair,idents::TkrId>(viewLayerPair,tkrId));
                 }
             }
@@ -232,7 +231,7 @@ const Event::TkrClusterVec& TkrQueryClustersTool::getClusters(const idents::TkrI
     return (*m_idClusMap)[tkrId];
 }
 
-Point TkrQueryClustersTool::meanHit(Event::TkrCluster::view v, int layer) const
+Point TkrQueryClustersTool::meanHit(int view, int layer) const
 {
     // Purpose and Method: Returns the mean position of all clusters in a 
     //       layer
@@ -245,7 +244,6 @@ Point TkrQueryClustersTool::meanHit(Event::TkrCluster::view v, int layer) const
     
     if (!validLayer(layer)) return Pini;
 
-    int view = v == Event::TkrCluster::X ? 0 : 1;
     const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
     Point Pini3(0.,0.,0.);
 
@@ -261,9 +259,8 @@ Point TkrQueryClustersTool::meanHit(Event::TkrCluster::view v, int layer) const
     return Pini2;
 }
 
-Point TkrQueryClustersTool::meanHitInside(Event::TkrCluster::view v, int layer, 
-                                      double inDistance, 
-                                      const Point& Pcenter) const
+Point TkrQueryClustersTool::meanHitInside(int view, int layer, double inDistance, 
+                                          const Point& Pcenter) const
 {
     // Purpose and Method: Returns mean position of hits
     //    within a distance of a point in the measured dimension,
@@ -276,7 +273,6 @@ Point TkrQueryClustersTool::meanHitInside(Event::TkrCluster::view v, int layer,
     Point P(0.,0.,0);
     if (!validLayer(layer)) return P;
 
-    int view = v == Event::TkrCluster::X ? 0 : 1;
     const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
     int nhits = clusters.size();
     if (nhits == 0) return P;
@@ -291,10 +287,10 @@ Point TkrQueryClustersTool::meanHitInside(Event::TkrCluster::view v, int layer,
     {
         P = (*clusIter)->position();
         
-        if        (v == Event::TkrCluster::X) {
+        if        (view == idents::TkrId::eMeasureX) {
             hitDistance = fabs(P.x() - Pcenter.x());
             twrDistance = fabs(P.y() - Pcenter.y());
-        } else if (v == Event::TkrCluster::Y) {
+        } else if (view == idents::TkrId::eMeasureY) {
             hitDistance = fabs(P.y() - Pcenter.y());
             twrDistance = fabs(P.x() - Pcenter.x());
         } else {
@@ -317,9 +313,8 @@ Point TkrQueryClustersTool::meanHitInside(Event::TkrCluster::view v, int layer,
     return P;
 }
 
-Point TkrQueryClustersTool::nearestHitOutside(Event::TkrCluster::view v, 
-                                          int layer, double inDistance, 
-                                          const Point& Pcenter, int& id) const
+Point TkrQueryClustersTool::nearestHitOutside(int view, int layer, double inDistance, 
+                                              const Point& Pcenter, int& id) const
 {
     // Purpose and Method: returns the position of the closest cluster
     //    outside of a given distance from a point in the measured direction,
@@ -334,7 +329,6 @@ Point TkrQueryClustersTool::nearestHitOutside(Event::TkrCluster::view v,
     
     if (!validLayer(layer)) return Pnear;
 
-    int view = v == Event::TkrCluster::X ? 0 : 1;
     const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
     int nhits = clusters.size();
     if (nhits == 0) return Pnear;
@@ -357,12 +351,12 @@ Point TkrQueryClustersTool::nearestHitOutside(Event::TkrCluster::view v,
         double hitDistance = fabs(Pini.x() - Pcenter.x());
         double twrDistance = fabs(Pini.y() - Pcenter.y());
         
-        if      (v == Event::TkrCluster::Y) 
+        if      (view == idents::TkrId::eMeasureY) 
         {
             hitDistance = fabs(Pini.y() - Pcenter.y());
             twrDistance = fabs(Pini.x() - Pcenter.x());
         }
-        else if (v != Event::TkrCluster::X) 
+        else if (view != idents::TkrId::eMeasureX) 
         {
             hitDistance = (Pini-Pcenter).mag();
             twrDistance = 0.;
@@ -480,7 +474,7 @@ int TkrQueryClustersTool::numberOfUUHitsNear( int layer, double dX, double dY,
     return numHits;
 }
 
-int TkrQueryClustersTool::numberOfHitsNear( Event::TkrCluster::view v, int layer, 
+int TkrQueryClustersTool::numberOfHitsNear( int view, int layer, 
                                        double inDistance, const Point& x0) const
 {
     // Purpose and Method: counts the number of hits within a distance 
@@ -496,16 +490,15 @@ int TkrQueryClustersTool::numberOfHitsNear( Event::TkrCluster::view v, int layer
     if (!validLayer(layer)) return numHits;
 
     // Look for hits in the desired view of the given layer
-    int view = v == Event::TkrCluster::X ? 0 : 1;
     const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
     
     for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
     {
         const Event::TkrCluster* cluster = *clusIter;
-        double hitDiffV = v == Event::TkrCluster::X 
+        double hitDiffV = view == idents::TkrId::eMeasureX 
             ? x0.x() - cluster->position().x()
             : x0.y() - cluster->position().y();
-        double hitDiffO = v == Event::TkrCluster::X 
+        double hitDiffO = view == idents::TkrId::eMeasureY 
             ? x0.y() - cluster->position().y()
             : x0.x() - cluster->position().x();
         

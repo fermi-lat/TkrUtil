@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.11 2004/06/17 04:45:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.12.2.3 2004/09/23 04:19:13 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -67,7 +67,7 @@ public:
     /// return the index
     int   getNumber()           { return m_number; }
     /// return the constants
-    AlignmentConsts getConsts() { return m_consts; }
+    const AlignmentConsts getConsts() { return m_consts; }
 private:
     /// type, TOWER, TRAY, FACE etc.
     aType m_type;
@@ -150,17 +150,17 @@ public:
     void moveMCHit(idents::VolumeIdentifier id, 
         HepPoint3D& entry, HepPoint3D &exit) const;
     
-    /// moves a TkrCluster according to deltaX and deltaY alignment consts
-    void moveCluster(int tower, int layer, int view, int ladder, HepPoint3D& point) const;
-
-    HepVector3D deltaReconPoint(
-        HepPoint3D& point, HepVector3D dir, int layer, int view, int tower) const;
-    void moveReconPoint(
-        HepPoint3D& point, HepVector3D dir, int layer, int view, int tower) const;
+    HepVector3D deltaReconPoint(const HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task, const AlignmentConsts* consts) const;
+    void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task, const AlignmentConsts* consts) const;
 
     /// Get the volId and the local coordinates for the point to be aligned
-    virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
-        HepPoint3D& alignmentPoint) const;
+    idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
+        const HepPoint3D& globalPoint, HepPoint3D& alignmentPoint) const;
+
+    HepPoint3D getTowerCoordinates(const HepPoint3D& globalPoint,
+        int& nXTower, int& nYTower) const;
    
     /// true means make alignment corrections at digi time
     bool alignSim() const {return ((m_fileFlag&(1<<SIM_SHIFT))>0); }
@@ -204,20 +204,20 @@ private:
     /// fill the tray constants from the tower constants
     StatusCode fillTrayConsts();
     /// do the transformation from tower to tray
-    void calculateTrayConsts(AlignmentConsts& thisTray);
+    void calculateTrayConsts(AlignmentConsts& thisTray) const;
     /// fill the face constants
     StatusCode fillFaceConsts();
     /// do the transformation from tray to face
-    void calculateFaceConsts(AlignmentConsts& thisPlane);
+    void calculateFaceConsts(AlignmentConsts& thisPlane) const;
     /// fill the ladder constants
     StatusCode fillLadderConsts();
     /// do the transformation from face to ladder
-   void calculateLadderConsts(AlignmentConsts& thisLadder);
+   void calculateLadderConsts(AlignmentConsts& thisLadder) const;
 
     /// fill the wafer constants
     StatusCode fillWaferConsts();
     /// do the transformation from ladder to wafer
-    void calculateWaferConsts(AlignmentConsts& thisWafer);
+    void calculateWaferConsts(AlignmentConsts& thisWafer) const;
    
     /// reads the alignment items from a file
     StatusCode readFromFile();
@@ -256,26 +256,26 @@ private:
     /// z of plane in tray, vs. tray number and botTop
     double m_faceZ[NLAYERS+1] [NVIEWS];
     
-    /// holds alignment consts for the towers
-    AlignmentConsts m_towerConsts;
-    /// holds alignment consts for the trays
-    AlignmentConsts m_trayConsts;
-    /// holds alignment consts for the planes
-    AlignmentConsts m_faceConsts;
-    /// holds alignment consts for the ladders
-    AlignmentConsts m_ladderConsts;
-    /// hold alignment consts for the wafers
-    AlignmentConsts m_waferConsts;
-    
+    /// holds alignment consts for the towers during construction
+    mutable AlignmentConsts m_towerConsts;
+    /// holds alignment consts for the trays during construction
+    mutable AlignmentConsts m_trayConsts;
+    /// holds alignment consts for the planes during construction
+    mutable AlignmentConsts m_faceConsts;
+    /// holds alignment consts for the ladders during construction
+    mutable AlignmentConsts m_ladderConsts;
+    /// hold alignment consts for the wafers during construction
+    mutable AlignmentConsts m_waferConsts;
     /// current element being constructed
+    mutable int m_tower;
+    mutable int m_tray;
+    mutable int m_face;
+    mutable int m_ladder;
+    mutable int m_wafer;
+
     std::string m_mode;
     std::ifstream* m_dataFile;
-    int m_tower;
-    int m_tray;
-    int m_face;
-    int m_ladder;
-    int m_wafer;
-    
+
     ITkrGeometrySvc* m_pGeoSvc;
     IGlastDetSvc* m_pDetSvc;
 

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.2 2003/01/10 19:35:42 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.3 2004/08/24 23:45:45 lsrea Exp $
 
 // Include files
 // Gaudi system includes
@@ -10,6 +10,9 @@
 #include "GaudiKernel/Algorithm.h"
 
 #include "TkrUtil/ITkrFailureModeSvc.h"
+
+#include "Event/MonteCarlo/McParticle.h"
+#include "Event/MonteCarlo/McEventStructure.h"
 
 // Define the class here instead of in a header file: not needed anywhere but here!
 //------------------------------------------------------------------------------
@@ -93,6 +96,16 @@ StatusCode test_TkrUtil::execute()
     const int view1 = 0;
     const int layer2 = 4;
     const int view2 = 1;
+
+    Event::McParticle* mcPart = new Event::McParticle();
+
+    Event::McParticle::StdHepId hepId = mcPart->particleProperty();
+
+    Event::McEventStructure* mcEvent = new Event::McEventStructure();
+
+    mcEvent->setPrimaryParticle(mcPart);
+
+    Event::McParticleRefVec refVec = mcEvent->getTrackVector();
 
     if (m_FailSvc == 0) return StatusCode::FAILURE;
 

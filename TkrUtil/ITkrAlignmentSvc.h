@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.13 2004/09/07 21:20:31 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.13.2.1 2004/09/22 04:47:51 lsrea Exp $
 */
 
 
@@ -15,16 +15,16 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.13 
 #include "idents/VolumeIdentifier.h"
 #include "CLHEP/Geometry/Point3D.h"
 #include "Event/Recon/TkrRecon/TkrCluster.h"
-#include "Event/Recon/TkrRecon/TkrCluster.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
 
-static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 4, 0); 
+static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 5, 0); 
 
 namespace {
     enum constType {SIM=0, REC=1};
+    enum alignTask {NULLTASK= 0, APPLYCONSTS=1, FINDTOWERCONSTS=2, FINDWAFERCONSTS};
 }
 
 /// A small class to define alignment constants
@@ -110,19 +110,20 @@ public:
     /// move the McHit by the alignment consts
     virtual void moveMCHit(idents::VolumeIdentifier id, 
         HepPoint3D& entry, HepPoint3D &exit) const = 0;
-    /// move the cluster by the alignment consts
-    virtual void moveCluster(int tower, int layer, int view, int ladder,
-        HepPoint3D& point) const = 0;
     /// move the recon hit by the alignment consts
-    virtual void moveReconPoint(
-        HepPoint3D& point, HepVector3D dir, int layer, int view, int tower) const = 0;
+    virtual void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task = APPLYCONSTS, 
+        const AlignmentConsts* consts = 0) const = 0;
     /// move the recon hit by the alignment consts
     virtual HepVector3D deltaReconPoint(
-        HepPoint3D& point, HepVector3D dir, int layer, int view, 
-        int tower=-1) const = 0;
+        const HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task= APPLYCONSTS, 
+        const AlignmentConsts* consts = 0) const = 0;
     /// Get the volId and the local coordinates for the point to be aligned
-    virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
-        HepPoint3D globalPoint, HepPoint3D& alignmentPoint) const = 0;
+    //virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
+    //    const HepPoint3D& globalPoint, HepPoint3D& alignmentPoint) const = 0;
+    virtual HepPoint3D getTowerCoordinates(const HepPoint3D& globalPoint,
+        int& nXTower, int& nYTower) const = 0;
     /// true = perform alignment during simulation
     virtual bool alignSim() const = 0;
     /// true = perform alignment during reconstruction

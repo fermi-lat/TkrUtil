@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.9 2004/09/12 03:53:07 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.10 2004/09/18 18:38:42 usher Exp $
 */
 
 
@@ -14,7 +14,6 @@
 
 #include "geometry/Point.h"
 
-#include "Event/Recon/TkrRecon/TkrCluster.h"
 #include "Event/Recon/TkrRecon/TkrCluster.h"
 
 
@@ -64,18 +63,19 @@ public:
     static const InterfaceID& interfaceID() { return IID_ITkrQueryClustersTool; }
 
         /// returns the mean space point in for a given view and layer
-    virtual Point meanHit(Event::TkrCluster::view v, int layer) const = 0;
+    //virtual Point meanHit(Event::TkrCluster::view v, int layer) const = 0;
+    virtual Point meanHit(int v, int layer) const = 0;
     /** returns the mean space point for a given layer, view, within 
     * "inDistance" of a point Pini in the measurement view, and within 
     * one tower in the other view.
     */
-    virtual Point meanHitInside (Event::TkrCluster::view v, int layer, 
+    virtual Point meanHitInside (int v, int layer, 
         double inDistance, const Point& Pini) const = 0;
     /** returns the nearest point outside of "inDistance" of a point "Pini"
     * in the measured view, within one tower in the other view, and a ref. 
     * to the id
     */
-    virtual Point nearestHitOutside(Event::TkrCluster::view v, int layer, 
+    virtual Point nearestHitOutside(int v, int layer, 
         double inDistance, const Point& Pini, int& id) const = 0;
     
     /// Finds the number of clusters with measured distances 
@@ -86,7 +86,7 @@ public:
     virtual int numberOfHitsNear( int layer, double dX, double dY, const Point& x0) const = 0;
     /// Finds the number of clusters within "inDistance" of a point 
     /// and within one tower, in requested layer and view
-    virtual int numberOfHitsNear( Event::TkrCluster::view v, int layer, 
+    virtual int numberOfHitsNear( int v, int layer, 
         double inDistance, const Point& x0) const = 0;
 
     /// Finds the number of unused clusters within 2*dX by 2*dY of a point 

@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.26 2004/06/17 04:45:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.27.2.3 2004/09/23 04:19:13 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -44,7 +44,7 @@ const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
 
 namespace {
     double truncateCoord( double x, double pitch, 
-        int numElements, int& elementNumber, bool reverse = false) 
+        int numElements, int& elementNumber, bool reverse = false)
     {
         double xScaled = x/pitch;
         // this is the correction for odd number of elements (towers in EM, for example)
@@ -542,7 +542,7 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     return sc;
 }
 
-void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray)
+void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray) const
 {
     // Purpose: merges the tower and tray constants
     // Inputs:  tray constants
@@ -613,7 +613,7 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
     return sc;
 }
 
-void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace)
+void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace) const
 {
     // Purpose: merges the tray and face constants
     // Inputs:  face constants
@@ -683,7 +683,7 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     return sc;
 }
 
-void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder)
+void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder) const
 {
     // Purpose: merges the tray and ladder constants
     // Inputs:  ladder constants
@@ -701,15 +701,10 @@ void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder)
     double ladderWidth = (trayWidth - (nLadder-1)*ladderGap)/nLadder;
     double offset      = -0.5*trayWidth + 0.5*ladderWidth;
     offset += m_ladder*(ladderWidth + ladderGap);
-    double xPlane, yPlane;
 
-    if (view==0) {
-        xPlane = offset;
-        yPlane = 0.;
-    } else {
-        xPlane = 0.;
-        yPlane = offset;
-    }
+    double xPlane = offset;
+    double yPlane = 0.0;
+    if (view!=0) std::swap(xPlane, yPlane);
 
     double deltaX = thisLadder.getDeltaX() + m_faceConsts.getDeltaX()
         - m_faceConsts.getRotZ()*yPlane;
@@ -735,7 +730,10 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     while (itry--) {done[itry] = false;}
  
     int nWafers = m_pGeoSvc->nWaferAcross();
+    int layer, view;
+    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
 
+    int index;
     AlignmentItem item;
     while (getNextItem(WAFER,item)) {
         m_wafer = item.getNumber();
@@ -745,9 +743,15 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
                 return StatusCode::FAILURE;
         }
         AlignmentConsts thisWafer = item.getConsts();
+
         calculateWaferConsts(thisWafer);
+        // here are the final constants!
+        index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
+        if (index<0) continue;
+        if (m_mode=="sim") {m_simConsts[index] = m_waferConsts;} 
+        else               {m_recConsts[index] = m_waferConsts;}
         done[m_tray] = true;
-    }
+   }
 
     if (m_ladderConsts.isNull()) return sc;
 
@@ -757,14 +761,19 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     while (itry--) {
         if (!done[itry]) {
             m_wafer = itry;
+            AlignmentConsts thisWafer = item.getConsts();
             calculateWaferConsts(null);
+            // here are the final constants!
+            index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
+            if (index<0) continue;
+            if (m_mode=="sim") {m_simConsts[index] = m_waferConsts;} 
+            else               {m_recConsts[index] = m_waferConsts;}
         }
     }
     return sc;
 }
 
-
-void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
+void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer) const
 {
     // Purpose: merges the ladder and wafer constants
     // Inputs:  wafer constants
@@ -772,12 +781,7 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     // Dependencies: None
     // Caveats: None
     
-    int layer, view;
     int nWafer = m_pGeoSvc->nWaferAcross();
-
-    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
-    int index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
-    if (index<0) return;
 
     double trayWidth   = m_pGeoSvc->trayWidth();
     double waferGap    = m_pGeoSvc->ladderInnerGap();
@@ -786,15 +790,11 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     double offset      = -0.5*trayWidth1 + 0.5*waferWidth;
     offset += m_wafer*(waferWidth+waferGap);
 
-    double xWafer, yWafer;
-
-    if (view==0) {
-        xWafer = 0.;
-        yWafer = offset;
-    } else {
-        xWafer = offset; // you might think this should be negative, but think again!
-        yWafer = 0.;
-    }
+    double xWafer = 0.0;
+    double yWafer = offset;
+    int layer, view;
+    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
+    if (view==1) std::swap(xWafer, yWafer);
 
     double deltaX = thisWafer.getDeltaX() + m_ladderConsts.getDeltaX()
         - m_ladderConsts.getRotZ()*yWafer;
@@ -806,15 +806,10 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     double rotY = thisWafer.getRotY() + m_ladderConsts.getRotY();
     double rotZ = thisWafer.getRotZ() + m_ladderConsts.getRotZ();
 
-    // here are the final constants!
-    if (m_mode=="sim") {
-        m_simConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
+    m_waferConsts = AlignmentConsts(deltaX, deltaY, deltaZ,
             rotX, rotY, rotZ);
-    } else {
-        m_recConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
-            rotX, rotY, rotZ);
-    }
-    return;
+
+     return;
 }
 
 int TkrAlignmentSvc::getIndex(int tower, int layer, 
@@ -939,35 +934,29 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     return;
 }
 
-void TkrAlignmentSvc::moveCluster(int tower, int layer, int view, int ladder,
-                                  HepPoint3D& point) const
-{
-    // Purpose:  Move an cluster according to alignment constants (dx and dy only)
-    // Inputs:   tower, layer, view, ladder, and cluster position
-    // Output:   modified position argument
-    
-    /*
-    int wafer = 0;
-    const AlignmentConsts* alConsts = getConsts(REC, tower, layer, view, ladder, wafer);
-    // "x" is the only thing we can correct at this stage...
-    //     average for all the wafers in a ladder would be better.
-    AlignmentConsts alConsts1(alConsts->getDeltaX(), alConsts->getDeltaY()); 
-    HepVector3D dir(0., 0., 1);
+HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepVector3D& dir, 
+                                   int layer, int view, alignTask task, 
+                                   const AlignmentConsts* consts) const
+{   
+    // alignTask can have the values NULLTASK, APPLYCONSTS, pr FINDTOWERCONSTS.
+    //   if NULLTASK, a zero vector is returned
+    //   if APPLYCONSTS, the constants are supplied by the alignment service
+    //   if FINDTOWERCONSTS,  the constants are expected to be passed in
+    //      if they're not, a zero vector is returned;
+    //      In this mode, transformations are made with respect to local tower 
+    //         coordinates, not wafer coordinates.
 
-    view = -1;
-
-    point = point - getDelta(view, point, dir, &alConsts1);
-    */
-}
-
-HepVector3D TkrAlignmentSvc::deltaReconPoint(HepPoint3D& point, HepVector3D dir, 
-                                   int layer, int view, int tower) const
-{   // not sure what happens when tower = -1
-
-    //bool doRotation = (view==1 && rotate);
-    
     HepPoint3D localPoint;
-    idents::VolumeIdentifier volId = getGeometryInfo(layer, view, point, localPoint);
+    int nXTower, nYTower;
+    idents::VolumeIdentifier volId;
+
+    if ((task==NULLTASK) || (task!=APPLYCONSTS && consts==0)) return HepVector3D(0., 0., 0.);
+
+    if (task==APPLYCONSTS) {
+        volId = getGeometryInfo(layer, view, point, localPoint);
+    } else {
+        localPoint = getTowerCoordinates(point, nXTower, nYTower);
+    }
 
     double small = 1.e-3;
     double dirZ   = dir.z();
@@ -976,7 +965,28 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(HepPoint3D& point, HepVector3D dir,
     double alphaY = dir.y()/dirZ;
     
     double deltaPointX, deltaPointY;
-    const AlignmentConsts* alConsts = getConsts(REC, volId);
+
+    AlignmentConsts null;
+    m_faceConsts = null;
+    if(task==FINDTOWERCONSTS) {
+        // need to generate the "face" constants to apply to the "face" coordinates
+        // first get tray and view
+        int tray, face;
+        m_pGeoSvc->layerToTray(layer, view, tray, face);
+        m_tray = tray;
+        m_face = face;
+        // now the input consts
+        m_towerConsts = *consts;
+        // this is for testing
+        //m_towerConsts = AlignmentConsts(0.0, 0.0, 0.0, 0.0, 0.002, 0.0);
+        calculateTrayConsts(null);
+        calculateFaceConsts(null);
+        //std::cout << "tower coord: " << localPoint << std::endl;
+        //std::cout << "calculated face consts: " << m_faceConsts << std::endl;
+    }
+  
+    const AlignmentConsts* alConsts = (task==APPLYCONSTS ? getConsts(REC, volId): &m_faceConsts);
+
     applyDelta(localPoint.x(), localPoint.y(), alphaX, alphaY, alConsts,
         deltaPointX, deltaPointY);
 
@@ -993,25 +1003,34 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(HepPoint3D& point, HepVector3D dir,
     return -deltaPoint;
 }
 
-void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, HepVector3D dir, 
-                                   int layer, int view, int tower = -1) const
+void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
+                                   int layer, int view, alignTask task, 
+                                   const AlignmentConsts* consts) const
 {
-    HepVector3D deltaPoint = deltaReconPoint(point, dir, layer, view, tower);
+    HepVector3D deltaPoint = deltaReconPoint(point, dir, layer, view, task, consts);
     
    //now subtract(??) this delta from the global point
-    point = point + deltaPoint;
+    point += deltaPoint;
     return;
 }
 
-idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
-                                                          HepPoint3D& alignmentPoint) const
+HepPoint3D TkrAlignmentSvc::getTowerCoordinates(
+    const HepPoint3D& globalPoint, int& nXTower, int& nYTower) const
 {
-    int nXTower, nYTower, ladder, wafer;
-    //bool doRotation = (view==1 && rotate);
     double xTower = truncateCoord(globalPoint.x(), m_pGeoSvc->towerPitch(), 
         m_pGeoSvc->numXTowers(), nXTower);
     double yTower = truncateCoord(globalPoint.y(), m_pGeoSvc->towerPitch(), 
         m_pGeoSvc->numYTowers(), nYTower);
+    return HepPoint3D(xTower, yTower, globalPoint.z());
+}
+
+idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(
+    int layer, int view, const HepPoint3D& globalPoint, HepPoint3D& alignmentPoint) const
+{
+    int nXTower, nYTower, ladder, wafer;
+    
+    HepPoint3D towerPoint
+        = getTowerCoordinates(globalPoint, nXTower, nYTower);
 
     double WaferSide = m_pGeoSvc->siStripPitch()*m_pGeoSvc->ladderNStrips() 
         + 2.*m_pGeoSvc->siDeadDistance();
@@ -1026,6 +1045,9 @@ idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(int layer, int view, H
     // because the wafers are *numbered backwards* for the y-measuring planes,
     //  the transformation is not obvious. The minus signs that you would expect
     //  are *not* there.
+
+    double xTower = towerPoint.x();
+    double yTower = towerPoint.y();
 
     if (view==1) std::swap(xTower, yTower);
     xLocal = truncateCoord(xTower, ladderPitch, nLadders, ladder);
