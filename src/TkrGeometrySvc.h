@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.14 2004/05/31 22:11:31 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.15 2004/08/19 08:17:32 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -47,7 +47,12 @@ public:
     int    nWaferAcross()   const {return m_nWaferAcross;}
     double siWaferSide()    const {return m_siWaferSide;}
 
-    int    numPlanes()      const {return numLayers();}
+    int    numPlanes()      const {
+        int nPlanes = 2*numLayers() 
+            - (m_bottomTrayNumber>-1? 0: 1) 
+            - (m_topTrayNumber>-1? 0: 1);
+        return nPlanes;
+    }
 
     double towerPitch()     const {return m_towerPitch;}
     double trayWidth()      const {return m_trayWidth;}
@@ -146,20 +151,20 @@ public:
 
         // definitions of plane, layer
     int trayToPlane(int tray, int botTop) const {
-        return 2*tray + botTop - 1;
+        return 2*tray + botTop - getBottomTrayFlag() ;
     }
     int trayToBiLayer(int tray, int botTop) const {
-        return tray + botTop - 1;
+        return tray + botTop - getBottomTrayFlag() ;
     }
     int planeToTray(int plane) const {
-        return (plane+1)/2;
+        return (plane+getBottomTrayFlag())/2;
     }
     int planeToBotTop(int plane) const {
-        return (plane+1)%2;
+        return (plane+getBottomTrayFlag())%2;
     }
+    int getBottomTrayFlag() const { return (m_bottomTrayNumber>-1 ? 1 : 0); }
+    int getTopTrayFlag()    const { return (m_topTrayNumber>-1    ? 1 : 0); }
 
-
-    
 private:
     
     /// number of Towers in X
@@ -222,6 +227,22 @@ private:
     int m_planeToLayer[NPLANES];
     int m_layerToPlane[NLAYERS][NVIEWS];
 
+    int m_topTrayNumber;
+    int m_bottomTrayNumber;
+
+    /// Retrieves the basic constants from GlastDetSvc
+    StatusCode getConsts();
+    /// Initializes arrays of private data
+    void initializeArrays();
+    ///
+    void makeTowerIds();
+    ///
+    void makeLayerIds();
+    ///
+    StatusCode getTowerLimits();
+    ///
+    void getTowerType();
+
     /// Returns minimum trayHeight... I hope we can stop using this soon
     StatusCode getMinTrayHeight(double& trayHeight);
 
@@ -236,7 +257,8 @@ private:
 
     /// return converter type for a layer
     convType getDigiLayerType(int digiLayer) const;
-
+    /// find the test tower
+    StatusCode getTestTower();
     /// find the legal volumes and store the info
     StatusCode getVolumeInfo();
 

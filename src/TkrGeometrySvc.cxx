@@ -36,39 +36,11 @@ StatusCode TkrGeometrySvc::initialize()
     
     StatusCode sc = StatusCode::SUCCESS;
     
-    Service::initialize();
+    //Service::initialize();
     setProperties();
     MsgStream log(msgSvc(), name());
 
-    double siWaferActiveSide;
-
-    m_nviews = 2;
-
-    if (service("GlastDetSvc", m_pDetSvc).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("xNum", &m_numX).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("xNum", &m_numY).isSuccess() &&    
-        m_pDetSvc->getNumericConstByName("nWaferAcross", &m_nWaferAcross).isSuccess() &&   
-        m_pDetSvc->getNumericConstByName("towerPitch", &m_towerPitch).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("SiThick", &m_siThickness).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("SiWaferSide", &m_siWaferSide).isSuccess() &&
-        m_pDetSvc->getNumericConstByName(
-        "SiWaferActiveSide", &siWaferActiveSide).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("stripPerWafer", &m_ladderNStrips).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("ladderGap", &m_ladderGap).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("ssdGap", &m_ladderInnerGap).isSuccess() 
-        )
-    {
-        sc = StatusCode::SUCCESS;
-    } else {
-        log << MSG::ERROR << "Failed to get geometry constants" << endreq;
-        return StatusCode::FAILURE;
-    }
-
-    // finish the constants
-    m_trayWidth = m_nWaferAcross*m_siWaferSide +(m_nWaferAcross-1)*m_ladderGap;
-    m_siDeadDistance = 0.5*(m_siWaferSide - siWaferActiveSide);
-    m_siStripPitch = siWaferActiveSide/m_ladderNStrips;
-    m_siResolution = m_siStripPitch/sqrt(12.);
+    sc = getConsts();
     
     IToolSvc* toolSvc = 0;
     if (sc = service("ToolSvc",toolSvc, true).isSuccess() )
@@ -87,32 +59,23 @@ StatusCode TkrGeometrySvc::initialize()
 
     // fill up the m_volId tower arrays, used for providing volId prefixes
     // these are the Id's for the 15 towers, with just the first 3 fields
+    initializeArrays();
 
-
-    HepTransform3D T;
-    int tower;
-
-    int layer, view, plane;
-    for (plane=0; plane<NPLANES; ++plane) {
-        m_planeToView[plane] = -1;
-        m_planeToLayer[plane] = -1;
-        layer = plane/2;
-        view  = plane%2;
-        m_layerToPlane[layer][view] = -1;
+    sc = getTestTower();
+    if( sc.isFailure()) {
+        log << MSG::ERROR << "Failed to find test tower"<< endreq;
+        return sc;
     }
+   
+/*
+   makeTowerIds();
 
-    int i, ind;
-
-    for(i=0; i<NLAYERS; ++i) {
-        m_radLenConv[i] = 0.;
-        m_radLenRest[i] = 0.;
+    sc = fillPropagatorInfo(); 
+    if( sc.isFailure()) {
+        log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
+        return sc;
     }
-    for (ind=0; ind<NTYPES; ++ind) {
-        m_numLayers[ind]     = 0;
-        m_aveRadLenConv[ind] = 0.;
-        m_aveRadLenRest[ind] = 0.;
-    }
-
+ */   
     sc = getVolumeInfo();
     if( sc.isFailure()) {
         log << MSG::ERROR << "Failed to find correct volumes for tracker"<< endreq;
@@ -121,97 +84,23 @@ StatusCode TkrGeometrySvc::initialize()
     
     // number of layers is now known...
     // but will get be calculated another way later... the two *should* agree!
+    makeTowerIds();
 
-    for(tower=0;tower<m_numX*m_numY;++tower) {
-        idents::VolumeIdentifier vId;
-        vId.append(0);               // in Tower
-        idents::TowerId t(tower);  
-        vId.append(t.iy());          // yTower
-        vId.append(t.ix());          // xTower
-        vId.append(1);               // Tracker
-        m_volId_tower[tower].init(0,0);  
-        m_volId_tower[tower].append(vId);
+    sc = getTestTower();
+    if( sc.isFailure()) {
+        log << MSG::ERROR << "Failed to find test tower"<< endreq;
+        return sc;
     }
- 
-    // fill the towerType array, and find the test tower
-    //m_testTower = -1;
-    m_xLim[0] = 1000; m_xLim[1] = -1;
-    m_yLim[0] = 1000; m_yLim[1] = -1;
-    StatusCode foundTower = StatusCode::FAILURE;
-    for (tower=0;tower<m_numX*m_numY;++tower) {
-        idents::TowerId t = idents::TowerId(tower);
-        m_towerType[tower] = 0;
-        idents::VolumeIdentifier volId;
-        volId.init(0,0);
-        volId.append(m_volId_tower[tower]);
-        //volId.append(1); // TKR
 
-        int tray;
-        int botTop;
-        layerToTray(0, 0,tray, botTop);
-        // get the right combination for this plane...
-        volId.append(tray);
-        volId.append(0);
-        volId.append(botTop);
-        volId.append(0); volId.append(0); // ladder and wafer
-        sc = m_pDetSvc->getTransform3DByID(volId,&T);
-        if (sc.isFailure()) {
-            // start by marking missing towers
-            m_towerType[tower] = -1;
-            continue;
-        } else {
-            foundTower = StatusCode::SUCCESS;
-            // find the lowest and highest towers in each direction
-            m_xLim[0] = std::min(m_xLim[0], t.ix());
-            m_xLim[1] = std::max(m_xLim[1], t.ix());
-            m_yLim[0] = std::min(m_yLim[0], t.iy());
-            m_yLim[1] = std::max(m_yLim[1], t.iy());
-        }
-           
-        // set test tower to first tower actually present
-        // already done above
-        // if(m_testTower<0) m_testTower = tower;  
-    }
-    if( foundTower.isFailure()) {
+    sc  = getTowerLimits();
+
+    if( (sc = getTowerLimits()).isFailure()) {
         // for now, just fail; might be more clever later
         log << MSG::ERROR << "Failed to find any tower... check geometry!"<< endreq;
         return sc;
     }
 
-    // use the list of existing towers to generate the tower type of each tower.
-    // tower type is number of edges not touching another tower (0-4);
-    int ix, iy;
-    idents::TowerId tempTower;
-    for (ix=0; ix<m_numX; ++ix) {
-        for (iy=0; iy<m_numY; ++iy) {
-            int nExposed = 0;
-            idents::TowerId t = idents::TowerId(ix, iy);
-            tower = t.id();
-            if (m_towerType[tower]==-1) continue;
-            // tower exists, check the 4 sides
-            if (ix==0) ++nExposed;
-            else {
-                tempTower = idents::TowerId(ix-1,iy);
-                if (m_towerType[tempTower.id()]==-1) ++nExposed;
-            }
-            if (ix==m_numX-1) ++nExposed; 
-            else {
-                tempTower = idents::TowerId(ix+1,iy);
-                if (m_towerType[tempTower.id()]==-1) ++nExposed;
-            }
-            if(iy==0) ++nExposed;
-            else {
-                tempTower = idents::TowerId(ix,iy-1);
-                if (m_towerType[tempTower.id()]==-1) ++nExposed;
-            }
-            if (iy==m_numY-1) ++nExposed;
-            else {
-                tempTower = idents::TowerId(ix,iy+1);
-                if (m_towerType[tempTower.id()]==-1) ++nExposed;
-            }
-            m_towerType[tower] = nExposed;
-        }
-    }
+    getTowerType();
 
     sc = fillPropagatorInfo(); 
     if( sc.isFailure()) {
@@ -219,23 +108,7 @@ StatusCode TkrGeometrySvc::initialize()
         return sc;
     }
    
-    int bilayer;
-    for(bilayer=0;bilayer<numLayers();++bilayer) {
-        for (view=0; view<NVIEWS; ++view) {
-            int tray;
-            int botTop;            
-            layerToTray(bilayer, view, tray, botTop);
-
-            idents::VolumeIdentifier vId;
-            vId.append(tray);
-            vId.append(view);
-            vId.append(botTop);
-            vId.append(0); vId.append(0); // ladder and wafer
-            
-            m_volId_layer[bilayer][view].init(0,0);
-            m_volId_layer[bilayer][view].append(vId);
-        }
-    }  
+    makeLayerIds();
 
     // fill the m_layerZ arrays
     sc = fillLayerZ();
@@ -253,7 +126,6 @@ StatusCode TkrGeometrySvc::initialize()
     }
 
 	// Get cal info necessary for tracker recon
-
 	sc = getCalInfo();
     if (sc.isFailure()) return sc;
 
@@ -281,19 +153,19 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::INFO << "Couldn't set up TkrAlignmentSvc" << endreq;
         log << "Will assume it is not required"    << endreq;
     }
-
+    // Get the bad strips service
     m_badStrips = 0;
     if( service( "TkrBadStripsSvc", m_badStrips, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrBadStripsSvc" << endreq;
         log << "Will assume it is not required"    << endreq;
     }
-
+    // get the splits service
     m_tkrSplits = 0;
     if( service( "TkrSplitsSvc", m_tkrSplits, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't set up TkrSplitsSvc" << endreq;
         return StatusCode::FAILURE;
     }
-
+    // get the ToT service
     m_tkrToT    = 0;
     if( service( "TkrToTSvc", m_tkrToT, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't set up TkrToTSvc" << endreq;
@@ -429,12 +301,199 @@ StatusCode TkrGeometrySvc::fillLayerZ()
             volId.append(m_volId_tower[m_testTower]);
             //volId.append(1); // TKR
             volId.append(m_volId_layer[bilayer][view]);
-            if ((sc=m_pDetSvc->getTransform3DByID(volId,&T)).isFailure()) break;
-            m_layerZ[bilayer][view] = (T.getTranslation()).z();          
+            if ((sc=m_pDetSvc->getTransform3DByID(volId,&T)).isFailure()) {
+                break;
+            } else {
+                m_layerZ[bilayer][view] = (T.getTranslation()).z();  
+            }
         }
     }
     return sc;
 }
+
+StatusCode TkrGeometrySvc::getConsts()
+{
+    StatusCode sc = StatusCode::SUCCESS;
+    MsgStream log(msgSvc(), name());
+
+    m_nviews = 2;
+
+    double siWaferActiveSide;
+
+    if (service("GlastDetSvc", m_pDetSvc).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("xNum", &m_numX).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("xNum", &m_numY).isSuccess() &&    
+        m_pDetSvc->getNumericConstByName("nWaferAcross", &m_nWaferAcross).isSuccess() &&   
+        m_pDetSvc->getNumericConstByName("towerPitch", &m_towerPitch).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("SiThick", &m_siThickness).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("SiWaferSide", &m_siWaferSide).isSuccess() &&
+        m_pDetSvc->getNumericConstByName(
+        "SiWaferActiveSide", &siWaferActiveSide).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("stripPerWafer", &m_ladderNStrips).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("ladderGap", &m_ladderGap).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("ssdGap", &m_ladderInnerGap).isSuccess() 
+        )
+    {
+        sc = StatusCode::SUCCESS;
+    } else {
+        log << MSG::ERROR << "Failed to get geometry constants" << endreq;
+        return StatusCode::FAILURE;
+    }
+
+    // finish the constants
+    m_trayWidth = m_nWaferAcross*m_siWaferSide +(m_nWaferAcross-1)*m_ladderGap;
+    m_siDeadDistance = 0.5*(m_siWaferSide - siWaferActiveSide);
+    m_siStripPitch = siWaferActiveSide/m_ladderNStrips;
+    m_siResolution = m_siStripPitch/sqrt(12.);
+    
+    return sc;
+}
+
+void TkrGeometrySvc::initializeArrays()
+{
+    MsgStream log(msgSvc(), name());
+
+    int layer, view, plane;
+    for (plane=0; plane<NPLANES; ++plane) {
+        m_planeToView[plane] = -1;
+        m_planeToLayer[plane] = -1;
+        layer = plane/2;
+        view  = plane%2;
+        m_layerToPlane[layer][view] = -1;
+    }
+
+    int i, ind;
+
+    for(i=0; i<NLAYERS; ++i) {
+        m_radLenConv[i] = 0.;
+        m_radLenRest[i] = 0.;
+    }
+    for (ind=0; ind<NTYPES; ++ind) {
+        m_numLayers[ind]     = 0;
+        m_aveRadLenConv[ind] = 0.;
+        m_aveRadLenRest[ind] = 0.;
+    }
+    for (ind=0; ind<m_numX*m_numY; ++ind) {
+        m_towerType[ind] = -1;
+    }
+
+    // and for now...
+    m_bottomTrayNumber = 0;
+    m_topTrayNumber    = 18;
+}
+
+StatusCode TkrGeometrySvc::getTowerLimits()
+{
+    
+    StatusCode sc;
+
+    HepTransform3D T;
+    int tower;
+    // fill the towerType array
+    m_xLim[0] = 1000; m_xLim[1] = -1;
+    m_yLim[0] = 1000; m_yLim[1] = -1;
+    StatusCode foundTower = StatusCode::FAILURE;
+    for (tower=0;tower<m_numX*m_numY;++tower) {
+        idents::TowerId t = idents::TowerId(tower);
+        idents::VolumeIdentifier volId;
+        volId.init(0,0);
+        volId.append(m_volId_tower[tower]);
+        int tray;
+        int botTop;
+        layerToTray(0, 0,tray, botTop);
+        // get the right combination for this plane...
+        volId.append(tray);
+        volId.append(0);
+        volId.append(botTop);
+        volId.append(0); volId.append(0); // ladder and wafer
+        sc = m_pDetSvc->getTransform3DByID(volId,&T);
+        if (sc.isSuccess()) {
+            foundTower = StatusCode::SUCCESS;
+            // find the lowest and highest towers in each direction
+            m_xLim[0] = std::min(m_xLim[0], t.ix());
+            m_xLim[1] = std::max(m_xLim[1], t.ix());
+            m_yLim[0] = std::min(m_yLim[0], t.iy());
+            m_yLim[1] = std::max(m_yLim[1], t.iy());
+        }          
+    }
+    return foundTower;
+}
+
+void TkrGeometrySvc::getTowerType()
+{
+    // use the list of existing towers to generate the tower type of each tower.
+    // tower type is number of edges not touching another tower (0-4);
+    int ix, iy;
+    int tower;
+    idents::TowerId tempTower;
+    for (ix=0; ix<m_numX; ++ix) {
+        for (iy=0; iy<m_numY; ++iy) {
+            int nExposed = 0;
+            idents::TowerId t = idents::TowerId(ix, iy);
+            tower = t.id();
+            if (m_towerType[tower]==-1) continue;
+            // tower exists, check the 4 sides
+            if (ix==0) ++nExposed;
+            else {
+                tempTower = idents::TowerId(ix-1,iy);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            if (ix==m_numX-1) ++nExposed; 
+            else {
+                tempTower = idents::TowerId(ix+1,iy);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            if(iy==0) ++nExposed;
+            else {
+                tempTower = idents::TowerId(ix,iy-1);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            if (iy==m_numY-1) ++nExposed;
+            else {
+                tempTower = idents::TowerId(ix,iy+1);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            m_towerType[tower] = nExposed;
+        }
+    }
+}
+
+void TkrGeometrySvc::makeTowerIds()
+{
+    int tower;
+    for(tower=0;tower<m_numX*m_numY;++tower) {
+        idents::VolumeIdentifier vId;
+        vId.append(0);               // in Tower
+        idents::TowerId t(tower);  
+        vId.append(t.iy());          // yTower
+        vId.append(t.ix());          // xTower
+        vId.append(1);               // Tracker
+        m_volId_tower[tower].init(0,0);  
+        m_volId_tower[tower].append(vId);
+    }
+}
+
+void TkrGeometrySvc::makeLayerIds()
+{
+    int bilayer, view;
+    for(bilayer=0;bilayer<numLayers();++bilayer) {
+        for (view=0; view<NVIEWS; ++view) {
+            int tray;
+            int botTop;            
+            layerToTray(bilayer, view, tray, botTop);
+
+            idents::VolumeIdentifier vId;
+            vId.append(tray);
+            vId.append(view);
+            vId.append(botTop);
+            vId.append(0); vId.append(0); // ladder and wafer
+
+            m_volId_layer[bilayer][view].init(0,0);
+            m_volId_layer[bilayer][view].append(vId);
+        }
+    }  
+}
+
 
 StatusCode TkrGeometrySvc::fillPropagatorInfo()
 {
@@ -469,7 +528,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         idBot = bottom;
         idBot.append(view);          // try both views
         idBot.append(1);             // top silicon (*most* bottom trays have one!)
-        idBot.append(0); idBot.append(0);  // wafer
+        idBot.append(0); idBot.append(0);  // ladder, wafer
         std::cout << "view " << view << " idBot " << idBot.name() << std::endl;
         if(sc = m_pDetSvc->getTransform3DByID(idBot, &botTransform).isSuccess()) {
             break;
@@ -507,13 +566,43 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     log << MSG::INFO  << "Propagator goes from "<< propTop << " to " << propBot << std::endl;
     
     int numSteps = track->getNumberSteps();
-    int istep = 0;
+    int istep;
     idents::VolumeIdentifier id;
-    double radlen;
     idents::VolumeIdentifier prefix = m_pDetSvc->getIDPrefix();
 
+    // check on first and last planes...
+    // if "first" plane is a bottom, then the there's a top tray
+    // if "last" plane is a top, then there's a bottom tray
+    /*
+    m_bottomTrayNumber = -1;
+    m_topTrayNumber    = -1;
+  
+    bool firstSiliconPlane = true;
+    for (istep=0; istep<numSteps; ++istep) { // we're going from top to bottom
+        Point stepPoint = track->getStepPosition(istep);
+        id = track->getStepVolumeId(istep);
+        id.prepend(prefix);
+        //check if in the tracker, and then if in a silicon plane
+        if(id[0]==0 && id[3]==1 && id.size()>6) {
+            int tray   = id[4];
+            int item   = id[6];
+            if (item==0 || item==1) { //silicon plane, bottom or top
+                if (firstSiliconPlane) {
+                    if (item==0) m_topTrayNumber = tray;
+                    firstSiliconPlane = false;
+                }
+                // this will end up with the info for the last plane encountered
+                if (item==1) m_bottomTrayNumber = tray;
+            }
+        }
+    }
+    */
+
+    // now do the layer stuff
+
+    double radlen;
     bool startCount = false;
-    for (; istep<numSteps; ++istep) {
+    for (istep=0; istep<numSteps; ++istep) {
         Point stepPoint = track->getStepPosition(istep);
         id = track->getStepVolumeId(istep);
         id.prepend(prefix);
@@ -530,7 +619,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         if(id[0]==0 && id[3]==1 && id.size()>6) {
             int tray = id[4];
             int item = id[6];
-            if (item==2) {
+            if (item==2 || item==1) {
                 startCount = true;
             }
             if (!startCount) continue;
@@ -590,7 +679,6 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     
     return sc;
 }
-
 
 double TkrGeometrySvc::getReconLayerZ(int layer, int view) const
 {
@@ -737,6 +825,67 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
     int tray, botTop, layer, view, plane;
     int layer0 = -1;
 
+    tower = m_testTower;
+    //for(tower=0;tower<m_numX*m_numY;++tower) {
+        idents::VolumeIdentifier vId, vId1, vId2, vId3, vIdTest;
+        vId.init(0,0);
+        vId.append(0);               // in Tower
+        idents::TowerId t(tower);  
+        vId.append(t.iy());          // yTower
+        vId.append(t.ix());          // xTower
+        // would be better to have this, but need to check if it will work
+        vIdTest = vId;
+        vId.append(1);             // tracker
+        for(tray=0; tray<NLAYERS+1; ++tray) {
+            vId1 = vId;
+            vId1.append(tray);
+            for(view=0;view<2;++view) {
+                vId2 = vId1;
+                vId2.append(view);
+                for(botTop=0;botTop<2;++botTop) {
+                    if (tray==m_bottomTrayNumber && botTop==0) continue;
+                    if (tray==m_topTrayNumber    && botTop==1) continue;
+                    vId3 = vId2;
+                    vId3.append(botTop);
+                    vId3.append(0); vId3.append(0);
+                    sc = m_pDetSvc->getTransform3DByID(vId3,&T);
+                    if (sc.isSuccess()) {
+                        found = true;
+                        std::cout << " Id of this element: " << vId3.name() << " exists " << std::endl;
+                        plane = trayToPlane(tray, botTop); // definition no!
+                        layer = trayToBiLayer(tray, botTop); // definition no!
+                        if (layer0!=layer) m_numLayers[ALL]++;
+                        m_planeToView[plane] = view;
+                        m_planeToLayer[plane] = layer;
+                        m_layerToPlane[layer][view] = plane;
+                        layer0 = layer;
+                    }
+                }
+            }
+        }
+     //   if (found) {
+     //       m_testTower    = tower;
+     //       m_testTowerId  = vIdTest;
+     //       sc = StatusCode::SUCCESS;
+     //       break;
+     //   }       
+     //}
+        return StatusCode::SUCCESS;
+}
+
+
+StatusCode TkrGeometrySvc::getTestTower() 
+{
+    StatusCode sc = StatusCode::SUCCESS;
+
+    bool found = false;
+
+    HepTransform3D T;
+    int tower;
+
+    int tray, botTop, view;
+    int layer0 = -1;
+
     for(tower=0;tower<m_numX*m_numY;++tower) {
         idents::VolumeIdentifier vId, vId1, vId2, vId3, vIdTest;
         vId.init(0,0);
@@ -760,17 +909,12 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
                     sc = m_pDetSvc->getTransform3DByID(vId3,&T);
                     if (sc.isSuccess()) {
                         found = true;
-                        std::cout << " Id of this element: " << vId3.name() << " exists " << std::endl;
-                        plane = trayToPlane(tray, botTop); // definition
-                        layer = trayToBiLayer(tray, botTop); // definition
-                        if (layer0!=layer) m_numLayers[ALL]++;
-                        m_planeToView[plane] = view;
-                        m_planeToLayer[plane] = layer;
-                        m_layerToPlane[layer][view] = plane;
-                        layer0 = layer;
+                        break;
                     }
                 }
+                if (found) break;
             }
+            if (found) break;
         }
         if (found) {
             m_testTower    = tower;
