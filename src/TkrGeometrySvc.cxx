@@ -876,3 +876,19 @@ StatusCode TkrGeometrySvc::getTestTower()
     }
     return sc;
 }
+
+int TkrGeometrySvc::getPlaneSeparation(const idents::TkrId& id1, const idents::TkrId& id2) const
+{
+    // returns number of planes between two objects specified by TkrIds.
+    //   -1 means number cannot be determined
+
+    // Really don't even need tower values. A TkrId with only tray and botTop will have
+    //    a plane associated with it.
+
+    int nDiff = -1;
+    if (!id1.hasTray() || !id1.hasBotTop() || !id2.hasTray() || !id2.hasBotTop()) return nDiff;
+
+    int plane1 = getPlane(id1);
+    int plane2 = getPlane(id2);
+    return abs(plane1 - plane2);
+}

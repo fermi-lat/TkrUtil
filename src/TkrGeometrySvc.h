@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.16 2004/08/31 23:54:55 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.17 2004/10/09 04:42:51 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -93,6 +93,9 @@ public:
     int    getPlane (const idents::TkrId& tkrId) const {
         return 2*tkrId.getTray() + tkrId.getBotTop() - getBottomTrayFlag();
     }
+    /// returns number of planes between two objects specified by TkrId
+    int getPlaneSeparation(const idents::TkrId& id1, const idents::TkrId& id2) const;
+
     double getPlaneZ(int plane) const {
         return m_planeZ[plane];
     }
