@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.10 2004/03/10 18:35:03 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.11 2004/03/12 05:49:22 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -112,6 +112,8 @@ public:
     ITkrAlignmentSvc*   getTkrAlignmentSvc()   const { return m_tkrAlign;}
     /// Provide access to splits service
     ITkrSplitsSvc*      getTkrSplitsSvc()      const { return m_tkrSplits;}
+    /// Provide access to ToT service
+    ITkrToTSvc*         getTkrToTSvc()         const { return m_tkrToT;}
 
     /// calculate the tray number, botTop from layer, view
     void layerToTray (int layer, int view, int& tray, int& botTop) const;
@@ -225,6 +227,8 @@ private:
     ITkrSplitsSvc*      m_tkrSplits;
     /// number of the test tower (used to find zLayer, etc.)
     int m_testTower;
+    /// pointer to the ToT service
+    ITkrToTSvc*         m_tkrToT;
 
 };
 

@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.4 2003/04/11 23:27:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.1 2004/03/10 18:35:03 lsrea Exp $
 */
 
 #ifndef ITkrSplitsSvc_H
@@ -10,8 +10,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.4 2003
 
 // Include files
 #include "GaudiKernel/IInterface.h"
-
-#include "TkrUtil/ITkrGeometrySvc.h"
 
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
@@ -31,8 +29,10 @@ public:
     static const InterfaceID& interfaceID() { return IID_ITkrSplitsSvc; }
 
     /// get the list of enabled failure mode conditions
-    virtual int  getEnd(int tower, int layer, int view, int strip) const =0;
-    virtual int  getSplitPoint(int tower, int layer, int view) const = 0;
+    virtual int  getEnd(const int tower, const int layer, const int view, const int strip) 
+        const = 0;
+    virtual int  getSplitPoint(const int tower, const int layer, const int view) 
+        const = 0;
 };
 
 #endif // ITkrSplitsSvc_H

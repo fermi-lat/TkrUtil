@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.1 2004/03/10 18:35:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.2 2004/03/12 05:49:22 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
@@ -49,12 +49,12 @@ public:
     ///void setTkrGeometrySvc(TkrGeometrySvc* p_geoSvc) { m_geoSvc = p_geoSvc; }
 
     /// get the last C0 strip for this layer
-    int getSplitPoint(int tower, int layer, int view) const {
+    int getSplitPoint(const int tower, const int layer, const int view) const {
         return m_splits[tower][layer][view];
     }
 
     /// tell which end this strip belongs to
-    int getEnd(int tower, int layer, int view, int strip) const {
+    int getEnd(const int tower, const int layer, const int view, const int strip) const {
         return (strip<=m_splits[tower][layer][view]? 0 : 1);
     }
 

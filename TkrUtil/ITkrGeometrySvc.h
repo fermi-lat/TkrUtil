@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.9 2003/07/18 22:27:19 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.10 2004/03/10 18:35:03 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -15,6 +15,7 @@
 #include "TkrUtil/ITkrFailureModeSvc.h"
 #include "TkrUtil/ITkrBadStripsSvc.h"
 #include "TkrUtil/ITkrSplitsSvc.h"
+#include "TkrUtil/ITkrToTSvc.h"
 
 #include "CLHEP/Geometry/Point3D.h"
 
@@ -28,7 +29,7 @@
  * @author Tracy Usher
  */
 
-static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 7 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 8 , 0); 
 
 namespace {
     enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
@@ -104,17 +105,19 @@ public:
     virtual double getAveRest(convType type) const = 0;
 
     /// Provide access to the old propagator
-    virtual IKalmanParticle*    getPropagator() const = 0;
+    virtual IKalmanParticle*    getPropagator()        const = 0;
     /// Provide access to the new propagator
     virtual IPropagator*        getG4PropagationTool() const = 0;
     /// Provide access to the failure mode service
     virtual ITkrFailureModeSvc* getTkrFailureModeSvc() const = 0;
     /// Provide acess to the alignment service
-    virtual ITkrAlignmentSvc*   getTkrAlignmentSvc() const = 0;
+    virtual ITkrAlignmentSvc*   getTkrAlignmentSvc()   const = 0;
     /// Provide access to the bad strips service
-    virtual ITkrBadStripsSvc*   getTkrBadStripsSvc() const = 0;
-    /// Provide access to the splitss service
-    virtual ITkrSplitsSvc*      getTkrSplitsSvc() const = 0;
+    virtual ITkrBadStripsSvc*   getTkrBadStripsSvc()   const = 0;
+    /// Provide access to the splits service
+    virtual ITkrSplitsSvc*      getTkrSplitsSvc()      const = 0;
+    /// Provide access to the ToT service
+    virtual ITkrToTSvc*         getTkrToTSvc()         const = 0;
 
 
     /// calculate the tray number, botTop from layer, view

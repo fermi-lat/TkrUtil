@@ -205,6 +205,12 @@ StatusCode TkrGeometrySvc::initialize()
         return StatusCode::FAILURE;
     }
 
+    m_tkrToT    = 0;
+    if( service( "TkrToTSvc", m_tkrToT, true).isFailure() ) {
+        log << MSG::ERROR << "Couldn't set up TkrToTSvc" << endreq;
+        return StatusCode::FAILURE;
+    }
+
     log << MSG::INFO << "TkrGeometrySvc successfully initialized" << endreq;
     return StatusCode::SUCCESS;
 
