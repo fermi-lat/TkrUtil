@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.15 2003/04/11 23:27:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.16 2003/04/26 18:40:21 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -31,6 +31,19 @@ const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
 // Service parameters which can be set at run time must be declared.
 // This should be done in the constructor.
 
+
+namespace {
+    double truncateCoord( double x, double pitch, int numElements, int& elementNumber) 
+    {
+        double xScaled = x/pitch;
+        double delta = 0.5*(numElements%2);
+        double xMod = xScaled + delta;
+        int theFloor = (int) floor(xMod);
+        elementNumber = theFloor + numElements/2;
+        return pitch*(xMod - theFloor - 0.5);
+    }
+   
+}
 TkrAlignmentSvc::TkrAlignmentSvc(const std::string& name, 
                                  ISvcLocator* pSvcLocator) :
 Service(name, pSvcLocator)
@@ -43,7 +56,6 @@ Service(name, pSvcLocator)
     
     return;
 }
-
 
 StatusCode TkrAlignmentSvc::initialize()
 {
@@ -661,6 +673,45 @@ void TkrAlignmentSvc::moveReconHit(int /*tower*/, int /*layer*/, int /*view*/, i
                                    HepPoint3D& /*point*/, HepVector3D /*dir*/) const
 {
     //placeholder for now
+}
+
+idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
+                                                          HepPoint3D& alignmentPoint) const
+{
+    int nXTower, nYTower, ladder, wafer;
+    double xTower = truncateCoord(globalPoint.x(), m_pGeoSvc->towerPitch(), 
+        m_pGeoSvc->numXTowers(), nXTower);
+    double yTower = truncateCoord(globalPoint.y(), m_pGeoSvc->towerPitch(), 
+        m_pGeoSvc->numYTowers(), nYTower);
+
+    double WaferSide = m_pGeoSvc->siStripPitch()*m_pGeoSvc->ladderNStrips() 
+        + 2.*m_pGeoSvc->siDeadDistance();
+    double ladderPitch = WaferSide + m_pGeoSvc->ladderGap();
+    double waferPitch  = WaferSide + m_pGeoSvc->ladderInnerGap();
+    int nLadders = m_pGeoSvc->nWaferAcross();
+    double xLocal, yLocal;
+    if (view == 0) {
+        xLocal = truncateCoord(xTower, ladderPitch, nLadders, ladder);
+        yLocal = truncateCoord(yTower, waferPitch,  nLadders, wafer);
+    } else {
+        xLocal = truncateCoord(yTower, ladderPitch, nLadders, ladder);
+        yLocal = truncateCoord(xTower, waferPitch,  nLadders, wafer);
+    }
+
+    int tray, botTop;
+    m_pGeoSvc->layerToTray(layer, view, tray, botTop);
+    idents::VolumeIdentifier id;
+    id.init(0,0);
+    id.append(0);
+    id.append(nYTower);
+    id.append(nXTower);
+    id.append(1);
+    id.append(tray);
+    id.append(view);
+    id.append(botTop);
+    id.append(ladder);
+    id.append(wafer);
+    return id;
 }
 
 HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,

@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.6 2003/04/26 18:40:21 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.7 2003/04/30 02:36:59 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -45,6 +45,7 @@ public:
     int    numSuperGlast()  const {return getNumType(SUPER);}
     int    numRegular()     const {return getNumType(STANDARD);}
     int    nWaferAcross()   const {return m_nWaferAcross;}
+    double siWaferSide()    const {return m_siWaferSide;}
 
     int    numPlanes()      const {return numLayers();}
 
@@ -54,7 +55,7 @@ public:
     
     double ladderGap()      const {return m_ladderGap;}
     double ladderInnerGap() const {return m_ladderInnerGap;}
-    int    ladderNStrips()  const {return m_ladderNStrips;} 
+    int    ladderNStrips()  const {return m_ladderNStrips;}
     
     double siStripPitch()   const {return m_siStripPitch;}
     double siResolution()   const {return m_siResolution;}
@@ -68,7 +69,7 @@ public:
     HepPoint3D getStripPosition(int tower, int layer, int view, double stripid) const;
 
     /// return the z position for a reconLayer and view
-    double getReconLayerZ(int layer, int view) const;
+    double getReconLayerZ(int layer, int view=2) const;
     /// return the average z position for a reconLayer
     //double getReconLayerZ(int layer);
     /// return the rad length of the converter for each layer
@@ -130,13 +131,6 @@ private:
     int    m_numY;              
     /// two views, always!
     int    m_nviews;        
-    /// total number of x-y layers
-    //int    m_nlayers; 
-    /// number of no-converter layers
-    //int m_nNoConverter;
-    /// number of superglast layers
-    //int m_nSuperGlast;
-    ///  number of wafers in a ladder
     int m_nWaferAcross;
 
     /// Distance between centers of adjacent towers
@@ -180,7 +174,7 @@ private:
     double m_aveRadLenRest[NTYPES];
 
     /// Returns minimum trayHeight... I hope we can stop using this soon
-    StatusCode getMinTrayHeight(double & trayHeight);
+    StatusCode getMinTrayHeight(double trayHeight);
 
     /// returns z position of X, Y or average plane for each layer
     StatusCode fillLayerZ();

@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.5 2003/04/11 23:27:15 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.6 2003/04/26 01:02:46 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -27,10 +27,10 @@
  * @author Tracy Usher
  */
 
-static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 4 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 5 , 0); 
 
 namespace {
-    enum convType { NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
+    enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
 }
 
 class ITkrGeometrySvc : public virtual IInterface
@@ -61,6 +61,7 @@ public:
     virtual double ladderInnerGap() const =0;
     virtual int    ladderNStrips() const =0;
     virtual int    nWaferAcross() const =0;
+    virtual double siWaferSide() const = 0;
     
     virtual double siStripPitch() const =0;
     virtual double siResolution() const =0;

@@ -4,7 +4,10 @@
 
 @verbatim
 
-  v1r9p2   30-apr-03 LSR Little fix to get badStripsSvc working again
+  v1r9p4   07_may_03 LSR Fix to TkrGeometrySvc for EM (introduced at v1r9 I think)
+                         add functionality to TkrAlignmentSvc (preliminary)
+                         and change to interfaces for both services
+  v1r9p3   30-apr-03 LSR Little fix to get badStripsSvc working again
   v1r9p2   29-apr-03 LSR another unix error! Where did *that* come from?
   v1r9p1   26-apr-03 LSR fix unix errors and warnings
   v1r9     25-apr-03 LSR add functionality to TkrGeometrySvc; "constify"

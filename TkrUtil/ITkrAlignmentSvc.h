@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2003/04/08 22:20:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.7 2003/04/11 23:27:15 lsrea Exp $
 */
 
 
@@ -14,12 +14,14 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2
 
 #include "idents/VolumeIdentifier.h"
 #include "CLHEP/Geometry/Point3D.h"
+#include "Event/Recon/TkrRecon/TkrCluster.h"
+#include "Event/Recon/TkrRecon/TkrClusterCol.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
 
-static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 2 , 0); 
+static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 3, 0); 
 
 namespace {
     enum constType {SIM=0, REC=1};
@@ -113,6 +115,9 @@ public:
     /// move the recon hit by the alignment consts
     virtual void moveReconHit(int tower, int layer, int view, int ladder,
         HepPoint3D& point, HepVector3D dir) const = 0;
+    /// Get the volId and the local coordinates for the point to be aligned
+    virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
+        HepPoint3D globalPoint, HepPoint3D& alignmentPoint) const = 0;
     /// true = perform alignment during simulation
     virtual bool alignSim() const = 0;
     /// true = perform alignment during reconstruction

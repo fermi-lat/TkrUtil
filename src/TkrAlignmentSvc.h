@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.4 2003/04/11 20:51:47 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.5 2003/04/11 23:27:15 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -102,7 +102,10 @@ public:
     void moveReconHit(int tower, int layer, int view, int ladder,
         HepPoint3D& point, HepVector3D dir) const;
 
-    
+    /// Get the volId and the local coordinates for the point to be aligned
+    virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
+        HepPoint3D& alignmentPoint) const;
+   
     /// true means make alignment corrections at digi time
     bool alignSim() const {return ((m_fileFlag&(1<<SIM_SHIFT))>0); }
     /// true means make alignment corrections at recon time
