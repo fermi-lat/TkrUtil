@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.9 2003/12/03 19:12:26 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.10 2004/06/24 08:49:03 lsrea Exp $
 */
 
 
@@ -51,9 +51,10 @@ StatusCode TkrBadStripsSvc::initialize()
     if(m_visitor==0) {
         m_visitor = new BadVisitor;
         m_visitor->setService(this);
+        m_visitor->setService(m_pGeoSvc);
     }
 
-    Service::initialize();
+    //Service::initialize();
     
     m_badStripsFile = "";
     m_empty = true;
@@ -96,6 +97,14 @@ StatusCode TkrBadStripsSvc::doInit()
     MsgStream log(msgSvc(), name());
     
     StatusCode sc = StatusCode::SUCCESS;
+
+    sc = service("TkrGeometrySvc", m_pGeoSvc, true);
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+            << "Could not get TkrGeometrySvc" 
+            << endreq;
+        return sc;
+    }
     
     // If there is no bad strips file, service will do nothing
     if (m_badStripsFile=="") {        
@@ -170,14 +179,14 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
     // -2 at beginning of line sets the tag (default is 1)
     // 
     // for each layer with bad strips:
-    // tower# sequence#  [strip#] [strip#] ...  -1
+    // tower# plane#  [strip#] [strip#] ...  -1
     // all whitespace is ignored, so data for a layer may span lines
     //
     // 
     
     while(read && !file->eof()) {
         int tower;
-        int sequence;
+        int plane;
         
         int tag = 1;
         
@@ -193,13 +202,17 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
         }
         
         if (file->eof()) break;
-        *file >> sequence;
+        *file >> plane;
         
         // kludge until the geometry supplies this info
         // converts layer (0...35) to bilayer (digi format) and view
-        int layer = sequence/2;
-        int element = (sequence+3)%4;
-        int view = element/2;
+        
+        //int layer = plane/2;
+        //int element = (plane+3)%4;
+        //int view = element/2;
+
+        int layer, view;
+        m_pGeoSvc->planeToLayer(plane, layer, view);
         
         stripCol* v;
         // my private use of getBadStrips requires non-const pointer
@@ -370,8 +383,10 @@ CalibData::eVisitorRet BadVisitor::badPlane(unsigned int row,
     if (!allBad) { 
         unsigned int i;
         int tower = idents::TowerId(row, col).id();
-        int layer = top ? tray : tray-1;
-        int view  = layer%2 ? 1-top : top;
+        //int layer = top ? tray : tray-1;
+        //int view  = layer%2 ? 1-top : top;
+        int layer, view;
+        m_pGeoSvc->trayToLayer(tray, top, layer, view);
         int tag = 1;
         idents::GlastAxis::axis iview = view ? idents::GlastAxis::Y : idents::GlastAxis::X;
 

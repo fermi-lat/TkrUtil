@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.11 2003/05/02 16:08:52 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.12 2004/06/24 08:49:03 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -65,25 +65,34 @@ StatusCode TkrFailureModeSvc::initialize ()
     // Dependencies: None
     // Restrictions and Caveats:  None
 
-    StatusCode  status = StatusCode::SUCCESS;
-
     // Open the message log
     MsgStream log( msgSvc(), name() );
+
+    StatusCode  sc = StatusCode::SUCCESS;
+
+    sc = service("TkrGeometrySvc", m_pGeoSvc, true);
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+            << "Could not get TkrGeometrySvc" 
+            << endreq;
+        return sc;
+    }
 
     if(m_visitor==0) {
         m_visitor = new BadVisitorFM;
         m_visitor->setService(this);
+        m_visitor->setService(m_pGeoSvc);
     }
 
     // Call super-class
-    Service::initialize ();
+    //Service::initialize ();
 
     // Bind all of the properties for this service
-    if ( (status = setProperties()).isFailure() ) {
+    if ( (sc = setProperties()).isFailure() ) {
         log << MSG::ERROR << "Failed to set properties" << endreq;
     }
 
-    status = doInit();
+    sc = doInit();
 
     return StatusCode::SUCCESS;
 }
@@ -340,9 +349,20 @@ CalibData::eVisitorRet BadVisitorFM::badPlane(unsigned int row,
     if (allBad) {
 
         int tower = idents::TowerId(row, col).id();
-        int layer = top ? tray : tray-1;
-        int view  = layer%2 ? 1-top : top;
-        int plane = 2*layer + view;
+        //int layer = top ? tray : tray-1;
+        //int view  = layer%2 ? 1-top : top;
+        //int plane = 2*layer + view;
+
+        //layer = (plane+10)/2 - 5; // homemade "floor"
+        //view = ((layer%2==0) ? botTop : (1 - botTop));
+
+        int layer, view;
+        m_pGeoSvc->trayToLayer(tray, top, layer, view);
+
+        // last remnant of hardwired stuff... need to think about this a bit
+        //    but it's effectively a definition
+        //int plane = 2*tray + top - 1;
+        int plane = m_pGeoSvc->trayToPlane(tray, top);
 
         std::vector<int>& curList = m_pFailureMode->getLayers(tower);
         unsigned int i = 0;

@@ -3,6 +3,7 @@
 
 // Include files
 #include "TkrUtil/ITkrFailureModeSvcCalib.h"
+#include "TkrUtil/ITkrGeometrySvc.h"
 #include "GaudiKernel/Service.h"
 
 #include <vector>
@@ -40,10 +41,12 @@ namespace {
             const CalibData::StripCol& strips);
 
         void setService(ITkrFailureModeSvcCalib* pFailureMode) {m_pFailureMode = pFailureMode;}
+        void setService(ITkrGeometrySvc*         pGeoSvc)      {m_pGeoSvc      = pGeoSvc;}
 
     private:
         MsgStream* m_log;
         ITkrFailureModeSvcCalib* m_pFailureMode;
+        ITkrGeometrySvc*         m_pGeoSvc;
     };
 }
 
@@ -122,6 +125,8 @@ private:
 
     /// vector of layers to fail
     LayerMap  m_layerList;
+
+    ITkrGeometrySvc*     m_pGeoSvc;
     };
 
 

@@ -88,22 +88,55 @@ StatusCode TkrGeometrySvc::initialize()
     // fill up the m_volId tower arrays, used for providing volId prefixes
     // these are the Id's for the 15 towers, with just the first 3 fields
 
+
+    HepTransform3D T;
     int tower;
+
+    int layer, view, plane;
+    for (plane=0; plane<NPLANES; ++plane) {
+        m_planeToView[plane] = -1;
+        m_planeToLayer[plane] = -1;
+        layer = plane/2;
+        view  = plane%2;
+        m_layerToPlane[layer][view] = -1;
+    }
+
+    int i, ind;
+
+    for(i=0; i<NLAYERS; ++i) {
+        m_radLenConv[i] = 0.;
+        m_radLenRest[i] = 0.;
+    }
+    for (ind=0; ind<NTYPES; ++ind) {
+        m_numLayers[ind]     = 0;
+        m_aveRadLenConv[ind] = 0.;
+        m_aveRadLenRest[ind] = 0.;
+    }
+
+    sc = getVolumeInfo();
+    if( sc.isFailure()) {
+        log << MSG::ERROR << "Failed to find correct volumes for tracker"<< endreq;
+        return sc;
+    }
+    
+    // number of layers is now known...
+    // but will get be calculated another way later... the two *should* agree!
+
     for(tower=0;tower<m_numX*m_numY;++tower) {
         idents::VolumeIdentifier vId;
         vId.append(0);               // in Tower
         idents::TowerId t(tower);  
         vId.append(t.iy());          // yTower
         vId.append(t.ix());          // xTower
+        vId.append(1);               // Tracker
         m_volId_tower[tower].init(0,0);  
         m_volId_tower[tower].append(vId);
     }
  
     // fill the towerType array, and find the test tower
-    m_testTower = -1;
+    //m_testTower = -1;
     m_xLim[0] = 1000; m_xLim[1] = -1;
     m_yLim[0] = 1000; m_yLim[1] = -1;
-    HepTransform3D T;
     StatusCode foundTower = StatusCode::FAILURE;
     for (tower=0;tower<m_numX*m_numY;++tower) {
         idents::TowerId t = idents::TowerId(tower);
@@ -111,11 +144,12 @@ StatusCode TkrGeometrySvc::initialize()
         idents::VolumeIdentifier volId;
         volId.init(0,0);
         volId.append(m_volId_tower[tower]);
-        volId.append(1); // TKR
+        //volId.append(1); // TKR
 
         int tray;
         int botTop;
         layerToTray(0, 0,tray, botTop);
+        // get the right combination for this plane...
         volId.append(tray);
         volId.append(0);
         volId.append(botTop);
@@ -135,7 +169,8 @@ StatusCode TkrGeometrySvc::initialize()
         }
            
         // set test tower to first tower actually present
-        if(m_testTower<0) m_testTower = tower;  
+        // already done above
+        // if(m_testTower<0) m_testTower = tower;  
     }
     if( foundTower.isFailure()) {
         // for now, just fail; might be more clever later
@@ -185,9 +220,8 @@ StatusCode TkrGeometrySvc::initialize()
     }
    
     int bilayer;
-    int view;
     for(bilayer=0;bilayer<numLayers();++bilayer) {
-        for (view=0; view<2; ++view) {
+        for (view=0; view<NVIEWS; ++view) {
             int tray;
             int botTop;            
             layerToTray(bilayer, view, tray, botTop);
@@ -222,8 +256,6 @@ StatusCode TkrGeometrySvc::initialize()
 
 	sc = getCalInfo();
     if (sc.isFailure()) return sc;
-
-
 
     // Get propagator from the service
     
@@ -290,7 +322,7 @@ HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view,
 
     idents::VolumeIdentifier volId;
     volId.append(m_volId_tower[tower]);
-    volId.append(1); // TKR
+    //volId.append(1); // TKR
     volId.append(m_volId_layer[layer][view]);
     return m_pDetSvc->getStripPosition(volId, stripId);
 }
@@ -302,9 +334,12 @@ void TkrGeometrySvc::trayToLayer(int tray, int botTop,
     // Purpose: calculate layer and view from tray and botTop
     // Method: use knowledge of the structure of the Tracker
     
-    int plane = 2*tray + botTop - 1;
-    layer = (plane+10)/2 - 5; // homemade "floor"
-    view = ((layer%2==0) ? botTop : (1 - botTop));
+    //int plane = 2*tray + botTop - 1;
+    //layer = (plane+10)/2 - 5; // homemade "floor"
+    //view = ((layer%2==0) ? botTop : (1 - botTop));
+    int plane = trayToPlane(tray, botTop);
+    layer = m_planeToLayer[plane];
+    view  = m_planeToView[plane];
     return;
 }
 
@@ -314,9 +349,13 @@ void TkrGeometrySvc::layerToTray(int layer, int view,
     // Purpose: calculate tray and botTop from layer and view.
     // Method:  use knowledge of the structure of the Tracker
     
-    int plane = (2*layer) + (((layer % 2) == 0) ? (1 - view) : (view));
-    tray = (plane+1)/2;
-    botTop = (1 - (plane % 2));
+    //int plane = (2*layer) + (((layer % 2) == 0) ? (1 - view) : (view));
+    //tray = (plane+1)/2;
+    //botTop = (1 - (plane % 2));
+    int plane = m_layerToPlane[layer][view];
+    tray = planeToTray(plane);
+    botTop = planeToBotTop(plane);
+    return;
 }
 
 
@@ -325,9 +364,11 @@ void TkrGeometrySvc::planeToLayer(int plane,
 {
     // Purpose: calculate tray and botTop from plane
     // Method:  use knowledge of the structure of the Tracker
-        layer = plane/2;
-        int element = (plane+3)%4;
-        view = element/2;
+    //    layer = plane/2;
+    //    int element = (plane+3)%4;
+    //    view = element/2;
+    layer = m_planeToLayer[plane];
+    view  = m_planeToView[plane];
 }
 
 // queryInterface
@@ -386,7 +427,7 @@ StatusCode TkrGeometrySvc::fillLayerZ()
         for (int view=0; view<2; ++view) {
             idents::VolumeIdentifier volId;
             volId.append(m_volId_tower[m_testTower]);
-            volId.append(1); // TKR
+            //volId.append(1); // TKR
             volId.append(m_volId_layer[bilayer][view]);
             if ((sc=m_pDetSvc->getTransform3DByID(volId,&T)).isFailure()) break;
             m_layerZ[bilayer][view] = (T.getTranslation()).z();          
@@ -420,7 +461,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     // don't make any assumptions about the view in the bottom tray
     idents::VolumeIdentifier bottom;
     bottom = m_volId_tower[m_testTower]; // testTower
-    bottom.append(1); // TKR
+    //bottom.append(1); // TKR
     bottom.append(0);                // tray 0
     idents::VolumeIdentifier idBot;
     HepTransform3D botTransform;
@@ -429,7 +470,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         idBot.append(view);          // try both views
         idBot.append(1);             // top silicon (*most* bottom trays have one!)
         idBot.append(0); idBot.append(0);  // wafer
-        //std::cout << "view " << view << " idBot " << idBot.name() << std::endl;
+        std::cout << "view " << view << " idBot " << idBot.name() << std::endl;
         if(sc = m_pDetSvc->getTransform3DByID(idBot, &botTransform).isSuccess()) {
             break;
         }
@@ -455,18 +496,6 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     Point startPoint = Point(xStart, yStart, propTop);
 
     Vector startDir  = Vector(0., 0., -1.);
-
-    int i, ind;
-
-    for(i=0; i<NLAYERS; ++i) {
-        m_radLenConv[i] = 0.;
-        m_radLenRest[i] = 0.;
-    }
-    for (ind=0; ind<NTYPES; ++ind) {
-        m_numLayers[ind]     = 0;
-        m_aveRadLenConv[ind] = 0.;
-        m_aveRadLenRest[ind] = 0.;
-    }
 
     IPropagator* track = m_G4PropTool;
     track->setStepStart(startPoint, startDir);
@@ -517,7 +546,8 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     }
 
     log << MSG::DEBUG;
-
+    int numAll = 0;
+    int i, ind;
     for (i=0; i<NLAYERS; ++i) {
         convType type = getDigiLayerType(i);
         if (type==ABSENT) continue;
@@ -526,7 +556,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         m_numLayers[ind]++;
         m_aveRadLenConv[ind] += radlen;
         m_aveRadLenRest[ind] += m_radLenRest[i];
-        m_numLayers[(int)ALL]++;
+        numAll++;
         m_aveRadLenConv[(int)ALL] += radlen;
         m_aveRadLenRest[(int)ALL] += m_radLenRest[i];
 
@@ -536,6 +566,15 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         }
     }
     log << endreq;
+
+    if(numAll!=m_numLayers[(int)ALL]) {
+        log<< MSG::ERROR << "Inconsistent layer accounting, " 
+            << numAll << " vs " <<m_numLayers[(int)ALL] << endreq;
+        return StatusCode::FAILURE;
+    } else {
+        m_numLayers[(int)ALL] = numAll;
+    }
+
 
 // reverseLayerNumber() starts working here!
 
@@ -624,7 +663,7 @@ StatusCode TkrGeometrySvc::getCalInfo()
         m_pDetSvc->getNumericConstByName("cellVertPitch", &cellVertPitch).isFailure())
     {return StatusCode::FAILURE;}
 
-    //get the top and bottom of the CAL crystals
+    //get the top and bottom of the CAL crystals... why do I need to do this?
 
     int count;
 
@@ -633,8 +672,11 @@ StatusCode TkrGeometrySvc::getCalInfo()
 	// for the moment, I'll just check a few until I get a good one, and if I don't then
 	// I bail... this is a bit of a kludge... seems to work though
 
+    // should check for x or y, and pick the highest
+    // also some sensible action if there is no cal, like set it to lowest tkr plane - 1.
+
     idents::VolumeIdentifier topLayerId;
-    topLayerId.append(m_volId_tower[m_testTower]);
+    topLayerId.append(m_testTowerId);
     topLayerId.append(0);  // CAL
     topLayerId.append(0);  // layer
     topLayerId.append(0);  // x view
@@ -681,4 +723,61 @@ bool TkrGeometrySvc::isInActiveLAT(Point pos) const
     double y = pos.y();
     return (x>getLATLimit(0,LOW) && x<getLATLimit(0,HIGH) 
         && y>getLATLimit(1,LOW) && y<getLATLimit(1,HIGH) ? true : false );
+}
+
+StatusCode TkrGeometrySvc::getVolumeInfo() 
+{
+    StatusCode sc = StatusCode::SUCCESS;
+
+    bool found = false;
+
+    HepTransform3D T;
+    int tower;
+
+    int tray, botTop, layer, view, plane;
+    int layer0 = -1;
+
+    for(tower=0;tower<m_numX*m_numY;++tower) {
+        idents::VolumeIdentifier vId, vId1, vId2, vId3, vIdTest;
+        vId.init(0,0);
+        vId.append(0);               // in Tower
+        idents::TowerId t(tower);  
+        vId.append(t.iy());          // yTower
+        vId.append(t.ix());          // xTower
+        // would be better to have this, but need to check if it will work
+        vIdTest = vId;
+        vId.append(1);             // tracker
+        for(tray=0; tray<NLAYERS+1; ++tray) {
+            vId1 = vId;
+            vId1.append(tray);
+            for(view=0;view<2;++view) {
+                vId2 = vId1;
+                vId2.append(view);
+                for(botTop=0;botTop<2;++botTop) {
+                    vId3 = vId2;
+                    vId3.append(botTop);
+                    vId3.append(0); vId3.append(0);
+                    sc = m_pDetSvc->getTransform3DByID(vId3,&T);
+                    if (sc.isSuccess()) {
+                        found = true;
+                        std::cout << " Id of this element: " << vId3.name() << " exists " << std::endl;
+                        plane = trayToPlane(tray, botTop); // definition
+                        layer = trayToBiLayer(tray, botTop); // definition
+                        if (layer0!=layer) m_numLayers[ALL]++;
+                        m_planeToView[plane] = view;
+                        m_planeToLayer[plane] = layer;
+                        m_layerToPlane[layer][view] = plane;
+                        layer0 = layer;
+                    }
+                }
+            }
+        }
+        if (found) {
+            m_testTower    = tower;
+            m_testTowerId  = vIdTest;
+            sc = StatusCode::SUCCESS;
+            break;
+        }       
+    }
+    return sc;
 }

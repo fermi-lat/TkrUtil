@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.13 2004/05/10 23:58:51 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.14 2004/05/31 22:11:31 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -27,7 +27,7 @@ class TkrGeometrySvc : public Service,
         virtual public ITkrGeometrySvc
 {
 public:
-    enum { NVIEWS=2, NLAYERS=18, NTOWERS=16};
+    enum { NVIEWS=2, NLAYERS=18, NTOWERS=16, NPLANES=36};
     
     TkrGeometrySvc(const std::string& name, ISvcLocator* pSvcLocator); 
     virtual ~TkrGeometrySvc() {}
@@ -143,6 +143,22 @@ public:
     }
     /// return the service type
     const IID& type() const;
+
+        // definitions of plane, layer
+    int trayToPlane(int tray, int botTop) const {
+        return 2*tray + botTop - 1;
+    }
+    int trayToBiLayer(int tray, int botTop) const {
+        return tray + botTop - 1;
+    }
+    int planeToTray(int plane) const {
+        return (plane+1)/2;
+    }
+    int planeToBotTop(int plane) const {
+        return (plane+1)%2;
+    }
+
+
     
 private:
     
@@ -202,6 +218,10 @@ private:
     /// average radlen of the rest
     double m_aveRadLenRest[NTYPES];
 
+    int m_planeToView[NPLANES];
+    int m_planeToLayer[NPLANES];
+    int m_layerToPlane[NLAYERS][NVIEWS];
+
     /// Returns minimum trayHeight... I hope we can stop using this soon
     StatusCode getMinTrayHeight(double& trayHeight);
 
@@ -217,6 +237,8 @@ private:
     /// return converter type for a layer
     convType getDigiLayerType(int digiLayer) const;
 
+    /// find the legal volumes and store the info
+    StatusCode getVolumeInfo();
 
     /// pointer to the detector service
     IGlastDetSvc * m_pDetSvc;
@@ -245,6 +267,8 @@ private:
     ITkrSplitsSvc*      m_tkrSplits;
     /// number of the test tower (used to find zLayer, etc.)
     int m_testTower;
+    /// root for testTower
+    idents::VolumeIdentifier m_testTowerId;
     /// pointer to the ToT service
     ITkrToTSvc*         m_tkrToT;
 

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.3 2004/06/17 04:45:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.4 2004/08/18 00:46:36 lsrea Exp $
 
 */
 
@@ -170,15 +170,11 @@ void TkrSplitsSvc::update(CalibData::TkrSplitsCalib* pSplits)
     log << MSG::INFO << "Splits pointer updated" << endreq;
 }
 
-
 StatusCode TkrSplitsSvc::doInit()
 {
     // Open the message log
     MsgStream log( msgSvc(), name() );
     StatusCode sc = StatusCode::SUCCESS;
-
-    // test of getting TkrGeometrySvc from inside TkrSplitsSvc... It works!
-    //int stripsPerLadder  = m_geoSvc->ladderNStrips();
 
     /*  Keep this for a while
 
