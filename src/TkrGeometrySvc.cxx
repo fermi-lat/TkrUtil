@@ -554,15 +554,19 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         if(id[0]==0 && id[3]==1 && id.size()>6) {
             int tray = id[4];
             int item = id[6];
-            if (item==2 || item==1) {
+            if (item==2 || item==1 || item==0 || item==6) {
                 startCount = true;
             }
             if (!startCount) continue;
-            // only the "top" silicon in each layer is in the same tray as layer
-            // the "bottom" silicon is one tray up
-            // NOT TRUE IN GENERAL!!! NEEDS LOOKING AT!!!
-            int layer = (item==2 || item==6 || item==0) ? tray-1 : tray;
-            if (item==2) { // converter
+            int layer, view;
+            if (item==2 || item==6 || item==0) {
+                // group the converter, biasboard and bottom silicon together
+                // It's the top of the layer in the LAT, not in EGRET
+                trayToLayer(tray, 0, layer, view); 
+            } else { 
+                trayToLayer(tray, 1, layer, view);
+            }
+             if (item==2) { // converter
                 m_radLenConv[layer] = radlen;
                 m_convZ[layer] = stepPoint.z();
             } else {
@@ -934,12 +938,11 @@ int TkrGeometrySvc::getPlane(double z) const
 unsigned int TkrGeometrySvc::getDefaultClusterStatus() const
 {
     using namespace Event;
-    int planeOffset = -trayToPlane(0, 0);
+    int planeOffset = 1 + trayToPlane(0, 0);
     int layerOffset = getLayer(1) - getLayer(0);
     return 
         (layerOffset>0 ? TkrCluster::maskLAYEROFFSET : 0) |
-        (planeOffset>0 ? TkrCluster::maskPLANEOFFSET : 0) |
-        (TkrCluster::maskVERSION&(TkrCluster::VERSION<<TkrCluster::shiftVERSION));
+        (planeOffset>0 ? TkrCluster::maskPLANEOFFSET : 0) ;
 }
 
 double TkrGeometrySvc::truncateCoord( double x, double pitch, 
