@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.2 2003/01/06 18:22:48 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.3 2003/01/15 00:32:31 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -141,7 +141,7 @@ void TkrFailureModeSvc::processTowerList() {
 bool TkrFailureModeSvc::towerFailed(int tower) {
     bool found = false;
     // Search to see if this event id is among the list of ids we want to pause on
-    int *loc = std::find(m_towerList.begin(), m_towerList.end(), tower);                
+    std::vector<int>::iterator loc = std::find(m_towerList.begin(), m_towerList.end(), tower);                
     return (loc != m_towerList.end());
 }
 
