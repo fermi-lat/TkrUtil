@@ -392,9 +392,15 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
 
     // this is always above the tracker
     double propTop = stayClear+zBot;
-    Point startPoint = Point(40., 40., propTop);
 
-    //Point startPoint = Point(40., 40., 640.);
+    // need to do the swim through the test tower
+    idents::TowerId tTower = idents::TowerId(m_testTower);
+    int xTower = tTower.ix();
+    int yTower = tTower.iy();
+    double xStart = (xTower - 0.5*(numXTowers()-1))*towerPitch() + 40.;
+    double yStart = (yTower - 0.5*(numYTowers()-1))*towerPitch() + 40.;
+    Point startPoint = Point(xStart, yStart, propTop);
+
     Vector startDir  = Vector(0., 0., -1.);
 
     int i, ind;
