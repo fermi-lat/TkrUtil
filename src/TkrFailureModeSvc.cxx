@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.15 2004/09/18 18:05:14 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.16 2004/10/12 19:04:55 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -114,10 +114,11 @@ StatusCode TkrFailureModeSvc::update(CalibData::BadStrips* pDead, CalibData::Bad
     log << MSG::INFO << "Updater called" << endreq;
     //StatusCode sc = doInit();
     if (!m_existsList) {
-        pDead->traverse(m_visitor);
-        pHot->traverse(m_visitor);
-        if(m_towerList.size()) m_failureModes = 1<<TOWER_SHIFT;
-        if(m_layerList.size()) m_failureModes = 1<<LAYER_SHIFT;
+        if (pDead) pDead->traverse(m_visitor);
+        if (pHot)  pHot->traverse(m_visitor);
+        m_failureModes = 0;
+        if(m_towerList.size()) m_failureModes |= 1<<TOWER_SHIFT;
+        if(m_layerList.size()) m_failureModes |= 1<<LAYER_SHIFT;
     } else {
         log << MSG::INFO << "No update done -- layer and tower list is being used instead" << endreq;
     }

@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.6 2004/09/07 21:20:32 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.7 2005/02/11 07:12:54 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -192,9 +192,9 @@ StatusCode TkrCalibAlg::execute( ) {
     // check the dead channels
 
     //    SmartDataPtr<CalibData::BadStrips> pDead(m_pCalibDataSvc, "");
-    CalibData::BadStrips* pDead; //  = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, "");
+    CalibData::BadStrips* pDead = 0; //  = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, "");
     if(m_deadStripsFlavor!="ideal" && m_deadStripsFlavor!="") {
-        std::string fullDeadPath = "/Calib/TKR_DeadChan/"+m_flavor;
+        std::string fullDeadPath = "/Calib/TKR_DeadChan/"+m_deadStripsFlavor;
         pDead = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullDeadPath);
         if (!pDead) {
             log << MSG::ERROR 
@@ -227,9 +227,9 @@ StatusCode TkrCalibAlg::execute( ) {
     // now the hot channels
 
     //    SmartDataPtr<CalibData::BadStrips>pHot(m_pCalibDataSvc, "");
-    CalibData::BadStrips* pHot; // = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, "");
+    CalibData::BadStrips* pHot = 0; // = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, "");
     if(m_hotStripsFlavor!="ideal" && m_hotStripsFlavor!="") {
-        std::string fullHotPath = "/Calib/TKR_HotChan/"+m_flavor;
+        std::string fullHotPath = "/Calib/TKR_HotChan/"+m_hotStripsFlavor;
         pHot = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullHotPath);
         if (!pHot) {
             log << MSG::ERROR 
@@ -337,6 +337,10 @@ StatusCode TkrCalibAlg::execute( ) {
            // last thing, pass pointer to TkrSplitsSvc
            m_pTkrToTSvc->update(pToT);
         }
+    }
+    // now muon calibration
+    if(m_muonFlavor!="ideal" && m_muonFlavor!="") {
+        // muon code here!
     }
 
     return StatusCode::SUCCESS;

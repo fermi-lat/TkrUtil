@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrBadStripsSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.6 2004/08/24 23:45:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.7 2004/12/26 23:27:13 lsrea Exp $
 */
 
 
@@ -29,7 +29,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.6 2
 //             Leon Rochester, 3-June-2001
 //----------------------------------------------
 
-static const InterfaceID IID_ITkrBadStripsSvc("ITkrBadStripsSvc", 3 , 0); 
+static const InterfaceID IID_ITkrBadStripsSvc("ITkrBadStripsSvc", 4 , 0); 
 
 /// A small class to define tagged strips 
 class TaggedStrip 
@@ -99,9 +99,9 @@ public:
     virtual void setBadClusterCol(Event::TkrClusterCol* pClus) = 0;
     virtual void setBadIdClusterMap(Event::TkrIdClusterMap* pMap) = 0;
 
-    virtual Event::TkrDigiCol*      getBadDigiCol() const = 0;
     virtual Event::TkrClusterCol*   getBadClusterCol() const = 0;
     virtual Event::TkrIdClusterMap* getBadIdClusterMap() const = 0;
+    virtual StatusCode makeBadDigiCol(Event::TkrDigiCol* pDigis) = 0;
  };
 
 #endif

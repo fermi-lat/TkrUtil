@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.11 2005/02/11 07:12:54 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.12 2005/02/25 16:20:29 usher Exp $
 
 // Include files
 
@@ -55,7 +55,9 @@ public:
         const std::string& name, 
         const IInterface* parent);
     
-    virtual ~TkrQueryClustersTool() { }
+    virtual ~TkrQueryClustersTool() {
+        if(!m_nullVec) delete m_nullVec;
+    }
 
     StatusCode initialize();
     
@@ -129,15 +131,19 @@ private:
     ITkrGeometrySvc*  m_tkrGeom;
     /// pointer to event data service
     IDataProviderSvc* m_pEventSvc;
+    /// pointer to badStripsSvc
+    ITkrBadStripsSvc* m_pBadStrips;
     /// save test distance
     double m_testDistance;
     /// current pointer
-    mutable Event::TkrIdClusterMap* m_idClusMap;
+    mutable Event::TkrIdClusterMap* m_idClusMap; 
     /// same for bad clusters
     mutable Event::TkrIdClusterMap* m_badIdClusMap;
 
     /// THE table of life
     mutable TkrViewLayerIdMap m_ViewLayerIdMap;
+    /// something to return if there are no clusters
+    Event::TkrClusterVec* m_nullVec;
 };
 
 // Static factory for instantiation of algtool objects
@@ -155,6 +161,7 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
 
     //m_pClus     = 0;
     m_idClusMap = 0;
+    m_nullVec   = 0;
     m_ViewLayerIdMap.clear();
 }
 
@@ -171,11 +178,9 @@ StatusCode TkrQueryClustersTool::initialize()
             return sc;
         }
 
-        ITkrBadStripsSvc* pBadStrips = m_tkrGeom->getTkrBadStripsSvc();
+        m_pBadStrips = m_tkrGeom->getTkrBadStripsSvc();
         m_badIdClusMap = 0;
-        if(pBadStrips) {
-            m_badIdClusMap = pBadStrips->getBadIdClusterMap();
-        }
+        m_nullVec = new Event::TkrClusterVec;
 
         // test distance (in unmeasured view)
         m_testDistance = _towerFactor*m_tkrGeom->towerPitch();
@@ -226,7 +231,7 @@ bool TkrQueryClustersTool::validLayer(int layer, clusterType type) const
         m_idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
             EventModel::TkrRecon::TkrIdClusterMap);
     } else {
-        m_idClusMap = m_badIdClusMap;
+        m_idClusMap = m_pBadStrips->getBadIdClusterMap();
     }
 
     // check for valid layer
@@ -284,6 +289,7 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
 
         const Event::TkrClusterVec newClus = (*idClusMap)[newId];
 
+        int size = clusVec.size();
         clusVec.insert(clusVec.end(),newClus.begin(),newClus.end());
     }
 
@@ -308,10 +314,15 @@ const Event::TkrClusterVec& TkrQueryClustersTool::getClustersX(
      if(type==STANDARDCLUSTERS) {
         m_idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
             EventModel::TkrRecon::TkrIdClusterMap);
-    return (*m_idClusMap)[tkrId];
-    } else {
-        return (*m_badIdClusMap)[tkrId];
-    }
+        return (*m_idClusMap)[tkrId];
+     } else {
+         if (m_pBadStrips->getBadIdClusterMap()){
+             int size = (m_pBadStrips->getBadIdClusterMap())->size();
+             return ( size ? (*(m_pBadStrips->getBadIdClusterMap()))[tkrId] : *m_nullVec);
+         } else {
+             return *m_nullVec;
+         }
+     }
 }
 
 Point TkrQueryClustersTool::nearestHitOutside(
@@ -380,7 +391,7 @@ Event::TkrCluster* TkrQueryClustersTool::nearestClusterOutsideX(
     
     if (!validLayer(layer, type)) return nearCluster;
 
-    const Event::TkrClusterVec clusters = getClusters(view, layer);
+    const Event::TkrClusterVec clusters = getClustersX(view, layer, type);
     int nhits = clusters.size();
     if (nhits == 0) return nearCluster;
     

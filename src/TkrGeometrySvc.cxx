@@ -61,30 +61,30 @@ StatusCode TkrGeometrySvc::initialize()
     // these are the Id's for the 15 towers, with just the first 3 fields
     initializeArrays();
 
-    // getTestTower checks to see if there is a "bottom Tray"
-    // this is crucial for numbering of the planes, 
-    //    so must be done before anything else!!!
+    // this can be early, no magic in here!
+    makeTowerIds();
+
+    // getTestTower finds an existing tower 
+    // and checks to see if there is a "bottom Tray".
+
     sc = getTestTower();
     if( sc.isFailure()) {
         log << MSG::ERROR << "Failed to find test tower"<< endreq;
         return sc;
     }
 
+    // find the planes, associate them with layers, check for "top Tray"
     sc = getVolumeInfo();
     if( sc.isFailure()) {
         log << MSG::ERROR << "Failed to find correct volumes for tracker"<< endreq;
         return sc;
     }
 
+    // now we know what the layers are, so:
+    makeLayerIds();
+
     // number of layers is now known...
     // but will get be calculated another way later... the two *should* agree!
-    makeTowerIds();
-
-    //sc = getTestTower();
-    //if( sc.isFailure()) {
-    //    log << MSG::ERROR << "Failed to find test tower"<< endreq;
-    //    return sc;
-    //}
 
     sc  = getTowerLimits();
 
@@ -101,8 +101,6 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
         return sc;
     }
-
-    makeLayerIds();
 
     // the minimum "trayHeight" (actually tray pitch)
     // uses planeZ info, so must follow call to fillPlaneZ()
@@ -186,32 +184,32 @@ HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view,
 }
 
 
-void TkrGeometrySvc::trayToLayer(int tray, int botTop, 
+void TkrGeometrySvc::trayToLayer(int tray, int face, 
                                  int& layer, int& view) const
 {
-    // Purpose: calculate layer and view from tray and botTop
+    // Purpose: calculate layer and view from tray and face
     // Method: use knowledge of the structure of the Tracker
 
-    int plane = trayToPlane(tray, botTop);
+    int plane = trayToPlane(tray, face);
     layer = m_planeToLayer[plane];
     view  = m_planeToView[plane];
     return;
 }
 
 void TkrGeometrySvc::layerToTray(int layer, int view, 
-                                 int& tray, int& botTop) const
+                                 int& tray, int& face) const
 {   
-    // Purpose: calculate tray and botTop from layer and view.
+    // Purpose: calculate tray and face from layer and view.
     // Method:  use knowledge of the structure of the Tracker
 
     int plane = m_layerToPlane[layer][view];
     if (plane==-1) {
         tray = -1;
-        botTop = -1;
+        face = -1;
         return;
     }
     tray = planeToTray(plane);
-    botTop = planeToBotTop(plane);
+    face = planeToBotTop(plane);
     return;
 }
 
@@ -219,7 +217,7 @@ void TkrGeometrySvc::layerToTray(int layer, int view,
 void TkrGeometrySvc::planeToLayer(int plane, 
                                   int& layer, int& view) const
 {
-    // Purpose: calculate tray and botTop from plane
+    // Purpose: calculate tray and face from plane
     // Method:  use knowledge of the structure of the Tracker
     layer = m_planeToLayer[plane];
     view  = m_planeToView[plane];
@@ -359,13 +357,13 @@ StatusCode TkrGeometrySvc::getTowerLimits()
         volId.init(0,0);
         volId.append(m_volId_tower[tower]);
         int tray;
-        int botTop;
-        layerToTray(0, 0,tray, botTop);
-        if(tray==-1) layerToTray(0, 1, tray, botTop);
+        int face;
+        layerToTray(0, 0,tray, face);
+        if(tray==-1) layerToTray(0, 1, tray, face);
         // get the right combination for this plane...
         volId.append(tray);
         volId.append(0);
-        volId.append(botTop);
+        volId.append(face);
         volId.append(0); volId.append(0); // ladder and wafer
         sc = m_pDetSvc->getTransform3DByID(volId,&T);
         if (sc.isSuccess()) {
@@ -424,13 +422,13 @@ void TkrGeometrySvc::makeTowerIds()
     int tower;
     for(tower=0;tower<m_numX*m_numY;++tower) {
         idents::VolumeIdentifier vId;
+        vId.init(0,0);
         vId.append(0);               // in Tower
         idents::TowerId t(tower);  
         vId.append(t.iy());          // yTower
         vId.append(t.ix());          // xTower
         vId.append(1);               // Tracker
-        m_volId_tower[tower].init(0,0);  
-        m_volId_tower[tower].append(vId);
+        m_volId_tower[tower] = idents::VolumeIdentifier(vId);
     }
 }
 
@@ -440,14 +438,14 @@ void TkrGeometrySvc::makeLayerIds()
     for(bilayer=0;bilayer<numLayers();++bilayer) {
         for (view=0; view<NVIEWS; ++view) {
             int tray;
-            int botTop;            
+            int face;            
             m_volId_layer[bilayer][view].init(0,0);
-            layerToTray(bilayer, view, tray, botTop);
+            layerToTray(bilayer, view, tray, face);
             if (tray==-1) continue;
             idents::VolumeIdentifier vId;
             vId.append(tray);
             vId.append(view);
-            vId.append(botTop);
+            vId.append(face);
             vId.append(0); vId.append(0); // ladder and wafer
 
             m_volId_layer[bilayer][view].append(vId);
@@ -788,34 +786,25 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
 {
     StatusCode sc = StatusCode::SUCCESS;
 
+    HepTransform3D T;
     bool found = false;
 
-    HepTransform3D T;
-    int tower;
-
-    //move  thru the planes in order, find their z postions, and assign them to layers
-    int tray, botTop, layer, view;
+    int tray, face, layer, view;
     int lastTray, lastFace, lastPlane;
     int plane = 0;
+    idents::VolumeIdentifier vId, vId1, vId2;
 
-    tower = m_testTower;
-    idents::VolumeIdentifier vId, vId1, vId2, vIdTest;
-    vId.init(0,0);
-    vId.append(0);               // in Tower
-    idents::TowerId t(tower);  
-    vId.append(t.iy());          // yTower
-    vId.append(t.ix());          // xTower
-    // would be better to have this, but need to check if it will work
-    vIdTest = vId;
-    vId.append(1);             // tracker
-    for(tray=0; tray<NLAYERS+1; ++tray) {
-        vId1 = vId;
+    //move  thru the planes in order, find their z postions, and assign them to layers
+    int bigNum = 100;
+    for(tray=0; tray<bigNum; ++tray) {
+        vId1 = m_testTowerId;
         vId1.append(tray);
-        for(botTop=0;botTop<2;++botTop) { // sequential order: tray, botTop
+        found = false;
+        for(face=0;face<2;++face) { // sequential order: tray, face
             for (view=0;view<2;++view) {
                 vId2 = vId1;
                 vId2.append(view);
-                vId2.append(botTop);
+                vId2.append(face);
                 vId2.append(0); vId2.append(0);
                 sc = m_pDetSvc->getTransform3DByID(vId2,&T);
                 if (sc.isSuccess()) {
@@ -823,12 +812,14 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
                     m_planeZ[plane] = (T.getTranslation()).z();
                     m_planeToView[plane] = view;
                     lastTray = tray;
-                    lastFace = botTop;
+                    lastFace = face;
                     lastPlane = plane;
                     ++plane; // just count up from the bottom, numbering planes sequentially
                 }
             }
         }
+        // bail as soon as a non-existent tray is found
+        if(!found) break;
     }
     m_topTrayNumber = ( (lastFace==0 && lastTray>0) ? lastTray : -1);
     m_numPlanes     = plane; // it's one more than the last plane number!
@@ -864,48 +855,33 @@ StatusCode TkrGeometrySvc::getTestTower()
     bool found = false;
 
     HepTransform3D T;
-    int tower;
+    int tower, tray, face, view;
 
-    int tray, botTop, view;
-    //int layer0 = -1;
+    for(tower=0;tower<m_numX*m_numY && !found;++tower) {
+        idents::VolumeIdentifier vId, vId1;
+        vId = m_volId_tower[tower];
 
-    for(tower=0;tower<m_numX*m_numY;++tower) {
-        idents::VolumeIdentifier vId, vId1, vId2, vId3, vIdTest;
-        vId.init(0,0);
-        vId.append(0);               // in Tower
-        idents::TowerId t(tower);  
-        vId.append(t.iy());          // yTower
-        vId.append(t.ix());          // xTower
-        // would be better to have this, but need to check if it will work
-        vIdTest = vId;
-        vId.append(1);             // tracker
-        for(tray=0; tray<NLAYERS+1; ++tray) { // what does it mean if the 1st layer fails???
-            vId1 = vId;
-            vId1.append(tray);
-            for(view=0;view<2;++view) {
-                vId2 = vId1;
-                vId2.append(view);
-                for(botTop=0;botTop<2;++botTop) {
-                    vId3 = vId2;
-                    vId3.append(botTop);
-                    vId3.append(0); vId3.append(0);
-                    sc = m_pDetSvc->getTransform3DByID(vId3,&T);
-                    if (sc.isSuccess()) {
-                        found = true;
-                        break;
-                    }
+        // whatever happens there *has* to be a tray 0!
+        // might not be a "real" bottom tray though.
+        tray = 0;
+        for(view=0; view<2&&!found; ++view) {
+             for(face=0; face<2&&!found; ++face) {
+                vId1 = vId;
+                vId1.append(tray);
+                vId1.append(view);
+                vId1.append(face);
+                vId1.append(0); vId1.append(0);
+                sc = m_pDetSvc->getTransform3DByID(vId1,&T);
+                if (sc.isSuccess()) {
+                    found = true;
+                    m_testTower    = tower;
+                    m_testTowerId  = vId;
+                    sc = StatusCode::SUCCESS;
+                    m_bottomTrayNumber = ( (tray==0 && face==1) ? tray : -1);
+                    break;
                 }
-                if (found) break;
             }
-            if (found) break;
         }
-        if (found) {
-            m_testTower    = tower;
-            m_testTowerId  = vIdTest;
-            sc = StatusCode::SUCCESS;
-            m_bottomTrayNumber = ( (tray==0 && botTop==1) ? tray : -1);
-            break;
-        }       
     }
     return sc;
 }
@@ -915,7 +891,7 @@ int TkrGeometrySvc::getPlaneSeparation(const idents::TkrId& id1, const idents::T
     // returns number of planes between two objects specified by TkrIds.
     //   -1 means number cannot be determined
 
-    // Really don't even need tower values. A TkrId with only tray and botTop will have
+    // Really don't even need tower values. A TkrId with only tray and face will have
     //    a plane associated with it.
 
     int nDiff = -1;
@@ -967,72 +943,4 @@ double TkrGeometrySvc::truncateCoord( double x, double pitch,
     elementNumber = std::max(std::min(elementNumber, numElements-1),0);
     if (reverse) elementNumber = numElements - 1 - elementNumber;
     return pitch*(xMod - theFloor - 0.5);
-}
-
-bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower, 
-                             double& xActiveDist, double& yActiveDist, 
-                             double& xGap, double& yGap) const
-{
-    // input: view, Point
-    // returns: inTower, iXTower, iYTower, xActiveDist, yActiveDist,
-    //          xGap, yGap
-
-    // If inTower, x/yActiveDist is distance from activeWafer edge
-    // else, it's distance from entire active silicon plane
-
-    double twrPitch = towerPitch();
-    int numX = numXTowers();
-    int numY = numYTowers();
-    bool isInTower = true;
-    double xTower = truncateCoord(p.x(), twrPitch, numX, iXTower);
-    double yTower = truncateCoord(p.y(), twrPitch, numY, iYTower);
-    // check if the point is in an inter-tower gap
-    int nWafer = nWaferAcross();
-    double xPitch, yPitch, xSiGap, ySiGap;
-    double deadGap = siDeadDistance();
-    if (view==0) {
-        xPitch = ladderPitch();
-        yPitch = waferPitch();
-        xSiGap   = ladderGap();
-        ySiGap   = ladderInnerGap();
-    } else {
-        yPitch = ladderPitch();
-        xPitch = waferPitch();
-        ySiGap   = ladderGap();
-        xSiGap   = ladderInnerGap();
-    }
-
-    // if these are negative, track misses active area of tower
-    // probably no point in constraining hit in this plane
-    xGap = xSiGap + 2*deadGap;
-    yGap = ySiGap + 2*deadGap;
-    xActiveDist = 0.5*(nWafer*xPitch + xGap) - fabs(xTower); 
-    yActiveDist = 0.5*(nWafer*yPitch + yGap) - fabs(yTower);
-    if (xActiveDist>0 && yActiveDist>0) { // test for "inside active Tower"
-        // look for internal gaps
-        double xWafer, yWafer;
-        int iXWafer, iYWafer;
-        xWafer = truncateCoord(xTower, xPitch, nWafer, iXWafer);
-        yWafer = truncateCoord(yTower, yPitch, nWafer, iYWafer);
-
-        double activeWaferSide = siActiveWaferSide();
-        xActiveDist = 0.5*activeWaferSide - fabs(xWafer);
-        yActiveDist = 0.5*activeWaferSide - fabs(yWafer);
-    } else {
-        // towerGap is big, so no point in keeping 2 versions
-        double towerGap    = twrPitch - nWafer*xPitch + xGap;
-
-        // note that if we are on the outside of an edge tower the "gap" 
-        // is infinite, but the simple intertower gap is effectively infinite
-        // as far as the fit is concerned, so it shouldn't matter.
-        isInTower = false;
-        if (xActiveDist<0 ) {
-            yGap = twrPitch;
-            xGap = (yActiveDist<0 ? twrPitch : towerGap);
-        } else {
-            xGap = twrPitch;
-            yGap = towerGap;
-        }
-    }
-    return isInTower;
 }

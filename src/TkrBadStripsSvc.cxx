@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.16 2004/12/26 23:27:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.17 2005/01/03 23:22:44 lsrea Exp $
 */
 
 
@@ -14,8 +14,13 @@
 #include "GaudiKernel/SvcFactory.h"
 #include "src/TkrBadStripsSvc.h"
 #include "idents/TowerId.h"
+#include "TkrUtil/ITkrMakeClustersTool.h"
+
+#include "Event/Digi/TkrDigi.h"
+#include "Event/Recon/TkrRecon/TkrCluster.h"
 
 #include "GaudiKernel/SmartDataPtr.h"
+#include "GaudiKernel/IToolSvc.h"
 
 #include <algorithm>
 #include <iostream>
@@ -49,6 +54,15 @@ StatusCode TkrBadStripsSvc::initialize()
     MsgStream log(msgSvc(), name());
 
     Service::initialize();
+
+    m_tkrGeom = 0;
+    sc = service("TkrGeometrySvc", m_tkrGeom, true);
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+            << "Could not get TkrGeometrySvc" 
+            << endreq;
+        return sc;
+    }
 
     if(m_visitor==0) {
         m_visitor = new BadVisitor;
@@ -101,13 +115,12 @@ StatusCode TkrBadStripsSvc::doInit()
     
     StatusCode sc = StatusCode::SUCCESS;
 
-    sc = service("TkrGeometrySvc", m_tkrGeom, true);
-    if ( !sc.isSuccess() ) {
-        log << MSG::ERROR 
-            << "Could not get TkrGeometrySvc" 
-            << endreq;
-        return sc;
-    }
+        Event::TkrClusterCol* pClusters = new Event::TkrClusterCol(0);
+        Event::TkrIdClusterMap* pMap = new Event::TkrIdClusterMap;
+        setBadClusterCol(pClusters);
+        int size = pMap->size();
+        setBadIdClusterMap(pMap);
+
     
     // If there is no bad strips file, service will do nothing
     if (m_badStripsFile=="") {        
@@ -128,11 +141,11 @@ StatusCode TkrBadStripsSvc::doInit()
     //makeCol(size);
     
     readFromFile(&file);
+
+    sc = generateBadClusters();
     
     file.close();
     
-    sc = makeBadDigiCol();
-
     return sc;
 }
 
@@ -142,13 +155,6 @@ StatusCode TkrBadStripsSvc::finalize()
     return StatusCode::SUCCESS;
 }
 
-/*void TkrBadStripsSvc::makeCol(const int size)
-{
-//    m_stripsCol.assign(size);
-//  return;
-}
-*/
-
 StatusCode TkrBadStripsSvc::update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot)
 {
     MsgStream log(msgSvc(), name());
@@ -156,13 +162,49 @@ StatusCode TkrBadStripsSvc::update(CalibData::BadStrips* pDead, CalibData::BadSt
     m_visitor->setLog(&log);
     log << MSG::INFO << "Updater called " << endreq;
     if (m_badStripsFile=="") {
-        pDead->traverse(m_visitor);
-        pHot->traverse(m_visitor);
+        if( pDead) pDead->traverse(m_visitor);
+        if (pHot)  pHot->traverse(m_visitor);
         m_empty = m_empty && m_visitor->isEmpty();
     } else {
         log << MSG::INFO 
             << "No update done -- badStripsFile is being used instead" << endreq;
     }
+
+    // generate bad clusters if there's been an update
+    // this is probably the place to do it.
+    sc = generateBadClusters();
+    return sc;
+}
+StatusCode TkrBadStripsSvc::generateBadClusters()
+{
+    StatusCode sc = StatusCode::SUCCESS;
+    MsgStream log(msgSvc(), name());
+
+    if(m_empty) { return sc; }
+
+    IToolSvc* toolSvc = 0;
+    if (sc = service("ToolSvc",toolSvc, true).isFailure() ){
+        log << MSG::ERROR << "Couldn't fine ToolSvc" << endreq; 
+    }
+
+    Event::TkrDigiCol* pDigis = new Event::TkrDigiCol;
+    makeBadDigiCol(pDigis); // deletes old one if it exists
+    if (pDigis) {
+        Event::TkrClusterCol* pClusters = new Event::TkrClusterCol(0);
+        Event::TkrIdClusterMap* pMap = new Event::TkrIdClusterMap;
+
+        ITkrMakeClustersTool* pMakeClusters;
+        if (toolSvc->retrieveTool("TkrMakeClustersTool", pMakeClusters).isFailure()) {
+            log << MSG::ERROR << "Couldn't retrieve TkrMakeClusterTool" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        pMakeClusters->makeClusters(pClusters, pMap, pDigis, BADCLUSTERS);
+        setBadClusterCol(pClusters);
+        int size = pMap->size();
+        setBadIdClusterMap(pMap);
+    }
+
     return sc;
 }
 
@@ -343,12 +385,14 @@ bool TkrBadStripsSvc::empty() const
     return m_empty;
 }
 
-StatusCode TkrBadStripsSvc::makeBadDigiCol() 
+StatusCode TkrBadStripsSvc::makeBadDigiCol(Event::TkrDigiCol* pDigis) 
 { 
     MsgStream log( msgSvc(), name() );
 
     // loop over all the bad strips and make an empty digi for each plane
-    m_pBadDigi = new Event::TkrDigiCol(0);
+    if (m_pBadDigi) { delete m_pBadDigi; }
+
+    m_pBadDigi = pDigis;
     int tower, layer, view;
     for (tower=0; tower<NTOWERS; ++tower) {
         for (layer=0; layer<NLAYERS; ++layer) {
@@ -362,8 +406,7 @@ StatusCode TkrBadStripsSvc::makeBadDigiCol()
             }
         }
     }
-
-    log << MSG::INFO << m_pBadDigi->size() <<" fake digis generated " << endreq;
+    log << MSG::INFO << m_pBadDigi->size() <<" digis created for bad cluster processing" << endreq;
 
     return StatusCode::SUCCESS;
 }

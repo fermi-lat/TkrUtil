@@ -9,7 +9,16 @@
 
   On main branch
   ------------------------------
+  v3r3     28-Feb-05 LSR TkrBadStripsSvc -- get DB working again
+                         TkrCalibSvc -- everything but muon calib in place
+                         TkrGeomSvc -- get rid of inTower(); some rearranging
+                         TkrQueryClusters -- speedup (thanks, Tracy)
+                         TkrFailureModeSvc -- fix setting of bits
+                         TkrMakeClustersSvc -- replacement for TkrRecon/TkrMakeClusters
+                             does both good and bad clusters
+  v3r2p4   28-Feb-05 LSR tag tracy's fix to queryclustrstool
   v3r2p3   21-Feb-05 LSR fix generation of CAL volId... affects CalValsTool, etc.
+
   v3r2p2   14-Feb-05 LSR fix a (probably) harmless uninitialized pointer
   v3r2p1   11-Feb-05 LSR Remove random character introduced into test program
                             and old bug in TkrGeometrySvc

@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.22 2005/01/17 19:14:56 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.23 2005/02/05 02:11:22 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -228,9 +228,6 @@ public:
 
     double truncateCoord( double x, double pitch, 
         int numElements, int& elementNumber, bool reverse = false) const;
-
-    bool inTower(int view, const Point p, int& iXTower, int& iYTower,
-        double& xActiveDist, double& yActiveDist, double& xGap, double &yGap) const;
 
 private:
     

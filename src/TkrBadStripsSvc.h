@@ -6,9 +6,8 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.8 2004/10/12 19:04:55 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.9 2004/12/26 23:27:13 lsrea Exp $
 */
-
 
 #ifndef TKRBADSTRIPSSVC_H
 #define TKRBADSTRIPSSVC_H 
@@ -83,7 +82,9 @@ namespace {
         void setService(ITkrGeometrySvc*       tkrGeom)    {m_tkrGeom    = tkrGeom;}
 
         bool isEmpty() { return m_nStrips==0; }
-        
+        // manipulate flags to trigger generation of bad clusters
+        bool generateBadClusters();
+ 
     private:
         MsgStream* m_log;
         ITkrBadStripsSvcCalib* m_pBadStrips;
@@ -91,7 +92,6 @@ namespace {
         int m_nStrips;
     };
 }
-
 
 class TkrBadStripsSvc : public Service, virtual public ITkrBadStripsSvcCalib,
 virtual public ITkrBadStripsSvc
@@ -131,12 +131,20 @@ public:
     bool empty() const;
 
     // for bad clusters
-    void  setBadClusterCol(Event::TkrClusterCol* pClus)    { m_pBadClus = pClus; }
-    void  setBadIdClusterMap(Event::TkrIdClusterMap* pMap) { m_pBadMap = pMap; }
+    void  setBadClusterCol(Event::TkrClusterCol* pClus)    {
+        if (m_pBadClus)  {delete m_pBadClus;}
+        m_pBadClus = pClus; 
+    }
+    void  setBadIdClusterMap(Event::TkrIdClusterMap* pMap) {
+        if(m_pBadMap) { delete m_pBadMap;}
+        m_pBadMap = pMap; 
+    }
+
     Event::TkrClusterCol*  getBadClusterCol() const    { return m_pBadClus; }
     Event::TkrIdClusterMap* getBadIdClusterMap() const { return m_pBadMap; }
-    Event::TkrDigiCol* getBadDigiCol() const           { return m_pBadDigi; }
-    
+    //Event::TkrDigiCol* getBadDigiCol() const           { return m_pBadDigi; }
+    StatusCode makeBadDigiCol(Event::TkrDigiCol* pDigis);
+
     /// called by TrkCalibAlg to cause an update of the strip lists
     StatusCode update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot);
 
@@ -151,16 +159,15 @@ public:
     const IID& type() const;   
     
 private:
-	
-    
+	  
     //void makeCol(const int size); // left over from original attempt
     
     /// reads bad strips from file file
     void readFromFile(std::ifstream* file);
 	
     StatusCode doInit();
-	
-    StatusCode makeBadDigiCol();
+
+    StatusCode generateBadClusters() ;    	
 	
     /// File name for constants
     std::string m_badStripsFile;  
@@ -180,6 +187,7 @@ private:
     Event::TkrDigiCol*      m_pBadDigi;
     Event::TkrClusterCol*   m_pBadClus;
     Event::TkrIdClusterMap* m_pBadMap;
+    mutable bool m_generateBadClusters;
 };
 
 //! Fill the ASCII output stream
