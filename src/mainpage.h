@@ -56,12 +56,18 @@
  * An xml file containing non-standard values may be specified 
  * in the jobOptions. Eventually this will be part of the calibration system (?)
  *
+ * @section TkrToTSvc TkrToTSvc
+ * TkrToTSvc maintains the ToT thresholds and gains for each strip in the detector. The default
+ * settings are: all strips the same, and set to produce the same result as before this
+ * service was introduced.
+ *
  * @section TkrGeometrySvc TkrGeometrySvc
  * TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
  * with TKR geometry.
  *
  * In addition, it stores pointers for TkrFailureModeSvc, TkrAlignmentSvc, and
- * TkrBadStripsSvc, and GlastPropagatorSvc, which simplifies a lot of code, since many modules that use
+ * TkrBadStripsSvc, TkrSplitsSvc, TkrToTSvc, and GlastPropagatorSvc, which simplifies a lot of code, 
+ * since many modules that use
  * the geometry use the other services as well.
  *
  * @section TkrQueryClustersTool TkrQueryClustersTool
@@ -91,6 +97,15 @@
  * @param TkrSplitsSvc.splitsFile
  * The name of the xml file containing a list of splits. See
  * /src/test/splits.xml in this package for the format of the file.
+ * @param TkrToTSvc.ToTFile
+ * The name of the file containing the thresholds and gains. Currently
+ * has no effect.
+ * @param TkrToTSvc.defaultThreshold
+ * For ideal mode, all thresholds are set to this value 
+ * (default = -2.92 microsec/fC).
+ *
+ * @param TkrToTSvc.defaultGain
+ * For ideal mode, all gains are set to this value (default = 2.50267833 microsec/fC)
  *
  * @param TkrAlignmentSvc.simFile
  * The name of the file containing the alignment constants to be used
