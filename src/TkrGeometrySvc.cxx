@@ -84,17 +84,11 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::INFO << "ToolSvc not found" << endreq;
         return sc; 
     }   
-    
-    // do this first
-    sc = fillPropagatorInfo(); 
-    if( sc.isFailure()) {
-        log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
-        return sc;
-    }
-        
-    // fill up the m_volId arrays, used for providing volId prefixes
-    
-    for(int tower=0;tower<m_numX*m_numY;tower++) {
+
+    // fill up the m_volId tower arrays, used for providing volId prefixes
+
+    int tower;
+    for(tower=0;tower<m_numX*m_numY;++tower) {
         idents::VolumeIdentifier vId;
         vId.append(0);               // in Tower
         idents::TowerId t(tower);  
@@ -104,10 +98,42 @@ StatusCode TkrGeometrySvc::initialize()
         m_volId_tower[tower].init(0,0);  
         m_volId_tower[tower].append(vId);
     }
-    
+ 
+    // find the test tower
+    HepTransform3D T;
+    for (tower=0;tower<m_numX*m_numY;++tower) {
+        idents::VolumeIdentifier volId;
+        volId.init(0,0);
+        volId.append(m_volId_tower[tower]);
+
+        int tray;
+        int botTop;
+        layerToTray(0, 0,tray, botTop);
+        volId.append(tray);
+        volId.append(0);
+        volId.append(botTop);
+        volId.append(0); volId.append(0); // ladder and wafer
+        sc = m_pDetSvc->getTransform3DByID(volId,&T);
+        if (sc.isFailure()) continue;
+        m_testTower = tower;
+        break;
+    }
+    if( sc.isFailure()) {
+        // for now, just fail; might be more clever later
+        log << MSG::ERROR << "Failed to find any tower... check geometry!"<< endreq;
+        return sc;
+    }
+
+    sc = fillPropagatorInfo(); 
+    if( sc.isFailure()) {
+        log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
+        return sc;
+    }
+   
     int bilayer;
-    for(bilayer=0;bilayer<numLayers();bilayer++) {
-        for (int view=0; view<2; view++) {
+    int view;
+    for(bilayer=0;bilayer<numLayers();++bilayer) {
+        for (view=0; view<2; ++view) {
             int tray;
             int botTop;            
             layerToTray(bilayer, view, tray, botTop);
@@ -292,13 +318,12 @@ StatusCode TkrGeometrySvc::fillLayerZ()
     StatusCode sc = StatusCode::SUCCESS;
     HepTransform3D T;
     
-    for (int bilayer=0; bilayer<numLayers(); bilayer++) {
-        for (int view=0; view<2; view++) {
+    for (int bilayer=0; bilayer<numLayers(); ++bilayer) {
+        for (int view=0; view<2; ++view) {
             idents::VolumeIdentifier volId;
-            volId.append(m_volId_tower[0]);
+            volId.append(m_volId_tower[m_testTower]);
             volId.append(m_volId_layer[bilayer][view]);
-            std::string foo = volId.name();
-            sc = sc && m_pDetSvc->getTransform3DByID(volId,&T);
+            if ((sc=m_pDetSvc->getTransform3DByID(volId,&T)).isFailure()) break;
             m_layerZ[bilayer][view] = (T.getTranslation()).z();          
         }
     }
@@ -329,11 +354,10 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     //         (should be pretty safe!)
     // don't make any assumptions about the view in the bottom tray
     idents::VolumeIdentifier bottom;
-    HepTransform3D botTransform;
-    bottom.init(0,0);
-    bottom.append(0);bottom.append(0); bottom.append(0); bottom.append(1); // tower 0
+    bottom = m_volId_tower[m_testTower]; // testTower
     bottom.append(0);                // tray 0
     idents::VolumeIdentifier idBot;
+    HepTransform3D botTransform;
     for (int view = 0; view<2; ++view) {
         idBot = bottom;
         idBot.append(view);          // try both views

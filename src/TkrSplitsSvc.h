@@ -4,14 +4,15 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.11 2003/05/02 16:08:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.1 2004/03/10 18:35:03 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
-#define TkrSplitsSvc_H 1
+//#define TkrSplitsSvc_H 1
 
 // Include files
 #include "TkrUtil/ITkrSplitsSvc.h"
+#include "TkrUtil/ITkrGeometrySvc.h"
 #include "GaudiKernel/Service.h"
 
 /** @class TkrSplitsSvc
@@ -64,6 +65,8 @@ private:
     std::string m_splitsFile;
     /// array of splits
     int m_splits[NTOWERS][NLAYERS][NVIEWS];
+    /// pointer to the geometry
+    ITkrGeometrySvc* m_geoSvc;
 
 };
 

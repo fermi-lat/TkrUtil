@@ -4,6 +4,7 @@
 
 @verbatim
 
+  v1r11p1  11-Mar-04 LSR Fix TkrGeometrySvc for new partially-filled geometry; backward compatible
   v1r11    10-Mar-04 LSR New TkrSplitsSvc 
   v1r10p5  19-Feb-04 TU  MC stuff moved to McToolBox
   v1r10p4     ??      

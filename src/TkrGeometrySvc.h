@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.9 2003/07/18 22:27:19 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.10 2004/03/10 18:35:03 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -223,6 +223,8 @@ private:
     ITkrBadStripsSvc*   m_badStrips;
     /// pointer to splits service
     ITkrSplitsSvc*      m_tkrSplits;
+    /// number of the test tower (used to find zLayer, etc.)
+    int m_testTower;
 
 };
 
