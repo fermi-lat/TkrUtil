@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.16 2003/04/26 18:40:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.17 2003/05/08 04:25:18 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -750,10 +750,10 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
         alphaX = alpha1;
         alphaY = alpha2;
     } else {
-        pointX = point2;
-        pointY = -point1;
-        alphaX = alpha2;
-        alphaY = -alpha1;
+        pointX = -point2;
+        pointY = point1;
+        alphaX = -alpha2;
+        alphaY = alpha1;
     }
   
     double rotTerm = deltaZ + rotX*pointY - rotY*pointX; 
