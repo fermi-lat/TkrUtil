@@ -1,3 +1,4 @@
 // Test of tower tilt
 // Tower 6, rotation and translation in X
-tower 6  0.1 0. 0. 0.0004 0.0 0.0
+tower 6  100 0. 0. 2.0 0.0 0.0
+//       microns   mrad

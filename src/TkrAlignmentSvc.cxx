@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.23 2004/06/14 05:14:55 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.24 2004/06/14 15:37:26 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -112,9 +112,9 @@ StatusCode TkrAlignmentSvc::initialize()
     }
     
     // initialize alignment constants   
-    int i;
+    int i = NELEMENTS;
     AlignmentConsts alConsts(0., 0., 0., 0., 0., 0.);
-    for (i=0;i<NELEMENTS; ++i) {
+    while (i--) {
         m_simConsts[i] = alConsts;
         m_recConsts[i] = alConsts;
     }
@@ -289,14 +289,17 @@ if (readFromFile().isFailure()) {
                 << endreq;
         }
     }
-    
+    log << endreq;
+
     if (processConstants().isFailure()) {
         log << MSG::ERROR << "Failed to process constants" << endreq;
         return StatusCode::FAILURE;
     }
     
     log << MSG::DEBUG ;
-    if (log.isActive()) {
+    bool doOutput = log.isActive();
+    log << "Debug output for alignment consts follows:" << endreq;
+    if (doOutput) {
         for (int tower = 0; tower < NTOWERS; ++tower) {
             bool first = true;
             for (int layer=0; layer<NLAYERS; ++layer) {
@@ -321,7 +324,6 @@ if (readFromFile().isFailure()) {
             }
         }
     }
-    log << endreq;
    
     return sc;
 }
@@ -341,14 +343,14 @@ StatusCode TkrAlignmentSvc::doTest()
     if (m_testMode&(1<<SIM_SHIFT)) {
         m_fileFlag = m_fileFlag|(1<<SIM_SHIFT);
         log << " in Sim" ;
-        for (i=0; i<NELEMENTS; ++i) {m_simConsts[i] = alConsts;
-        }
+        i = NELEMENTS;
+        while (i--) {m_simConsts[i] = alConsts;}
     }
     if (m_testMode&(1<<REC_SHIFT)) {
         m_fileFlag = m_fileFlag|(1<<REC_SHIFT);
         log << " Rec";
-        for (i=0; i<NELEMENTS; ++i) {m_recConsts[i] = alConsts;
-        }
+        i = NELEMENTS;
+        while (i--) {m_recConsts[i] = alConsts;}
     }
     log << endreq;
     
@@ -369,6 +371,10 @@ StatusCode TkrAlignmentSvc::readFromFile()
     std::string mystring;
     std::string flag;
     
+    // clear the list
+    m_itemCol.clear();
+    m_pItem = m_itemCol.begin();
+
     while(!m_dataFile->eof()) {
         mystring = "";
         getline(*m_dataFile, mystring);
@@ -492,9 +498,9 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     // even if a tray is not in the list, the tower constants must be passed down.
     
     // keep track of which ones have been explicitly called
-    bool done[NLAYERS+1]; // one more tray than layers
-    int itry;
-    for (itry=0; itry<NLAYERS+1; ++itry) { done[itry] = false; }
+    bool done[NTRAYS];
+    int itry = NTRAYS;
+    while (itry--) { done[itry] = false; }
     
     AlignmentItem item;
     int nTrays = m_pGeoSvc->numLayers() + 1;
@@ -513,9 +519,13 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
         done[m_tray] = true;
     }
 
+    // if the tower consts are zero, nothing left to do
+    if(m_towerConsts.isNull()) return sc;
+
     // now do the rest, with null tray constants
     AlignmentConsts null;
-    for (itry=0; itry<nTrays; ++itry) {
+    itry = nTrays;
+    while (itry--) {
         if (!done[itry]) {
             m_tray = itry;
             calculateTrayConsts(null);
@@ -543,6 +553,7 @@ void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray)
     double rotZ   = thisTray.getRotZ()   + m_towerConsts.getRotZ();
 
     m_trayConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
+    return;
 }
 
 StatusCode TkrAlignmentSvc::fillFaceConsts()
@@ -558,9 +569,9 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
 
     // here we have to do all of them, because the tower consts are non-zero
     
-    bool done[2];
-    int itry;
-    for (itry=0; itry<2; ++itry) { done[itry] = false; }
+    bool done[NVIEWS];
+    int itry = NVIEWS;
+    while (itry--) { done[itry] = false; }
     
     AlignmentItem item;
     // do the ones that are in the input file
@@ -578,10 +589,13 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
         done[m_face] = true;
     }
 
+    if (m_trayConsts.isNull()) return sc;
+
     // now do the rest
     int nPlanes = 2;
     AlignmentConsts null;
-    for (itry=0; itry<nPlanes; ++itry) {
+    itry = nPlanes;
+    while (itry--) {
         if (!done[itry]) {
             m_face = itry;
             calculateFaceConsts(null);
@@ -612,6 +626,7 @@ void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace)
     double rotZ   = thisFace.getRotZ()   + m_trayConsts.getRotZ();
 
     m_faceConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
+    return;
 }
 
 
@@ -627,8 +642,8 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     MsgStream log(msgSvc(), name());
 
     bool done[NLADDERS];
-    int itry;
-    for (itry=0;itry<NLADDERS;++itry) {done[itry] = false;}
+    int itry = NLADDERS;
+    while (itry--) {done[itry] = false;}
                
     AlignmentItem item;
     int nLadders = m_pGeoSvc->nWaferAcross();
@@ -646,9 +661,12 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
         done[m_tray] = true;
     }
 
+    if (m_faceConsts.isNull()) return sc;
+
     // now do the rest
     AlignmentConsts null;
-    for (itry=0; itry<nLadders; ++itry) {
+    itry = nLadders;
+    while (itry--) {
         if (!done[itry]) {
             m_ladder = itry;
             calculateLadderConsts(null);
@@ -697,6 +715,7 @@ void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder)
     double rotZ = thisLadder.getRotZ() + m_faceConsts.getRotZ();
 
     m_ladderConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
+    return;
 }
 
 StatusCode TkrAlignmentSvc::fillWaferConsts()
@@ -705,8 +724,8 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     MsgStream log(msgSvc(), name());
     
     bool done[NWAFERS];
-    int itry;
-    for (itry=0;itry<NWAFERS;++itry) {done[itry] = false;}
+    int itry = NWAFERS;
+    while (itry--) {done[itry] = false;}
  
     int nWafers = m_pGeoSvc->nWaferAcross();
 
@@ -723,9 +742,12 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
         done[m_tray] = true;
     }
 
+    if (m_ladderConsts.isNull()) return sc;
+
     // now do the rest
     AlignmentConsts null;
-    for (itry=0; itry<nWafers; ++itry) {
+    itry = nWafers;
+    while (itry--) {
         if (!done[itry]) {
             m_wafer = itry;
             calculateWaferConsts(null);
@@ -747,12 +769,13 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     int nWafer = m_pGeoSvc->nWaferAcross();
 
     m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
+    int index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
+    if (index<0) return;
 
     double trayWidth   = m_pGeoSvc->trayWidth();
     double waferGap    = m_pGeoSvc->ladderInnerGap();
     double waferWidth  = (trayWidth - (nWafer-1)*waferGap + .1)/nWafer;
     double trayWidth1   = nWafer*waferWidth + (nWafer-1)*waferGap;
-    //double laddergap   = m_pGeoSvc->ladderGap();
     double offset      = -0.5*trayWidth1 + 0.5*waferWidth;
     offset += m_wafer*(waferWidth+waferGap);
 
@@ -776,22 +799,17 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     double rotY = thisWafer.getRotY() + m_ladderConsts.getRotY();
     double rotZ = thisWafer.getRotZ() + m_ladderConsts.getRotZ();
 
-    int index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
     // here are the final constants!
     if (m_mode=="sim") {
         m_simConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
             rotX, rotY, rotZ);
-        //if (m_tower==0 && m_tray==10) {
-        //    std::cout << "Index " << index << " " << m_tower << " " << m_tray << " " 
-        //        << m_face << " " << layer << " " << view << std::endl;
-        //    std::cout << " deltaX, rotZ " << deltaX << " " << rotZ << std::endl;
-        //}
     } else {
         m_recConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
             rotX, rotY, rotZ);
     }
-
+    return;
 }
+
 int TkrAlignmentSvc::getIndex(int tower, int layer, 
                               int view, int ladder, int wafer) const
 {

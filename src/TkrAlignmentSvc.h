@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.8 2004/06/12 15:04:44 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.9 2004/06/14 15:37:26 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -232,7 +232,7 @@ private:
     /// dimension of arrays
     // the flight instrument only has (4 ladders)x(4 wafers) but to allow
     //   for possible conversion to BFEM/BTEM I've started with 5 each.
-    enum {NLAYERS = 18, NVIEWS = 2, NTOWERS = 16, NLADDERS= 4, NWAFERS = 4,
+    enum {NLAYERS = 18, NTRAYS = 19, NVIEWS = 2, NTOWERS = 16, NLADDERS= 4, NWAFERS = 4,
         NELEMENTS = NLAYERS*NVIEWS*NTOWERS*NLADDERS*NWAFERS};
     
     /// array to hold simulation constants  [ max needed: 9216 = 16*18*2*4*4 ]   
