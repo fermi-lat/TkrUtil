@@ -86,6 +86,7 @@ StatusCode TkrGeometrySvc::initialize()
     }   
 
     // fill up the m_volId tower arrays, used for providing volId prefixes
+    // these are the Id's for the 15 towers, with just the first 3 fields
 
     int tower;
     for(tower=0;tower<m_numX*m_numY;++tower) {
@@ -94,7 +95,6 @@ StatusCode TkrGeometrySvc::initialize()
         idents::TowerId t(tower);  
         vId.append(t.iy());          // yTower
         vId.append(t.ix());          // xTower
-        vId.append(1);               // in TKR
         m_volId_tower[tower].init(0,0);  
         m_volId_tower[tower].append(vId);
     }
@@ -105,6 +105,7 @@ StatusCode TkrGeometrySvc::initialize()
         idents::VolumeIdentifier volId;
         volId.init(0,0);
         volId.append(m_volId_tower[tower]);
+        volId.append(1); // TKR
 
         int tray;
         int botTop;
@@ -167,6 +168,9 @@ StatusCode TkrGeometrySvc::initialize()
 	// Get cal info necessary for tracker recon
 
 	sc = getCalInfo();
+    if (sc.isFailure()) return sc;
+
+
 
     // Get propagator from the service
     
@@ -233,6 +237,7 @@ HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view,
 
     idents::VolumeIdentifier volId;
     volId.append(m_volId_tower[tower]);
+    volId.append(1); // TKR
     volId.append(m_volId_layer[layer][view]);
     return m_pDetSvc->getStripPosition(volId, stripId);
 }
@@ -328,6 +333,7 @@ StatusCode TkrGeometrySvc::fillLayerZ()
         for (int view=0; view<2; ++view) {
             idents::VolumeIdentifier volId;
             volId.append(m_volId_tower[m_testTower]);
+            volId.append(1); // TKR
             volId.append(m_volId_layer[bilayer][view]);
             if ((sc=m_pDetSvc->getTransform3DByID(volId,&T)).isFailure()) break;
             m_layerZ[bilayer][view] = (T.getTranslation()).z();          
@@ -361,6 +367,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     // don't make any assumptions about the view in the bottom tray
     idents::VolumeIdentifier bottom;
     bottom = m_volId_tower[m_testTower]; // testTower
+    bottom.append(1); // TKR
     bottom.append(0);                // tray 0
     idents::VolumeIdentifier idBot;
     HepTransform3D botTransform;
@@ -560,8 +567,6 @@ StatusCode TkrGeometrySvc::getCalInfo()
 
     //get the top and bottom of the CAL crystals
 
-    idents::VolumeIdentifier topLayerId;
-    topLayerId.init(0,0);
     int count;
 
     // top layer of the Cal
@@ -569,13 +574,18 @@ StatusCode TkrGeometrySvc::getCalInfo()
 	// for the moment, I'll just check a few until I get a good one, and if I don't then
 	// I bail... this is a bit of a kludge... seems to work though
 
-    for (count=0;count<6;++count) {topLayerId.append(0);} 
+    idents::VolumeIdentifier topLayerId;
+    topLayerId.append(m_volId_tower[m_testTower]);
+    topLayerId.append(0);  // CAL
+    topLayerId.append(0);  // layer
+    topLayerId.append(0);  // x view
+ 
     StatusCode sc;
     HepTransform3D transfTop;
-	for (count=6;count<9;++count) {
-		topLayerId.append(0);
+    for (count=0;count<3;++count) {
+        topLayerId.append(0);
         if((sc = m_pDetSvc->getTransform3DByID(topLayerId,&transfTop)).isSuccess()) break;
-	}
+    }
 	if(sc.isFailure()) {
 		log << MSG::ERROR << "Couldn't get Id for layer 0 of CAL" << endreq;
 		return sc;

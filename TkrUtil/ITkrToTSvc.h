@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.1 2004/03/10 18:35:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.1 2004/03/13 19:40:37 lsrea Exp $
 */
 
 #ifndef ITkrToTSvc_H
@@ -10,6 +10,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.1 2004/03
 
 // Include files
 #include "GaudiKernel/IInterface.h"
+#include "idents/VolumeIdentifier.h"
 
 // Declaration of the interface ID ( interface id, major version,
 // minor version)

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.1 2004/03/13 19:40:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.2 2004/03/16 00:47:08 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -14,6 +14,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.1 2004/03/13 1
 #include "TkrUtil/ITkrToTSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "GaudiKernel/Service.h"
+#include "idents/TowerId.h"
 
 /** @class TkrToTSvc
 * @brief Service to store and compare to a list of desired failure modes in
