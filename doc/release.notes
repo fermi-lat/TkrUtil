@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r1p5   24-Jan-05 TkrToTSvc updates
   v3r1p4   17-Jan-05 LSR new methods for TkrGeometrySvc:
                              getConvLayerZ(layer)
                              isTopPlaneInLayer(plane)

@@ -61,7 +61,7 @@
   @section TkrToTSvc TkrToTSvc
   TkrToTSvc maintains the ToT thresholds and gains for each strip in the detector. The default
   settings are: all strips the same, and set to produce the same result as before this
-  service was introduced. "EM" mode internally generates a set of thresholds and gains 
+  service was introduced. "randomized" mode internally generates a random set of thresholds and gains 
   similar to the those measured in the Engineering module. In this case, the default values
   are ignored. Will eventually be part of the calibration database
  

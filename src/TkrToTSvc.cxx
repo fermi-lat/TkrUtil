@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.7 2004/12/16 23:28:30 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.8 2005/01/03 23:22:44 lsrea Exp $
 
 */
 
@@ -150,12 +150,13 @@ StatusCode TkrToTSvc::doInit()
                 }
             }
     }
-    } else if (m_mode.substr(0,2)=="EM") {
+    } else if (m_mode=="randomized") {
         // thresholds and gains set randomly to reproduce EM1 values
+        // but each tower is the same, to make testing a bit simpler
         // chips and strips are randomized separately
         int mySeed = 123456789;
         HepRandom::setTheSeed(mySeed);
-        for(tower=0;tower<NTOWERS;++tower) {
+        //for(tower=0;tower<NTOWERS;++tower) {
             for (layer=0;layer<numLayers;++layer) {
                 for (view=0;view<NVIEWS;++view) {
                     for(chip=0;chip<nChips;++chip) {
@@ -173,6 +174,7 @@ StatusCode TkrToTSvc::doInit()
                             }
                             double devThresh = -0.541*devGain + RandGauss::shoot(0, 0.262);
 
+                        for(tower=0; tower<NTOWERS;++tower) {
                             m_ToTGain[tower][layer][view][theStrip] = 
                                 chipGain + devGain;
                             m_ToTGain2[tower][layer][view][theStrip] = 
@@ -190,10 +192,11 @@ StatusCode TkrToTSvc::doInit()
         }
     } else {
         log << MSG::ERROR << "Called with mode: """ << m_mode 
-            << """, should be ""default"" or ""EM"" "
-            << std::endl;
+            << """, should be ""ideal"" or ""randomized"" "
+            << endreq;
         sc = StatusCode::FAILURE;
     }
+    log << MSG::INFO << "TkrToTSvc initialized with mode: " << m_mode << endreq;
 
     return sc;
 }
