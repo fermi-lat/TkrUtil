@@ -69,7 +69,7 @@
  *
  * @section jobOptions jobOptions
  *
- * @param TkrCalibAlg.flavor
+ * @param TkrCalibAlg.calibFlavor
  * Sets the flavor of calibration requested. Defaults to "ideal", which does nothing.
  *
  * @param TkrFailureModeSvc.towerList

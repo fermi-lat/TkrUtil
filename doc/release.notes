@@ -4,6 +4,7 @@
 
 @verbatim
 
+  v1r10p2  19-aug-03 LSR activate choice of flavor in TkrCalibAlg
   v1r10p1  07-aug-03 LSR cleanup
   v1r10    18-jul-03 LSR added methods to TkrGeometrySvc to calculate some CAL numbers
                               will go away when CAL supplies them

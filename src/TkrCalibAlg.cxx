@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.1 2003/02/17 18:06:58 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.2 2003/03/01 02:13:29 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -7,7 +7,9 @@
 #include "GaudiKernel/Service.h"
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/SmartDataPtr.h"
+#include "GaudiKernel/IDetDataSvc.h"
 
+#include "CalibData/CalibTime.h"
 #include "CalibData/CalibModel.h"
 #include "CalibData/Tkr/BadStrips.h"
 
@@ -48,6 +50,8 @@ private:
     
     /// pointer to data provider
     IDataProviderSvc*   m_pCalibDataSvc;
+    /// Handle to the IDetDataSvc interface of the CalibDataSvc
+    IDetDataSvc* m_detDataSvc;
     /// pointer to bad strips service
     ITkrBadStripsSvcCalib*   m_pTkrBadStripsSvc;
     /// pointer to failure mode service
@@ -72,7 +76,7 @@ TkrCalibAlg::TkrCalibAlg(const std::string&  name,
                          m_pTkrBadStripsSvc(0), m_pTkrFailureModeSvc(0),
                          m_serHot(-1), m_serDead(-1)
 {
-    declareProperty("flavor", m_flavor="ideal");
+    declareProperty("calibFlavor", m_flavor="ideal");
 }
 
 
@@ -91,6 +95,20 @@ StatusCode TkrCalibAlg::initialize()
             << "Could not get IDataProviderSvc interface of CalibDataSvc" 
             << endreq;
         return sc;
+    }
+
+    // Query the IDetDataSvc interface of the calib data service
+    sc = m_pCalibDataSvc->queryInterface(IID_IDetDataSvc, 
+                                (void**) &m_detDataSvc);
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+	    << "Could not query IDetDataSvc interface of CalibDataSvc" 
+	    << endreq;
+        return sc;
+    } else {
+        log << MSG::DEBUG 
+	    << "Retrieved IDetDataSvc interface of CalibDataSvc" 
+	    << endreq;
     }
     
     sc = service("TkrBadStripsSvc", m_pTkrBadStripsSvc, true);
@@ -119,12 +137,24 @@ StatusCode TkrCalibAlg::execute( ) {
     
     MsgStream log(msgSvc(), name());
 
-    if (m_flavor=="ideal") return StatusCode::SUCCESS;
+    if (m_flavor=="ideal" || m_flavor=="") return StatusCode::SUCCESS;
     
     bool updateNow = false;
 
+    // Set the event time
+    /* no, don't... let EvtClock do it
+    facilities::Timestamp time = facilities::Timestamp("2003-10-1 00:00");
+    log << MSG::DEBUG << "Event time: "
+        << time.getString()
+        << endreq; 
+    CalibData::CalibTime ctime(time);
+    log << MSG::DEBUG << "Event time (hours) " << ctime.hours() << endreq;
+    m_detDataSvc->setEventTime(ctime);
+
+    */
+
     // check the dead channels
-    std::string fullDeadPath = "/Calib/TKR_DeadChan/vanilla";
+    std::string fullDeadPath = "/Calib/TKR_DeadChan/"+m_flavor;
     SmartDataPtr<CalibData::BadStrips> pDead(m_pCalibDataSvc, fullDeadPath);
     if (!pDead) {
         log << MSG::ERROR 
@@ -154,7 +184,7 @@ StatusCode TkrCalibAlg::execute( ) {
     }
 
     // now the hot channels
-    std::string fullHotPath = "/Calib/TKR_HotChan/vanilla";
+    std::string fullHotPath = "/Calib/TKR_HotChan/"+m_flavor;
     SmartDataPtr<CalibData::BadStrips> pHot(m_pCalibDataSvc, fullHotPath);
     if (!pHot) {
         log << MSG::ERROR 
