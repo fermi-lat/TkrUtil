@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.15 2004/08/19 08:17:32 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.16 2004/08/31 23:54:55 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -61,6 +61,7 @@ public:
     double ladderGap()      const {return m_ladderGap;}
     double ladderInnerGap() const {return m_ladderInnerGap;}
     int    ladderNStrips()  const {return m_ladderNStrips;}
+    int    chipsPerLadder() const {return m_ladderNStrips/64;}
     
     double siStripPitch()   const {return m_siStripPitch;}
     double siResolution()   const {return m_siResolution;}
@@ -164,6 +165,10 @@ public:
     }
     int getBottomTrayFlag() const { return (m_bottomTrayNumber>-1 ? 1 : 0); }
     int getTopTrayFlag()    const { return (m_topTrayNumber>-1    ? 1 : 0); }
+
+    double truncateCoord( double x, double pitch, 
+                     int numElements, int& elementNumber, bool reverse = false) const;
+
 
 private:
     

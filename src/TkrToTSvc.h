@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.3 2004/04/10 05:57:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.4 2004/05/10 23:58:51 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -90,6 +90,13 @@ public:
         }
     }
     double getCountsPerMicrosecond() const { return m_countsPerMicrosecond;}
+    double getMevPerMip() const { return m_mevPerMip; }
+    double getFCPerMip() const { return m_fCPerMip; }
+    int    getMaxToT() const { return m_maxToT; }
+
+    double getCharge(double ToT, int tower, int layer, int view, int strip) const;
+    double getMipsFromToT(double ToT, int tower, int layer, int view, int strip) const;
+    double getMipsFromCharge(double charge, int tower, int layer, int view, int strip) const;
 
 private:
     /// internal init method
@@ -106,9 +113,16 @@ private:
     double m_defaultThreshold;
     /// default quality factor
     double m_defaultQuality;
+    /// default muon correction factor
+    double m_defaultMuonFactor;
     /// ToT counts per microsecond
     double m_countsPerMicrosecond;
+    /// Energy deposited by a mini particle traversing a silicon plane
+    double m_mevPerMip;
+    /// Charge deposited by a mini particle traversing a silicon plane
+    double m_fCPerMip;
     /// array of gains, in microseconds/fC
+    int    m_maxToT;
     float m_ToTGain      [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
     /// array of quadratic terms, in microseconds/fC**2
     float m_ToTGain2     [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
@@ -116,8 +130,10 @@ private:
     float m_ToTThreshold [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
     /// array of quality factors
     float m_ToTQuality   [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
+    /// array of Muon correction normalizations, should be order(1)
+    float m_ToTMuonFactor [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
     /// pointer to geometry service
-    ITkrGeometrySvc* m_geoSvc;
+    ITkrGeometrySvc* m_tkrGeom;
 };
 
 

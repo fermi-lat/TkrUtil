@@ -881,10 +881,7 @@ StatusCode TkrGeometrySvc::getTestTower()
     bool found = false;
 
     HepTransform3D T;
-    int tower;
-
-    int tray, botTop, view;
-    int layer0 = -1;
+    int tower, tray, botTop, view;
 
     for(tower=0;tower<m_numX*m_numY;++tower) {
         idents::VolumeIdentifier vId, vId1, vId2, vId3, vIdTest;
@@ -924,4 +921,23 @@ StatusCode TkrGeometrySvc::getTestTower()
         }       
     }
     return sc;
+}
+
+double TkrGeometrySvc::truncateCoord( double x, double pitch, 
+                     int numElements, int& elementNumber, bool reverse) const
+{
+    //Returns an element number and the coordinates in the local element
+
+    double xScaled = x/pitch;
+    // this is the correction for odd number of elements (towers in EM, for example)
+    double delta = 0.5*(numElements%2);
+    double xMod = xScaled + delta;
+    int theFloor = (int) floor(xMod);
+    elementNumber = theFloor + numElements/2;
+    // if it's outside the actual element, assign the closest
+    // this will not happen for real hits, but may for extrapolated hits
+    // or transformed hits.
+    elementNumber = std::max(std::min(elementNumber, numElements-1),0);
+    if (reverse) elementNumber = numElements - 1 - elementNumber;
+    return pitch*(xMod - theFloor - 0.5);
 }

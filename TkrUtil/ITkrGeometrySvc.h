@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.14 2004/08/24 23:45:44 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.15 2004/08/31 23:54:54 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -29,7 +29,7 @@
  * @author Tracy Usher
  */
 
-static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 9 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 10 , 0); 
 
 namespace {
     enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
@@ -65,6 +65,7 @@ public:
     virtual double ladderGap()      const = 0;
     virtual double ladderInnerGap() const = 0;
     virtual int    ladderNStrips()  const = 0;
+    virtual int    chipsPerLadder() const = 0;
     virtual int    nWaferAcross()   const = 0;
     virtual double siWaferSide()    const = 0;
     
@@ -146,6 +147,10 @@ public:
     virtual int planeToBotTop(int plane) const = 0;
     virtual int getBottomTrayFlag() const = 0;
     virtual int getTopTrayFlag()    const = 0;
+    
+    virtual double truncateCoord( double x, double pitch, 
+                     int numElements, int& elementNumber, bool reverse = false) const = 0;
+
 };
 
 #endif
