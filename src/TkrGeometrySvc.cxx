@@ -70,8 +70,6 @@ StatusCode TkrGeometrySvc::initialize()
     m_siDeadDistance = 0.5*(m_siWaferSide - siWaferActiveSide);
     m_siStripPitch = siWaferActiveSide/m_ladderNStrips;
     m_siResolution = m_siStripPitch/sqrt(12.);
-
-
     
     IToolSvc* toolSvc = 0;
     if (sc = service("ToolSvc",toolSvc, true).isSuccess() )
@@ -156,20 +154,20 @@ StatusCode TkrGeometrySvc::initialize()
     m_tkrFail = 0;
     if( service( "TkrFailureModeSvc", m_tkrFail, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrFailureModeSvc" << endreq;
-        log << MSG::INFO << "Will assume it is not required"    << endreq;
+        log << "Will assume it is not required"    << endreq;
     }
 
     // Get the alignment service 
     m_tkrAlign = 0;
     if( service( "TkrAlignmentSvc", m_tkrAlign, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrAlignmentSvc" << endreq;
-        log << MSG::INFO << "Will assume it is not required"    << endreq;
+        log << "Will assume it is not required"    << endreq;
     }
 
     m_badStrips = 0;
     if( service( "TkrBadStripsSvc", m_badStrips, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrBadStripsSvc" << endreq;
-        log << MSG::INFO << "Will assume it is not required"    << endreq;
+        log << "Will assume it is not required"    << endreq;
     }
     return StatusCode::SUCCESS;
 }
@@ -287,8 +285,7 @@ StatusCode TkrGeometrySvc::fillLayerZ()
             volId.append(m_volId_layer[bilayer][view]);
             std::string foo = volId.name();
             sc = sc && m_pDetSvc->getTransform3DByID(volId,&T);
-            m_layerZ[bilayer][view] = (T.getTranslation()).z();
-           
+            m_layerZ[bilayer][view] = (T.getTranslation()).z();          
         }
     }
     return sc;
@@ -328,11 +325,13 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     int istep = 0;
     idents::VolumeIdentifier id;
     double radlen;
+    idents::VolumeIdentifier prefix = m_pDetSvc->getIDPrefix();
 
     bool startCount = false;
     for (; istep<numSteps; ++istep) {
         Point stepPoint = track->getStepPosition(istep);
         id = track->getStepVolumeId(istep);
+        id.prepend(prefix);
         std::string idName = id.name();
         //double arclen = track->getStepArcLen(istep);
         radlen = track->getStepRadLength(istep);
@@ -351,7 +350,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             }
             if (!startCount) continue;
             // only the "top" silicon in each layer is in the same tray as layer
-            // the others are one tray up
+            // the "bottom" silicon is one tray up
             int layer = (item==2 || item==6 || item==0) ? tray-1 : tray;
             if (item==2) { // converter
                 m_radLenConv[layer] = radlen;
@@ -380,11 +379,9 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             << m_radLenRest[i] << endreq;
         }
     }
-
     log << endreq;
 
 // reverseLayerNumber() starts working here!
-
 
     log << MSG::INFO << endreq;
     for (ind=0;ind<NTYPES;++ind) {

@@ -4,6 +4,8 @@
 
 @verbatim
 
+  v1r9p6   10-may-03 LSR Fixes for EM incomplete IDs and different element names
+                         (Is there any reason to rename botTray to emBotTray?)
   v1r9p5   09_may_03 LSR Found another sign in the alignment code (I think)
   v1r9p4   07_may_03 LSR Fix to TkrGeometrySvc for EM (introduced at v1r9 I think)
                          add functionality to TkrAlignmentSvc (preliminary)

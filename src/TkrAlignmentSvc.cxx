@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.17 2003/05/08 04:25:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.18 2003/05/10 01:32:19 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -21,6 +21,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.17 200
 
 #include <fstream>
 #include <algorithm>
+#include <string>
 
 #include "xml/IFile.h"
 
@@ -775,30 +776,44 @@ IGeometry::VisitorRet TkrAlignmentGeomVisitor::pushShape(ShapeType /* s */, cons
         std::string name, std::string /* material*/, const DoubleVector& params, 
         VolumeType /*type*/)
 {
+    bool debug = false;
+ 
     if(name=="oneCAL") {
         return AbortSubtree;
     }
     
     if (name=="towerRow") {
+        // some of the names are blank if you don't start from topVol = LAT
+        if(idvec.size()==0) return More;
         if(idvec[0]>0) return AbortSubtree;
     }
     if (name=="oneTower") { 
+        if (debug) {
+            std::cout << "Element: " << name << std::endl;
+            std::cout << " idvec("<< idvec.size() << " elements):" ;
+            for (unsigned int iv=0; iv<idvec.size(); ++iv ) {
+                std::cout << idvec[iv] << " ";
+            }
+            std::cout << std::endl;
+        }
+        if (idvec.size()==0) return More;
         if(idvec[0]>0) return AbortSubtree;
     }
-    if (name=="trayBot") {m_trayBotHeight = params[8];}
 
-    if (name=="trayTop") {m_trayTopHeight = params[8];}
+    // trayBot or emTrayBot
+    if (name.find("rayBot")!=std::string::npos) {m_trayBotHeight = params[8];}
+
+    // trayTop or emTrayTop
+    if (name.find("rayTop")!=std::string::npos) {m_trayTopHeight = params[8];}
     
-    bool debug = false;
     if (debug) {
-        if (name=="traySuper"||name=="trayTop"||name=="trayBot"
-            ||name=="trayReg"||name=="trayNoConv"||name=="oneTKRStack"
-            ||name=="oneTKR") { 
+        // something like trayBot or emTraySuper or oneTkrStack
+        if (name.find("ray")!=std::string::npos || name.find("neTKR")!=std::string::npos) { 
             std::cout << name << ": z, height " 
                 << params[2] << ", " << params[8] << std::endl;
         }
     }
-    if (name=="trayTop") return AbortSubtree;
+     if (name.find("rayTop")!=std::string::npos) return AbortSubtree;
 
     return More;
 }
