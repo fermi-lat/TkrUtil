@@ -4,6 +4,8 @@
 
 @verbatim
 
+  v1r8     18-apr-03 LSR reorganize TkrQueryClustersTool, now const
+                         need to rebuild TkrRecon, AnalysisNtuple, merit
   v1r7p4   11-apr-03 LSR new Property: maximumDelta
   v1r7p3   10-apr-03 LSR make it 5mm; fix another bug... "tags are cheap"
   v1r7p2   09-apr-03 LSR limit alignment displacement to 3 mm until special cases are coded

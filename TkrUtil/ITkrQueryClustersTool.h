@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.6 2003/04/17 23:40:38 atwood Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.7 2003/04/18 20:27:36 lsrea Exp $
 */
 
 
@@ -64,34 +64,34 @@ public:
     static const InterfaceID& interfaceID() { return IID_ITkrQueryClustersTool; }
 
         /// returns the mean space point in for a given view and layer
-    virtual Point meanHit(Event::TkrCluster::view v, int layer) = 0;
+    virtual Point meanHit(Event::TkrCluster::view v, int layer) const = 0;
     /** returns the mean space point for a given layer, view, within 
     * "inDistance" of a point Pini in the measurement view, and within 
     * one tower in the other view.
     */
     virtual Point meanHitInside (Event::TkrCluster::view v, int layer, 
-        double inDistance, const Point& Pini) = 0;
+        double inDistance, const Point& Pini) const = 0;
     /** returns the nearest point outside of "inDistance" of a point "Pini"
     * in the measured view, within one tower in the other view, and a ref. 
     * to the id
     */
     virtual Point nearestHitOutside(Event::TkrCluster::view v, int layer, 
-        double inDistance, const Point& Pini, int& id) = 0;
+        double inDistance, const Point& Pini, int& id) const = 0;
     
     /// Finds the number of clusters with measured distances 
     /// inside a square of side 2*inDistance of a point, in requested bilayer
-    virtual int numberOfHitsNear( int layer, double inDistance, const Point& x0) = 0;
+    virtual int numberOfHitsNear( int layer, double inDistance, const Point& x0) const = 0;
     /// Finds the number of clusters with measured distances 
     /// inside a rectangle of side 2*dX by 2*dY of a point, in requested bilayer
-    virtual int numberOfHitsNear( int layer, double dX, double dY, const Point& x0) = 0;
+    virtual int numberOfHitsNear( int layer, double dX, double dY, const Point& x0) const = 0;
     /// Finds the number of clusters within "inDistance" of a point 
     /// and within one tower, in requested layer and view
     virtual int numberOfHitsNear( Event::TkrCluster::view v, int layer, 
-        double inDistance, const Point& x0) = 0;
+        double inDistance, const Point& x0) const = 0;
 
     /// Finds the number of unused clusters within 2*dX by 2*dY of a point 
     /// and within one tower, in requested layer and view
-    virtual int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0) = 0;
+    virtual int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0) const = 0;
 
 };
 
