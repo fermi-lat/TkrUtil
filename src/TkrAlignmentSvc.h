@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.7 2004/06/12 05:03:47 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.8 2004/06/12 15:04:44 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -214,7 +214,7 @@ private:
     /// reads the alignment items from a file
     StatusCode readFromFile();
     /// generate the per-wafer alignment constants
-    StatusCode processFile();
+    StatusCode processConstants();
     /// does some logic on the next item in the read-in list
     bool getNextItem(aType type, AlignmentItem& item);
     

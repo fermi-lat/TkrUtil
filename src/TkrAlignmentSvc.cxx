@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.22 2004/06/12 15:04:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.23 2004/06/14 05:14:55 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -268,7 +268,10 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     }
     log << endreq;
     
-    readFromFile();
+if (readFromFile().isFailure()) {
+        log << MSG::ERROR << "Failed to read input file" << endreq;
+        return StatusCode::FAILURE;
+    }
     theFile.close();
     
     log << MSG::DEBUG;
@@ -287,7 +290,10 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
         }
     }
     
-    processFile();
+    if (processConstants().isFailure()) {
+        log << MSG::ERROR << "Failed to process constants" << endreq;
+        return StatusCode::FAILURE;
+    }
     
     log << MSG::DEBUG ;
     if (log.isActive()) {
@@ -436,7 +442,7 @@ bool TkrAlignmentSvc::getNextItem(aType type, AlignmentItem& item)
     return true;
 }
 
-StatusCode TkrAlignmentSvc::processFile()
+StatusCode TkrAlignmentSvc::processConstants()
 {    
     // Purpose: produces the basic alignment constants
     // Inputs:  takes input from alignCol
@@ -455,8 +461,13 @@ StatusCode TkrAlignmentSvc::processFile()
 
     // do only the ones that are in the input file
     // the rest will automatically have null constants
+
     while (getNextItem(TOWER,item)) {
         m_tower = item.getNumber();
+        if (!m_pGeoSvc->isTower(m_tower)) {
+            log << MSG::ERROR << "Tower " << m_tower 
+                << " doesn't exist. Check input." << endreq;
+        }
         m_towerConsts = item.getConsts();
         if (fillTrayConsts().isFailure()) {
             log << MSG::ERROR << "fillTrayConsts failed!" << endreq;
@@ -486,9 +497,16 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     for (itry=0; itry<NLAYERS+1; ++itry) { done[itry] = false; }
     
     AlignmentItem item;
+    int nTrays = m_pGeoSvc->numLayers() + 1;
+
     // do the ones that are in the input file
     while (getNextItem(TRAY,item)) {
         m_tray = item.getNumber();
+        if (m_tray>=nTrays) {
+            log << MSG::ERROR << "Tray " << m_tray
+                << " doesn't exist. Check input. " << endreq;
+                return StatusCode::FAILURE;
+        }
         AlignmentConsts thisTray = item.getConsts();
         calculateTrayConsts(thisTray);
         if(fillFaceConsts().isFailure()) {return StatusCode::FAILURE;}
@@ -496,7 +514,6 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     }
 
     // now do the rest, with null tray constants
-    int nTrays = m_pGeoSvc->numLayers() + 1;
     AlignmentConsts null;
     for (itry=0; itry<nTrays; ++itry) {
         if (!done[itry]) {
@@ -549,6 +566,12 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
     // do the ones that are in the input file
     while (getNextItem(FACE,item)) {
         m_face = item.getNumber();
+        if (m_face>=2) {
+            log << MSG::ERROR << "Face " << m_face
+                << " doesn't exist. Check input." << endreq;
+                return StatusCode::FAILURE;
+        }
+
         AlignmentConsts thisFace = item.getConsts();
         calculateFaceConsts(thisFace);
         if(fillLadderConsts().isFailure()) {return StatusCode::FAILURE;}
@@ -608,8 +631,15 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     for (itry=0;itry<NLADDERS;++itry) {done[itry] = false;}
                
     AlignmentItem item;
+    int nLadders = m_pGeoSvc->nWaferAcross();
     while (getNextItem(LADDER,item)) {
         m_ladder = item.getNumber();
+        if (m_ladder>=nLadders) {
+            log << MSG::ERROR << "Ladder " << m_ladder
+                << " doesn't exist. Check input." << endreq;
+                return StatusCode::FAILURE;
+        }
+
         AlignmentConsts thisLadder = item.getConsts();
         calculateLadderConsts(thisLadder);
         if(fillWaferConsts().isFailure()) {return StatusCode::FAILURE;}
@@ -618,7 +648,6 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
 
     // now do the rest
     AlignmentConsts null;
-    int nLadders = m_pGeoSvc->nWaferAcross();
     for (itry=0; itry<nLadders; ++itry) {
         if (!done[itry]) {
             m_ladder = itry;
@@ -678,10 +707,17 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     bool done[NWAFERS];
     int itry;
     for (itry=0;itry<NWAFERS;++itry) {done[itry] = false;}
-        
+ 
+    int nWafers = m_pGeoSvc->nWaferAcross();
+
     AlignmentItem item;
     while (getNextItem(WAFER,item)) {
         m_wafer = item.getNumber();
+        if (m_wafer>=nWafers) {
+            log << MSG::ERROR << "Wafer " << m_wafer
+                << " doesn't exist. Check input." << endreq;
+                return StatusCode::FAILURE;
+        }
         AlignmentConsts thisWafer = item.getConsts();
         calculateWaferConsts(thisWafer);
         done[m_tray] = true;
@@ -689,8 +725,7 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
 
     // now do the rest
     AlignmentConsts null;
-    int nLadders = m_pGeoSvc->nWaferAcross();
-    for (itry=0; itry<nLadders; ++itry) {
+    for (itry=0; itry<nWafers; ++itry) {
         if (!done[itry]) {
             m_wafer = itry;
             calculateWaferConsts(null);
