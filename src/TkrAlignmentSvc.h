@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.11 2004/06/17 04:45:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.12 2004/09/07 21:20:32 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -67,7 +67,7 @@ public:
     /// return the index
     int   getNumber()           { return m_number; }
     /// return the constants
-    AlignmentConsts getConsts() { return m_consts; }
+    const AlignmentConsts getConsts() { return m_consts; }
 private:
     /// type, TOWER, TRAY, FACE etc.
     aType m_type;
@@ -150,17 +150,17 @@ public:
     void moveMCHit(idents::VolumeIdentifier id, 
         HepPoint3D& entry, HepPoint3D &exit) const;
     
-    /// moves a TkrCluster according to deltaX and deltaY alignment consts
-    void moveCluster(int tower, int layer, int view, int ladder, HepPoint3D& point) const;
-
-    HepVector3D deltaReconPoint(
-        HepPoint3D& point, HepVector3D dir, int layer, int view, int tower) const;
-    void moveReconPoint(
-        HepPoint3D& point, HepVector3D dir, int layer, int view, int tower) const;
+    HepVector3D deltaReconPoint(const HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task, const AlignmentConsts* consts) const;
+    void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task, const AlignmentConsts* consts) const;
 
     /// Get the volId and the local coordinates for the point to be aligned
-    virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
-        HepPoint3D& alignmentPoint) const;
+    idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
+        const HepPoint3D& globalPoint, HepPoint3D& alignmentPoint) const;
+
+    HepPoint3D getTowerCoordinates(const HepPoint3D& globalPoint,
+        int& nXTower, int& nYTower) const;
    
     /// true means make alignment corrections at digi time
     bool alignSim() const {return ((m_fileFlag&(1<<SIM_SHIFT))>0); }
