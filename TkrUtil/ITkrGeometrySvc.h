@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.6 2003/04/26 01:02:46 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.7 2003/05/08 04:25:18 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H

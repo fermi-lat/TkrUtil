@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrBadStripsSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2003/04/08 22:20:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.4 2003/04/11 23:27:15 lsrea Exp $
 */
 
 

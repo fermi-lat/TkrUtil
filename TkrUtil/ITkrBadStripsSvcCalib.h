@@ -2,7 +2,7 @@
 @brief Abstract Interface to TkrBadStripsSvc, used by TkrCalibAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2003/04/08 22:20:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvcCalib.h,v 1.2 2003/04/11 23:27:15 lsrea Exp $
 */
 
 
