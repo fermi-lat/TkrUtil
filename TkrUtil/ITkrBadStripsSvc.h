@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrBadStripsSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.4 2003/04/11 23:27:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.5 2003/07/02 20:15:06 cohen Exp $
 */
 
 
@@ -85,7 +85,6 @@ public:
     virtual bool isBadStrip(int tower, int layer, 
         idents::GlastAxis::axis axis, int strip) const = 0;
     virtual bool isBadStrip(const stripCol* v, int strip) const = 0;
-    virtual bool killDigi() const = 0;
     //! Fill the ASCII output stream
     virtual std::ostream& fillStream( std::ostream& s ) const = 0;        
 

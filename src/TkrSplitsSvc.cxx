@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.4 2004/08/18 00:46:36 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.5 2004/08/19 08:17:32 lsrea Exp $
 
 */
 
@@ -48,6 +48,8 @@ TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc)
     // Restrictions and Caveats:  None
     
     // declare the properties
+
+    declareProperty("splitsFile", m_splitsFile="");
 }
 
 StatusCode  TkrSplitsSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -78,8 +80,8 @@ StatusCode TkrSplitsSvc::initialize ()
     // Open the message log
     MsgStream log( msgSvc(), name() );
       
-    m_geoSvc = 0;
-    if( service( "TkrGeometrySvc", m_geoSvc, true).isFailure() ) {
+    m_pGeoSvc = 0;
+    if( service( "TkrGeometrySvc", m_pGeoSvc, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't retrieve TkrGeometrySvc" << endreq;
         return StatusCode::FAILURE;
     }
@@ -100,8 +102,7 @@ StatusCode TkrSplitsSvc::initialize ()
         
     m_pSplits = 0;
 
-    /*
-    // save this for a while
+    // back door for quick testing... this overrides the database access.
     if (m_splitsFile!="") {
         int ret =  facilities::Util::expandEnvVar(&m_splitsFile);
         if (ret>=0) {
@@ -112,37 +113,34 @@ StatusCode TkrSplitsSvc::initialize ()
             return StatusCode::FAILURE;
         }
     }
-    */
-
     sc = doInit();
     
     return sc;
 }
  
-int TkrSplitsSvc::getSplitPoint(const int tower, const int layer, const int view) const 
+int TkrSplitsSvc::getSplitPoint(int tower, int layer, int view) const 
 {
-    //Was: return m_splits[tower][layer][view];
-
     return getLastC0Strip(tower, layer, view);
 }
 
-int TkrSplitsSvc::getEnd(const int tower, const int layer, 
-                         const int view, const int strip) const 
+int TkrSplitsSvc::getEnd(int tower, int layer, 
+                         int view, int strip) const 
 {
-    //Was: return (strip<=m_splits[tower][layer][view]? 0 : 1);
-
     return ( (strip<=getLastC0Strip(tower, layer, view) ? 0 : 1) );
 }
         
 int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
 {
+    // 
     MsgStream log( msgSvc(), name() );
 
-    if (!m_pSplits) {
+    if (m_splitsFile!="") {
+        return m_splits[tower][layer][view];
+    } else if (!m_pSplits) {
         return defaultSplit;
     } else {
         int tray, botTop;
-        m_geoSvc->layerToTray(layer, view, tray, botTop);
+        m_pGeoSvc->layerToTray(layer, view, tray, botTop);
         bool isTop = (botTop==1);
         idents::TowerId twr(tower);
         int towerX = twr.ix();
@@ -176,7 +174,7 @@ StatusCode TkrSplitsSvc::doInit()
     MsgStream log( msgSvc(), name() );
     StatusCode sc = StatusCode::SUCCESS;
 
-    /*  Keep this for a while
+    // Keep this for a while
 
     int tower, layer, view;
     for(tower=0;tower<NTOWERS;++tower) {
@@ -186,7 +184,7 @@ StatusCode TkrSplitsSvc::doInit()
             }
         }
     }
-
+   
     if (m_splitsFile!="") {
         xml::IFile myFile(m_splitsFile.c_str());
 
@@ -203,11 +201,7 @@ StatusCode TkrSplitsSvc::doInit()
                 }
                 int plane;
                 for (plane=0; plane<NLAYERS*NVIEWS; ++plane) {
-                    // fix this kludge by adding a method to TkrGeometry,
-                    //    or maybe TkrTowerID??
-                    layer = plane/2;
-                    int element = (plane+3)%4;
-                    view = element/2;
+                    m_pGeoSvc->planeToLayer(plane, layer, view);
 
                     int split = splits[plane];
                     if(split<-1 || split>(NCHIPS-1)) {
@@ -220,12 +214,11 @@ StatusCode TkrSplitsSvc::doInit()
             }
         }
     }
-    */
+    
     return sc;
 }
 
 StatusCode TkrSplitsSvc::finalize( ) {
-    
     MsgStream log(msgSvc(), name());  
     return StatusCode::SUCCESS;
 }

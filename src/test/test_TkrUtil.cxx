@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.1.1.1 2002/12/05 20:17:19 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.2 2003/01/10 19:35:42 lsrea Exp $
 
 // Include files
 // Gaudi system includes
@@ -65,7 +65,7 @@ StatusCode test_TkrUtil::initialize(){
     MsgStream log(msgSvc(), name());
     log << MSG::INFO << "initialize" << endreq;
 
-    sc = service("TkrFailureModeSvc", m_FailSvc);
+    sc = service("TkrFailureModeSvc", m_FailSvc, true);
     if (sc.isFailure() ) {
         log << MSG::ERROR << "  Unable to find TkrFailureMode service" << endreq;
         return sc;

@@ -30,15 +30,13 @@ ApplicationMgr.TopAlg = {
 
 //Remove some towers and layers
 ApplicationMgr.DLLs+= {"TkrUtil"};
-ApplicationMgr.ExtSvc += {"TkrFailureModeSvc" };
+ApplicationMgr.DLLs+= {"CalibSvc"};
+
 TkrFailureModeSvc.towerList= {"10", "11"};  
 TkrFailureModeSvc.layerList= {"5_3_0", "5_4_1"};
 
-ApplicationMgr.ExtSvc += {"TkrBadStripsSvc"};
 TkrBadStripsSvc.badStripsFile = "$(TKRUTILROOT)/src/test/badStrips.txt";
 
-ApplicationMgr.ExtSvc += {"TkrAlignmentSvc"};
-//TkrAlignmentSvc.testMode = 1;
 TkrAlignmentSvc.simFile = "$(TKRUTILROOT)/src/test/Tower6_rotX_deltaX.txt";
 TkrAlignmentSvc.recFile = "$(TKRUTILROOT)/src/test/Tower6_rotY_deltaY.txt";
 
@@ -55,6 +53,3 @@ ApplicationMgr.EvtMax = 1;
 // End of job options file
 //
 //##############################################################
-
-
-

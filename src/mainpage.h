@@ -53,6 +53,10 @@
   TkrSplitsSvc maintains a list of splits for the low and high controllers for each
   plane in the detector. The default split is after chip 11, or strip 767. 
   Otherwise, the splits come in from the calibration database.
+
+  There's also a back-door to set the splits through an input xml file. This is for 
+  quick development use and is not guarranteed to be maintained. If a file is
+  specified, it overrides the database calibration.
  
   @section TkrToTSvc TkrToTSvc
   TkrToTSvc maintains the ToT thresholds and gains for each strip in the detector. The default
@@ -104,6 +108,9 @@
   The name of the file containing
   a list of bad (dead and hot) strips (default: null). These will be merged with bad strips
   coming from the calibration database.
+ *
+  @param TkrSplitsSvc.splitsFile
+  The name of the xml file containing the splits specification -- not guaranteed to be maintained
  *
   @param TkrToTSvc.ToTFile
   The name of the file containing the thresholds and gains. Currently

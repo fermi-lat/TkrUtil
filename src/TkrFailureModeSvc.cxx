@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.12 2004/06/24 08:49:03 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.13 2004/08/19 08:17:32 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -36,6 +36,7 @@ TkrFailureModeSvc::TkrFailureModeSvc(const std::string& name,ISvcLocator* svc) :
     declareProperty("towerList", m_towerListProperty);
     declareProperty("layerList", m_layerListProperty);
     m_visitor = 0;
+    m_existsList = false;
 }
 
 StatusCode  TkrFailureModeSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -84,9 +85,6 @@ StatusCode TkrFailureModeSvc::initialize ()
         m_visitor->setService(m_pGeoSvc);
     }
 
-    // Call super-class
-    //Service::initialize ();
-
     // Bind all of the properties for this service
     if ( (sc = setProperties()).isFailure() ) {
         log << MSG::ERROR << "Failed to set properties" << endreq;
@@ -109,13 +107,18 @@ StatusCode TkrFailureModeSvc::doInit()
 StatusCode TkrFailureModeSvc::update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot)
 {
     MsgStream log(msgSvc(), name());
+    StatusCode sc = StatusCode::SUCCESS;
     m_visitor->setLog(&log);
-    log << MSG::INFO << "updater called" << endreq;
-    StatusCode sc = doInit();
-    pDead->traverse(m_visitor);
-    pHot->traverse(m_visitor);
-    if(m_towerList.size()) m_failureModes = m_failureModes | 1<<TOWER_SHIFT;
-    if(m_layerList.size()) m_failureModes = m_failureModes | 1<<LAYER_SHIFT;
+    log << MSG::INFO << "Updater called" << endreq;
+    //StatusCode sc = doInit();
+    if (!m_existsList) {
+        pDead->traverse(m_visitor);
+        pHot->traverse(m_visitor);
+        if(m_towerList.size()) m_failureModes = 1<<TOWER_SHIFT;
+        if(m_layerList.size()) m_failureModes = 1<<LAYER_SHIFT;
+    } else {
+        log << MSG::INFO << "No update done -- layer and tower list is being used instead" << endreq;
+    }
     /*
     std::cout << "layerList size " << m_layerList.size() << std::endl;
     int tower;
@@ -131,33 +134,9 @@ StatusCode TkrFailureModeSvc::update(CalibData::BadStrips* pDead, CalibData::Bad
     }
     */
 
-    // taken from bad strips code
-    /*int i, j;
-    std::cout << "class TkrBadStripsSvc bad strip lists: " << std::endl;
-    for(i=0;i<NELEMENTS;i++) {
-    const stripCol* v = getBadStrips(i);
-    int size = v->size();
-    int tower = i/(NLAYERS*NVIEWS);
-    int layer = i%(NLAYERS*NVIEWS)/2;
-    int view  = i%2;
-    if (size) {
-    std::cout << " index " << i <<" tower " << tower << " layer "
-    << layer << " view " << view <<" size " << size << std::endl << " strips " ;
-    for (j=0;j<size;j++) {
-    int strip = (*v)[j].getStripNumber();
-    std::cout << strip<< " " ;
-    }
-    std::cout << std::endl;
-    }
-    }
-    */
-
-    //std::cout << fillStream(std::cout) << "*" << std::endl << "*" << "The end!!" << std::endl;
-
     return sc;
 
 }
-
 
 StatusCode TkrFailureModeSvc::finalize () 
 {
@@ -179,7 +158,7 @@ void TkrFailureModeSvc::processLayerList() {
         log << "Layers to kill ";
     }
     log << endreq;
-
+    
     std::vector<std::string>::const_iterator it;
     std::vector<std::string>::const_iterator itend = theLayers.end( );
     for (it = theLayers.begin(); it != itend; it++) {
@@ -202,6 +181,7 @@ void TkrFailureModeSvc::processLayerList() {
         std::vector<int>& curList = m_layerList[tower];
         curList.push_back(plane);
         m_failureModes = m_failureModes | 1 << LAYER_SHIFT;
+        m_existsList = true;
 
         /*
         std::cout << "debug output from processLayerList" << std::endl;
@@ -251,6 +231,7 @@ void TkrFailureModeSvc::processTowerList() {
         log << endreq;
         m_towerList.push_back(tower);
         m_failureModes = m_failureModes | 1 << TOWER_SHIFT;
+        m_existsList = true;
     }
 }
 

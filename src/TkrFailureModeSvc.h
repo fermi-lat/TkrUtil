@@ -113,6 +113,8 @@ private:
 
     /// bitmap of failure modes
     int m_failureModes;
+    /// tells whether a list was read in
+    bool m_existsList;
 
     /// vector of towers to fail
     std::vector<int> m_towerList;

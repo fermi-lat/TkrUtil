@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.3 2004/03/13 19:40:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.4 2004/08/18 00:46:36 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
@@ -28,6 +28,7 @@ class TkrSplitsSvc : public Service, virtual public ITkrSplitsSvc  {
 
 public:
 
+    enum {NTOWERS=16, NLAYERS=18, NVIEWS=2};
     TkrSplitsSvc(const std::string& name, ISvcLocator* pSvcLocator); 
 
     StatusCode initialize();
@@ -61,9 +62,13 @@ private:
    /// pointer to data provider svc
     IDataProviderSvc* m_pCalibDataSvc;
     /// pointer to the geometry
-    ITkrGeometrySvc* m_geoSvc;
+    ITkrGeometrySvc* m_pGeoSvc;
     /// pointer to the calibration data
     CalibData::TkrSplitsCalib* m_pSplits;
+    /// name of the input file, if present
+    std::string m_splitsFile;
+    /// array containing splits, for use as a quick test
+    int m_splits[NTOWERS][NLAYERS][NVIEWS];
 };
 
 #endif // TkrSplitsSvc_H

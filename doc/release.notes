@@ -3,6 +3,7 @@
 
 @verbatim
 
+  v1r12p9  24-Aug-04 LSR Fix the test program and jobOptions
   v1r12p8  23-Aug-04 LSR Lots of changes to TkrGeometrySvc, and a unix fix
   v1r12p7  17-Aug-04 LSR Fix req. connect TkrSplitsSvc to the database
   v1r12p6  21-Jul-04 LSR Fix req. file according to Traudl's suggestion

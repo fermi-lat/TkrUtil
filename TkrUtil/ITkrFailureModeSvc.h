@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrFailureModeSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2003/04/08 22:20:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrFailureModeSvc.h,v 1.4 2003/04/11 23:27:15 lsrea Exp $
 */
 
 
@@ -16,7 +16,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
 
-static const InterfaceID IID_ITkrFailureModeSvc("ITkrFailureModeSvc", 2 , 0);
+static const InterfaceID IID_ITkrFailureModeSvc("ITkrFailureModeSvc", 3, 0);
 
 /** @class ITkrFailureModeSvc
 * @brief Interface class for TkrFailureModeSvc

@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.10 2004/06/24 08:49:03 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.11 2004/08/19 08:17:32 lsrea Exp $
 */
 
 
@@ -36,7 +36,7 @@ Service(name, pSvcLocator)
 {
     //Name of the file to get data from   
     declareProperty("badStripsFile", m_badStripsFile="");
-    declareProperty("killDigi", m_killDigi=false );
+    //declareProperty("killDigi", m_killDigi=false );
     m_visitor = 0;
        
     return;
@@ -54,8 +54,6 @@ StatusCode TkrBadStripsSvc::initialize()
         m_visitor->setService(m_pGeoSvc);
     }
 
-    //Service::initialize();
-    
     m_badStripsFile = "";
     m_empty = true;
     
@@ -81,7 +79,6 @@ StatusCode TkrBadStripsSvc::initialize()
             return StatusCode::FAILURE;
         }
     }
-
     sc = doInit();
     
     return sc;
@@ -147,15 +144,18 @@ StatusCode TkrBadStripsSvc::finalize()
 StatusCode TkrBadStripsSvc::update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot)
 {
     MsgStream log(msgSvc(), name());
+    StatusCode sc = StatusCode::SUCCESS;
     m_visitor->setLog(&log);
-    log << MSG::INFO << "updater called " << endreq;
-    StatusCode sc = doInit();
-    pDead->traverse(m_visitor);
-    pHot->traverse(m_visitor);
-    m_empty = m_empty && m_visitor->isEmpty();
-    
+    log << MSG::INFO << "Updater called " << endreq;
+    if (m_badStripsFile=="") {
+        pDead->traverse(m_visitor);
+        pHot->traverse(m_visitor);
+        m_empty = m_empty && m_visitor->isEmpty();
+    } else {
+        log << MSG::INFO 
+            << "No update done -- badStripsFile is being used instead" << endreq;
+    }
     return sc;
-    
 }
 
 void TkrBadStripsSvc::readFromFile(std::ifstream* file)
