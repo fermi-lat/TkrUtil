@@ -237,12 +237,26 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     log << MSG::DEBUG ;
     if (log.isActive()) {
         for (int tower = 0; tower < NTOWERS; ++tower) {
-            std::cout << m_mode <<" consts for tower " << tower << ", view 0, ladder 0, wafer 0" << std::endl;
+            bool first = true;
             for (int layer=0; layer<NLAYERS; ++layer) {
                 int index = getIndex(tower, layer, 0, 0, 0);
-                std::cout << "layer " << layer << " ";
-                if (m_mode=="sim") {m_simConsts[index].fillStream(std::cout);}
-                else               {m_recConsts[index].fillStream(std::cout);}
+                if (m_mode=="sim") {
+                    if ( !m_simConsts[index].isNull() ) {
+                        if (first) std::cout << m_mode <<" consts for tower " << tower 
+                            << ", view 0, ladder 0, wafer 0" << std::endl;
+                        first = false;
+                        std::cout << "layer " << layer << " ";
+                        m_simConsts[index].fillStream(std::cout);
+                    }
+                }   else  {             
+                    if ( !m_recConsts[index].isNull() ) {
+                        if (first) std::cout << m_mode <<" consts for tower " << tower 
+                            << ", view 0, ladder 0, wafer 0" << std::endl;
+                        first = false;
+                        std::cout << "layer " << layer << " ";
+                        m_recConsts[index].fillStream(std::cout);
+                    }
+                }
             }
         }
     }
@@ -298,10 +312,10 @@ StatusCode TkrAlignmentSvc::readFromFile()
     
     while(!m_dataFile->eof()) {
         *m_dataFile >> flag ;
+        if (m_dataFile->eof()) break;
+
         if(flag== "//") { // comment line, just skip 
             std::getline(*m_dataFile, junk);
-            if (!m_dataFile->eof()) break;
-            continue;
         } else {
             if (flag=="tower") {
                 
@@ -314,7 +328,9 @@ StatusCode TkrAlignmentSvc::readFromFile()
                 
                 double a,b,c,d,e,f;       
                 *m_dataFile >> a >> b >> c >> d >> e >> f ;
-                m_towerConsts = AlignmentConsts(a,b,c,d,e,f);
+                
+                m_towerConsts = AlignmentConsts(0.001*a, 0.001*b, 0.001*c,
+                    0.001*d, 0.001*e, 0.001*f);
                 
                 if (m_towerConsts.isNull()) { continue; }
                 
@@ -555,6 +571,8 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     // Inputs:      volId and entry and exit points
     // Output:      modified entry and exit point arguments
     
+    //This is called "dir" but what I'm calculating is a direction normalized to dir.z() = 1;
+    //  This yields the slopes in x and y as the x() and y() components.
     HepVector3D dir = (exit-entry);
     double delz = dir.z();
 	
@@ -576,22 +594,28 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     HepVector3D deltaEntry = getDelta(view, entry, dir, alConsts);
     HepVector3D deltaExit  = getDelta(view, exit,  dir, alConsts);
 
-    // for now, limit delta to 3 mm
+    // for now, limit delta to 5 mm
     // later fix transformation for special cases
 
     double mag;
     HepVector3D dirDelta;
 
-    mag = std::min(3.0, deltaEntry.mag());
+    double maxDelta = 5.0;
+
+
+    mag = std::min(maxDelta, deltaEntry.mag());
     dirDelta = deltaEntry.unit();
     deltaEntry = mag*dirDelta;
 
-    mag = std::min(3.0, deltaExit.mag());
+    mag = std::min(maxDelta, deltaExit.mag());
     dirDelta = deltaExit.unit();
     deltaExit = mag*dirDelta;
 
     entry = entry + deltaEntry;
     exit  = exit  + deltaExit;
+    
+    //std::cout << "moveMc " << view << " delta " << deltaEntry.x() << " " << deltaEntry.y() 
+    //    << " dir " << dir.x() << " "<< dir.y() << std::endl;
     
     return;
 }
@@ -631,8 +655,8 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
     
     double small = 1.e-3;
     
-    double pointX = point.x(); 
-    double pointY = point.y(); 
+    double point1 = point.x(); 
+    double point2 = point.y(); 
     //double pointZ = point.z(); not yet used
     
     double deltaX = alConsts->getDeltaX();
@@ -645,20 +669,35 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
     
     double dirZ   = dir.z();
     if (fabs(dirZ)<small) dirZ = small;
-    double alphaX = dir.x()/dirZ;
-    double alphaY = dir.y()/dirZ;
-    
+    double alpha1 = dir.x()/dirZ;
+    double alpha2 = dir.y()/dirZ;
+
+    double pointX, pointY;
+    double alphaX, alphaY;
+
+    if (view==0) {
+        pointX = point1;
+        pointY = point2;
+        alphaX = alpha1;
+        alphaY = alpha2;
+    } else {
+        pointX = point2;
+        pointY = -point1;
+        alphaX = alpha2;
+        alphaY = -alpha1;
+    }
+  
     double rotTerm = deltaZ + rotX*pointY - rotY*pointX; 
     
-    double deltaPointXLocal = - deltaX + rotZ*pointY
+    double deltaPointX = - deltaX + rotZ*pointY
         + alphaX*rotTerm;
-    double deltaPointYLocal = - deltaY - rotZ*pointX
+    double deltaPointY = - deltaY - rotZ*pointX
         + alphaY*rotTerm;
-    
-    if(view==1) {
-        return HepVector3D(deltaPointYLocal, -deltaPointXLocal, 0.);
+
+    if (view==0) {
+        return HepVector3D(deltaPointX,  deltaPointY, 0.);
     } else {
-        return HepVector3D(deltaPointXLocal,  deltaPointYLocal, 0.);
+        return HepVector3D(deltaPointY, -deltaPointX, 0.);
     }
 }
 
