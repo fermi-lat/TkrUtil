@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.8 2003/05/02 16:08:52 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.9 2003/12/03 19:12:26 lsrea Exp $
 */
 
 
@@ -143,8 +143,7 @@ StatusCode TkrBadStripsSvc::update(CalibData::BadStrips* pDead, CalibData::BadSt
     StatusCode sc = doInit();
     pDead->traverse(m_visitor);
     pHot->traverse(m_visitor);
-        
-    //std::cout << fillStream(std::cout) << std::endl;
+    m_empty = m_empty && m_visitor->isEmpty();
     
     return sc;
     
@@ -388,6 +387,7 @@ CalibData::eVisitorRet BadVisitor::badPlane(unsigned int row,
         for (i=0;i<strips.size();i++) {
             int strip = strips[i];
             pBad->addStrip(v, TaggedStrip(strip, tag));
+            m_nStrips++;
         }
 
         // removing duplicates

@@ -16,29 +16,31 @@
 *
 */
 
-namespace {
-/**
-@class BadVisitorFM
+enum {TOWER_SHIFT = 0, LAYER_SHIFT = 1};
 
-  Minimal class derived from CalibData::BadStripsVisitor to
-  check out BadStrips visitor interface.
+namespace {
+    /**
+    @class BadVisitorFM
+
+    Minimal class derived from CalibData::BadStripsVisitor to
+    check out BadStrips visitor interface.
     */
     class BadVisitorFM : public CalibData::BadStripsVisitor {
     public:
-        BadVisitorFM(MsgStream* log=0) : m_log(log) {}
-        
+        BadVisitorFM(MsgStream* log=0) : m_log(log){}
+
         void setLog(MsgStream* log) {m_log = log;}
-        
+
         virtual CalibData::eVisitorRet badTower(unsigned int row, unsigned int col,
             int badness);
-        
+
         virtual CalibData::eVisitorRet badPlane(unsigned int row, unsigned int col, 
             unsigned int tray, bool top,
             int badness, bool allBad,
             const CalibData::StripCol& strips);
-        
+
         void setService(ITkrFailureModeSvcCalib* pFailureMode) {m_pFailureMode = pFailureMode;}
-        
+
     private:
         MsgStream* m_log;
         ITkrFailureModeSvcCalib* m_pFailureMode;
@@ -59,11 +61,11 @@ public:
     int getFailureConditions() const {return m_failureModes;}
 
     bool empty() const { return m_failureModes==0;}
+    void setFailureModes( int modeBit ) { m_failureModes = m_failureModes | modeBit;}
 
 
-	StatusCode update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot);
+    StatusCode update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot);
 
-    enum {TOWER_SHIFT, LAYER_SHIFT};
 
     /// Find out if object is marked Failed
     bool isFailed(int towerId, int layer, int view) const;
@@ -113,14 +115,14 @@ private:
     std::vector<int> m_towerList;
 
     /// vector of layers to fail
-//    std::map <int, std::vector<int> > m_layerList;
+    //    std::map <int, std::vector<int> > m_layerList;
 
     BadVisitorFM* m_visitor;
 
 
     /// vector of layers to fail
     LayerMap  m_layerList;
-};
+    };
 
 
 #endif // TkrFailureModeSvc_H

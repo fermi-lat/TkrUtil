@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.3 2003/02/17 18:06:58 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.4 2003/04/11 23:27:15 lsrea Exp $
 */
 
 
@@ -61,7 +61,7 @@ namespace {
 */
     class BadVisitor : public CalibData::BadStripsVisitor {
     public:
-        BadVisitor(MsgStream* log=0) : m_log(log) {}
+        BadVisitor(MsgStream* log=0) : m_log(log), m_nStrips(0) {}
         
         void setLog(MsgStream* log) {m_log = log;}
         
@@ -74,10 +74,13 @@ namespace {
             const CalibData::StripCol& strips);
         
         void setService(ITkrBadStripsSvcCalib* pBadStrips) {m_pBadStrips = pBadStrips;}
+
+        bool isEmpty() { return m_nStrips==0; }
         
     private:
         MsgStream* m_log;
         ITkrBadStripsSvcCalib* m_pBadStrips;
+        int m_nStrips;
     };
 }
 
