@@ -203,13 +203,14 @@ int TkrAlignmentSvc::getIndex(int tower, int layer,
     
     int index = -1;
     if (layer<0 || layer>=NLAYERS || tower<0 || tower>=NTOWERS ||
-        view<0 || view>=NVIEWS || ladder<0 || ladder >= NLADDERS || wafer<0 || wafer>=NWAFERS)
+        view<0 || view>=NVIEWS || ladder<0 || ladder >= NLADDERS ||
+        wafer<0 || wafer>=NWAFERS)
     {return index;}
     // for now, hardwired to be as large as will ever by needed
     return wafer + NWAFERS*(ladder + NLADDERS*(view + NVIEWS*(layer + NLAYERS*tower)));
 }
 
-AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, int tower, int layer, 
+const AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, int tower, int layer, 
                                             int view, int ladder, int wafer) const
 {
     // Purpose:  return pointer to an set of alignment consts
@@ -221,7 +222,8 @@ AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, int tower, int layer
     return getConsts(type, index);
 }
 
-AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, idents::VolumeIdentifier id) const
+const AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, 
+                                                  idents::VolumeIdentifier id) const
 {
     // Purpose:  return pointer to a set of alignment consts
     // Inputs:   const type, tower, layer, view, ladder, wafer
@@ -240,7 +242,7 @@ AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, idents::VolumeIdenti
     return getConsts(type, index);
 }
 
-AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, int index) const
+const AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, int index) const
 {
     // Purpose:  return pointer
     // Inputs:   index
@@ -249,16 +251,14 @@ AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, int index) const
     if (index>=0 && index < NELEMENTS) {
         
         if (type==SIM) {
-            return const_cast<AlignmentConsts*>(&m_simConsts[index]);
-            //return &m_simConsts[index];
+            return &m_simConsts[index];
         } else {
-            return const_cast<AlignmentConsts*>(&m_recConsts[index]);
-            //return &m_recConsts[index];
+            return &m_recConsts[index];
         }
         
     } else {
         AlignmentConsts* result = 0;
-        return 0;
+        return result;
     }
 }
 
@@ -278,7 +278,7 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     //    in 2nd order (~ microns) on the coordinates. This can be speeded up if
     //    necessary, by basing the calculation on the average coordinates
     
-    AlignmentConsts* alConsts = getConsts(SIM, id);
+    const AlignmentConsts* alConsts = getConsts(SIM, id);
 
     int view = id[5];
     
@@ -299,7 +299,7 @@ void TkrAlignmentSvc::moveCluster(int tower, int layer, int view, int ladder,
     // Output:   modified position argument
     
     int wafer = 0;
-    AlignmentConsts* alConsts = getConsts(REC, tower, layer, view, ladder, wafer);
+    const AlignmentConsts* alConsts = getConsts(REC, tower, layer, view, ladder, wafer);
     // "x" is the only thing we can correct at this stage...
     //     average for all the wafers in a ladder would be better.
     AlignmentConsts alConsts1(alConsts->getDeltaX(), alConsts->getDeltaY()); 

@@ -11,7 +11,7 @@
 *
 * @author Leon Rochester
 *
-* $Header$
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.1 2003/01/27 00:37:46 lsrea Exp $
 */
 
 #include "GaudiKernel/Service.h"
@@ -35,11 +35,11 @@ public:
     StatusCode finalize();
     
     /// returns the constants for a given element
-    AlignmentConsts* getConsts
+    const AlignmentConsts* getConsts
         (constType type, int tower, int layer, int view, int ladder, int wafer) const;
 
     /// returns the constants for a given element
-    AlignmentConsts* getConsts
+    const AlignmentConsts* getConsts
         (constType type, idents::VolumeIdentifier id) const;
 
     /// moves the entry and exit of an MCPositionHit according to alignment consts
@@ -68,7 +68,7 @@ private:
     
     
     /// returns the constants for a given element
-    AlignmentConsts* getConsts(constType type, int index) const;
+    const AlignmentConsts* getConsts(constType type, int index) const;
 
     /// to calculate delta of a point
     HepVector3D getDelta(int view,  const HepPoint3D& point, const HepVector3D& dir,

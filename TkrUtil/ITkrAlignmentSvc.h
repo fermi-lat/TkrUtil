@@ -60,10 +60,11 @@ public:
 
     static const InterfaceID& interfaceID() { return IID_ITkrAlignmentSvc; }
    
-    virtual AlignmentConsts* getConsts(constType type, int tower, int layer, int view, 
-        int ladder=0, int wafer=0) const = 0;
+    virtual const AlignmentConsts* getConsts(constType type, int tower, 
+        int layer, int view, int ladder=0, int wafer=0) const = 0;
 
-    virtual AlignmentConsts* getConsts(constType type, idents::VolumeIdentifier id) const = 0;
+    virtual const AlignmentConsts* getConsts(constType type, 
+        idents::VolumeIdentifier id) const = 0;
 
     virtual void moveMCHit(idents::VolumeIdentifier id, 
         HepPoint3D& entry, HepPoint3D &exit) const = 0;
