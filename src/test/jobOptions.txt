@@ -1,0 +1,49 @@
+//##############################################################
+//
+//  Job options file for TkrUtil test 
+
+// primary DLLs
+
+// ----------------------------
+// setup basic event loop stuff
+//
+
+ApplicationMgr.ExtSvc = { 
+    "GlastEventSelector/EventSelector" , 
+    "EventCnvSvc"
+    };
+EventPersistencySvc.CnvServices = {"EventCnvSvc"};
+EventSelector.Input = "NONE";
+
+// ----------------------------
+//  Geometry definition
+//
+
+ApplicationMgr.DLLs += {"GlastSvc"};
+
+
+// ----------------------------
+//  topalg
+//
+ApplicationMgr.TopAlg = {
+	"test_TkrUtil"
+    };
+
+//Remove some towers and layers
+ApplicationMgr.DLLs+= {"TkrUtil"};
+ApplicationMgr.ExtSvc += {"TkrFailureModeSvc"};
+TkrFailureModeSvc.towerList= {"10", "11"};  
+TkrFailureModeSvc.layerList= {"5_3_0", "5_4_1"};
+
+// Set output level threshold (2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL )
+MessageSvc.OutputLevel = 3;
+ApplicationMgr.EvtMax = 1;
+
+//==============================================================
+//
+// End of job options file
+//
+//##############################################################
+
+
+
