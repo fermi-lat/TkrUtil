@@ -2,6 +2,7 @@
 
  * Package TkrUtil
 
+ * v1r3       16-jan-03 LSR move TkrQueryClustersTool, TkrMeritTool to TkrUtil
  * v1r2       10-jan-03 LSR move TkrGeometrySvc to TkrUtil
  * v1r1       06-jan-03 LSR move TkrBadStripsSvc to TkrUtil
  * v1r0       30-dec-02 LSR no change (test to see if checkout works better)
