@@ -23,9 +23,9 @@ TkrAlignmentSvc::TkrAlignmentSvc(const std::string& name,
 Service(name, pSvcLocator)
 {
     //Name of the file to get data from   
-    declareProperty("simFile", m_simFile);
-    declareProperty("recFile", m_recFile);
-    declareProperty("testMode", m_testMode);
+    declareProperty("simFile", m_simFile="");
+    declareProperty("recFile", m_recFile="");
+    declareProperty("testMode", m_testMode=0);
     
     return;
 }
