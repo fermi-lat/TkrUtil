@@ -1,0 +1,3 @@
+-1 Test of tower tilt
+-1 Tower 6, rotation and translation in X
+6  0.1 0. 0. 0.0004 0.0 0.0

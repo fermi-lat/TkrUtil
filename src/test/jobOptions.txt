@@ -21,7 +21,6 @@ EventSelector.Input = "NONE";
 
 ApplicationMgr.DLLs += {"GlastSvc"};
 
-
 // ----------------------------
 //  topalg
 //
@@ -31,15 +30,23 @@ ApplicationMgr.TopAlg = {
 
 //Remove some towers and layers
 ApplicationMgr.DLLs+= {"TkrUtil"};
-ApplicationMgr.ExtSvc += {"TkrFailureModeSvc"};
+ApplicationMgr.ExtSvc += {"TkrFailureModeSvc" };
 TkrFailureModeSvc.towerList= {"10", "11"};  
 TkrFailureModeSvc.layerList= {"5_3_0", "5_4_1"};
 
 ApplicationMgr.ExtSvc += {"TkrBadStripsSvc"};
 TkrBadStripsSvc.badStripsFile = "$(TKRUTILROOT)/src/test/badStrips.txt";
 
+ApplicationMgr.ExtSvc += {"TkrAlignmentSvc"};
+//TkrAlignmentSvc.testMode = 1;
+TkrAlignmentSvc.simFile = "$(TKRUTILROOT)/src/test/Tower6_rotX_deltaX.txt";
+TkrAlignmentSvc.recFile = "$(TKRUTILROOT)/src/test/Tower6_rotY_deltaY.txt";
+
+ApplicationMgr.DLLs += {"G4Propagator", "G4Generator"};
+ApplicationMgr.ExtSvc += {"G4GeometrySvc"};
+
 // Set output level threshold (2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL )
-MessageSvc.OutputLevel = 3;
+MessageSvc.OutputLevel = 2;
 ApplicationMgr.EvtMax = 1;
 
 //==============================================================

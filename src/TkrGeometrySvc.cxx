@@ -122,6 +122,7 @@ StatusCode TkrGeometrySvc::initialize()
     }
 
     // Get propagator from the service
+    
     IPropagatorSvc* propagatorSvc = 0;
     sc = service("GlastPropagatorSvc", propagatorSvc, true);
     if (sc.isFailure()) {
@@ -172,22 +173,40 @@ HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view,
     return m_pDetSvc->getStripPosition(volId, stripId);
 }
 
-void TkrGeometrySvc::trayToLayer(int tray, int botTop, int& layer, int& view)
+
+void TkrGeometrySvc::trayToLayer(int tray, int botTop, 
+                                       int& layer, int& view)
 {
     // Purpose: calculate layer and view from tray and botTop
-    // Method:  pass it on to the detector service
+    // Method: use knowledge of the structure of the Tracker
     
-    m_pDetSvc->trayToLayer(tray, botTop, layer, view);
+    int plane = 2*tray + botTop - 1;
+    layer = (plane+10)/2 - 5; // homemade "floor"
+    view = ((layer%2==0) ? botTop : (1 - botTop));
+    return;
 }
 
-void TkrGeometrySvc::layerToTray(int layer, int view, int& tray, int& botTop) 
+void TkrGeometrySvc::layerToTray(int layer, int view, 
+                                       int& tray, int& botTop) 
 {   
-    // Purpose: calculate tray and botTop from layer and view
-    // Method:  pass it on to the detector service
+    // Purpose: calculate tray and botTop from layer and view.
+    // Method:  use knowledge of the structure of the Tracker
     
-    m_pDetSvc->layerToTray(layer, view, tray, botTop);
+    int plane = (2*layer) + (((layer % 2) == 0) ? (1 - view) : (view));
+    tray = (plane+1)/2;
+    botTop = (1 - (plane % 2));
 }
 
+
+void TkrGeometrySvc::planeToLayer(int plane, 
+                                       int& layer, int& view)
+{
+    // Purpose: calculate tray and botTop from plane
+    // Method:  use knowledge of the structure of the Tracker
+        layer = plane/2;
+        int element = (plane+3)%4;
+        view = element/2;
+}
 
 // queryInterface
 

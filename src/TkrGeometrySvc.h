@@ -10,12 +10,9 @@
  *
  * The constants all flow from GlastDetSvc.
  * 
- * The calculations are done locally, with some help from the GlastDetSvc. 
- * Probably should be moved to to GlastDetSvc.
- * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.2 2003/03/12 23:14:07 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.3 2003/03/13 19:06:06 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -89,6 +86,10 @@ public:
     void layerToTray (int layer, int view, int& tray, int& botTop);
     /// calculate layer, view from tray, botTop
     void trayToLayer (int tray, int botTop, int& layer, int& view);
+    /// calculate layer (digi format) and view from plane
+    void planeToLayer (int plane, int& layer, int& view);
+    
+
     
     StatusCode queryInterface(const IID& riid, void** ppvUnknown);
 

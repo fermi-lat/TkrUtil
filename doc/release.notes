@@ -2,6 +2,7 @@
 @verbatim
  @brief Package TkrUtil
 
+  v1r7     07-apr-03 LSR Upgrade TkrAlignmentSvc; reorganize ITkrGeometrySvc
   v1r6     13-mar-03 LSR TkrGeometry stores pointer to the other services
   v1r5p1   28-feb-03 LSR cleanup of unix errors
   v1r5     17-feb-03 LSR add TkrCalibAlg, and mods to services to implement
