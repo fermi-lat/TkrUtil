@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.5 2003/04/11 23:27:15 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.6 2003/04/17 23:40:38 atwood Exp $
 */
 
 
@@ -19,7 +19,7 @@
 
 
 // Declaration of the interface ID ( interface id, major version, minor version) 
-static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 1 , 0); 
+static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 2 , 0); 
 
 /** @class ITkrQueryClustersTool
 * @brief Abstract interface for methods to query TkrClusters
@@ -79,18 +79,19 @@ public:
         double inDistance, const Point& Pini, int& id) = 0;
     
     /// Finds the number of clusters with measured distances 
-    /// inside a square of side 2*inDistance of a point
+    /// inside a square of side 2*inDistance of a point, in requested bilayer
     virtual int numberOfHitsNear( int layer, double inDistance, const Point& x0) = 0;
     /// Finds the number of clusters with measured distances 
-    /// inside a rectangle of side 2*dX by 2*dY of a point
+    /// inside a rectangle of side 2*dX by 2*dY of a point, in requested bilayer
     virtual int numberOfHitsNear( int layer, double dX, double dY, const Point& x0) = 0;
     /// Finds the number of clusters within "inDistance" of a point 
-    /// and within one tower.
-    virtual int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0) = 0;
-    /// Finds the number of clusters within "inDistance" of a point 
-    /// and within one tower.
+    /// and within one tower, in requested layer and view
     virtual int numberOfHitsNear( Event::TkrCluster::view v, int layer, 
         double inDistance, const Point& x0) = 0;
+
+    /// Finds the number of unused clusters within 2*dX by 2*dY of a point 
+    /// and within one tower, in requested layer and view
+    virtual int numberOfUUHitsNear( int layer, double dX, double dY, const Point& x0) = 0;
 
 };
 
