@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r3p1   28-Feb-05 LSR req. file got corrupted during merge
   v3r3     28-Feb-05 LSR TkrBadStripsSvc -- get DB working again
                          TkrCalibSvc -- everything but muon calib in place
                          TkrGeomSvc -- get rid of inTower(); some rearranging
