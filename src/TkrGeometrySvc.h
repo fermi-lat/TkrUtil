@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.7 2003/04/30 02:36:59 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.8 2003/05/08 04:25:18 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -61,6 +61,11 @@ public:
     double siResolution()   const {return m_siResolution;}
     double siThickness()    const {return m_siThickness;}
     double siDeadDistance() const {return m_siDeadDistance;}
+
+	double calZTop()        const {return m_calZTop;}
+	double calZBot()        const {return m_calZBot;}
+	double calXWidth()      const {return m_calXWidth;}
+	double calYWidth()      const {return m_calYWidth;}
 
     /// reverse the numbering of the bilayers (goes both ways)
     int reverseLayerNumber(int layer) const {return numLayers()-layer-1;}
@@ -158,6 +163,14 @@ private:
     double m_siDeadDistance;
     /// size of Wafer
     double m_siWaferSide;
+    /// z coordinate of top of the top CAL crystal
+	double m_calZTop;
+	/// z coordinate of bottom of the bottom CAL crystal
+	double m_calZBot;
+	/// (maximum) width in x of active CsI across the entire instrument
+	double m_calXWidth;
+	/// (maximum) width in y of active CsI across the entire instrument
+	double m_calYWidth;
     /// z positions of all the layers (digi convention)
     double m_layerZ[NLAYERS][NVIEWS];
 
@@ -181,6 +194,9 @@ private:
 
     /// fill rad lengths
     StatusCode fillPropagatorInfo();
+
+	/// get the relevant CAL info();
+	StatusCode getCalInfo();
 
     /// return converter type for a layer
     convType getDigiLayerType(int digiLayer) const;

@@ -39,6 +39,8 @@ StatusCode TkrGeometrySvc::initialize()
     Service::initialize();
     setProperties();
     MsgStream log(msgSvc(), name());
+
+	std::cout << "TkrGeometrySvc init called!!!" << std::endl;
     
     double siWaferActiveSide;
 
@@ -138,6 +140,10 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::ERROR << "Failed to get minTrayHeight"<< endreq;
         return sc;
     }
+
+	// Get cal info necessary for tracker recon
+
+	sc = getCalInfo();
 
     // Get propagator from the service
     
@@ -496,3 +502,57 @@ convType TkrGeometrySvc::getDigiLayerType(int digiLayer) const
 
     return type;
 }
+
+StatusCode TkrGeometrySvc::getCalInfo()
+{
+    MsgStream log(msgSvc(), name());
+
+	double csiLength, csiWidth, csiHeight;
+    double cellHorPitch, cellVertPitch;
+    int nCsiPerLayer, CALnLayer;
+
+    if (m_pDetSvc->getNumericConstByName("CsILength",  &csiLength).isFailure() ||
+        m_pDetSvc->getNumericConstByName("CsIHeight",  &csiHeight).isFailure() ||
+        m_pDetSvc->getNumericConstByName("CsIWidth",   &csiWidth ).isFailure() ||
+        m_pDetSvc->getNumericConstByName("CALnLayer",  &CALnLayer).isFailure() ||
+        m_pDetSvc->getNumericConstByName("nCsIPerLayer",  &nCsiPerLayer).isFailure() ||
+        m_pDetSvc->getNumericConstByName("cellHorPitch",  &cellHorPitch).isFailure() ||
+        m_pDetSvc->getNumericConstByName("cellVertPitch", &cellVertPitch).isFailure())
+    {return StatusCode::FAILURE;}
+
+    //get the top and bottom of the CAL crystals
+
+    idents::VolumeIdentifier topLayerId;
+    topLayerId.init(0,0);
+    int count;
+
+    // top layer of the Cal
+	// Which id is legal depends on whether the cal geometry is plain or segvols.
+	// for the moment, I'll just check a few until I get a good one, and if I don't then
+	// I bail... this is a bit of a kludge... seems to work though
+
+    for (count=0;count<6;++count) {topLayerId.append(0);} 
+    StatusCode sc;
+    HepTransform3D transfTop;
+	for (count=6;count<9;++count) {
+		topLayerId.append(0);
+        if((sc = m_pDetSvc->getTransform3DByID(topLayerId,&transfTop)).isSuccess()) break;
+	}
+	if(sc.isFailure()) {
+		log << MSG::ERROR << "Couldn't get Id for layer 0 of CAL" << endreq;
+		return sc;
+	}
+    Vector vecTop = transfTop.getTranslation();
+    m_calZTop = vecTop.z()+ 0.5*csiHeight;
+    
+    m_calZBot = m_calZTop - (CALnLayer-1)*cellVertPitch - csiHeight;
+
+    // get the maximum horizontal dimension of the crystals in a layer
+    double calWidth1 = (nCsiPerLayer-1)*cellHorPitch + csiWidth;
+    double ModWidth  = std::max(calWidth1, csiLength);
+    m_calXWidth = (m_numX-1)*m_towerPitch + ModWidth;
+    m_calYWidth = (m_numY-1)*m_towerPitch + ModWidth;
+
+    return StatusCode::SUCCESS;
+}
+

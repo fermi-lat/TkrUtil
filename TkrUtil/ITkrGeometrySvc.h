@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.7 2003/05/08 04:25:18 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.8 2003/07/02 20:15:06 cohen Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -27,7 +27,7 @@
  * @author Tracy Usher
  */
 
-static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 5 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 6 , 0); 
 
 namespace {
     enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
@@ -43,34 +43,40 @@ public:
     
     //Retrieve stored information
 
-    virtual int    numXTowers() const =0;
-    virtual int    numYTowers() const =0;
-    virtual int    numViews() const =0;
-    virtual int    numLayers() const =0;
-    virtual int    numNoConverter() const =0;
-    virtual int    numSuperGlast() const =0;
-    virtual int    numRegular() const =0;
+    virtual int    numXTowers()     const = 0;
+    virtual int    numYTowers()     const = 0;
+    virtual int    numViews()       const = 0;
+    virtual int    numLayers()      const = 0;
+    virtual int    numNoConverter() const = 0;
+    virtual int    numSuperGlast()  const = 0;
+    virtual int    numRegular()     const = 0;
 
-    virtual int    numPlanes() const =0;
+    virtual int    numPlanes()      const = 0;
 
-    virtual double towerPitch() const =0;
-    virtual double trayWidth() const =0;
-    virtual double trayHeight() const =0;
+    virtual double towerPitch()     const = 0;
+    virtual double trayWidth()      const = 0;
+    virtual double trayHeight()     const = 0;
     
-    virtual double ladderGap() const =0;
-    virtual double ladderInnerGap() const =0;
-    virtual int    ladderNStrips() const =0;
-    virtual int    nWaferAcross() const =0;
-    virtual double siWaferSide() const = 0;
+    virtual double ladderGap()      const = 0;
+    virtual double ladderInnerGap() const = 0;
+    virtual int    ladderNStrips()  const = 0;
+    virtual int    nWaferAcross()   const = 0;
+    virtual double siWaferSide()    const = 0;
     
-    virtual double siStripPitch() const =0;
-    virtual double siResolution() const =0;
-    virtual double siThickness() const =0;
-    virtual double siDeadDistance() const =0;
+    virtual double siStripPitch()   const = 0;
+    virtual double siResolution()   const = 0;
+    virtual double siThickness()    const = 0;
+    virtual double siDeadDistance() const = 0;
+
+    virtual double calZTop()        const = 0;
+	virtual double calZBot()        const = 0;
+	virtual double calXWidth()      const = 0;
+	virtual double calYWidth()      const = 0;
+
 
     // Digi and Reco layers differ in the ordering
     /// convert from digi<->recon layer number
-    virtual int reverseLayerNumber(int layer) const =0;
+    virtual int reverseLayerNumber(int layer) const = 0;
 
     /// Return the strip position (in local coordinates) given the stripId
     virtual HepPoint3D getStripPosition( int tower, int layer, int view, 
