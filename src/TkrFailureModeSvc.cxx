@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.4 2003/01/21 20:58:24 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.5 2003/01/29 23:20:50 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -90,8 +90,6 @@ void TkrFailureModeSvc::processLayerList() {
     const std::vector<std::string>& theLayers = m_layerListProperty.value( );
     if (theLayers.empty()) return;
 
-    m_failureModes = m_failureModes || 1 << LAYER;
-
     log << MSG::DEBUG;
     if (log.isActive() ) {
         log << "Layers to kill ";
@@ -119,7 +117,8 @@ void TkrFailureModeSvc::processLayerList() {
         }
         log << endreq;
         std::vector<int>& curList = m_layerList[tower];
-        curList.push_back(plane);                
+        curList.push_back(plane);
+        m_failureModes = m_failureModes || 1 << LAYER_SHIFT;
     }
 }
 
@@ -139,8 +138,6 @@ void TkrFailureModeSvc::processTowerList() {
     }
     log << endreq;
 
-    m_failureModes = m_failureModes || 1 << TOWER;
-
     std::vector<std::string>::const_iterator it;
     std::vector<std::string>::const_iterator itend = theTowers.end( );
     for (it = theTowers.begin(); it != itend; it++) {
@@ -151,6 +148,7 @@ void TkrFailureModeSvc::processTowerList() {
         }
         log << endreq;
         m_towerList.push_back(tower);
+        m_failureModes = m_failureModes || 1 << TOWER_SHIFT;
     }
 }
 

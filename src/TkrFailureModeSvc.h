@@ -29,7 +29,7 @@ public:
     /// get the list of enabled failure mode conditions
     int getFailureConditions() {return m_failureModes;};
 
-    enum {TOWER, LAYER};
+    enum {TOWER_SHIFT, LAYER_SHIFT};
 
     /// Find out if object is marked Failed
     bool isFailed(int towerId, int layer, int view);

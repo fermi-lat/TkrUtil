@@ -76,6 +76,7 @@ public:
     virtual bool isBadStrip(int tower, int layer, 
         idents::GlastAxis::axis axis, int strip) const = 0;
     virtual bool isBadStrip(const stripCol* v, int strip) const = 0;
+    virtual bool empty() const = 0;
  };
 
 #endif

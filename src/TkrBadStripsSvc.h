@@ -36,7 +36,7 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/TkrRecon/Services/TkrBadStripsSvc.h,v 1.9 2002/09/18 23:41:00 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.1 2003/01/06 18:22:48 lsrea Exp $
 */
 
 #include "GaudiKernel/Service.h"
@@ -75,6 +75,8 @@ public:
     /// returns true if the given strip is found in the vector pointed 
     /// to by stripCol
     bool isBadStrip(const stripCol* v, int strip) const;
+
+    bool empty() const;
     
     /// queryInterface - required for a service
     StatusCode queryInterface(const IID& riid, void** ppvUnknown);
@@ -100,6 +102,8 @@ private:
     
     /// array to hold bad strips vectors  [ max needed: 576 = 16*18*2 ]   
     stripCol m_stripsCol[NELEMENTS];
+
+    bool m_empty;
 };
 
     

@@ -38,6 +38,7 @@ StatusCode TkrBadStripsSvc::initialize()
     Service::initialize();
     
     m_badStripsFile = "";
+    m_empty = true;
     
     setProperties();
     
@@ -166,6 +167,7 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
             // after each line is read in
             if (makestrips) std::sort(v->begin(), v->end());           
         }  
+        if (!v->empty()) {m_empty = false;}
         return;
     }
 }
@@ -258,6 +260,11 @@ bool TkrBadStripsSvc::isBadStrip(const stripCol* v, int strip) const
     // might be useful again some day
     //stripCol_it it = std::find(v->begin(), v->end(), tagBad(strip));
     //return (it!=v->end());
+}
+
+bool TkrBadStripsSvc::empty() const
+{
+    return m_empty;
 }
 
 // queryInterface
