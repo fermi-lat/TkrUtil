@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.2 2004/03/12 05:49:22 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.3 2004/06/17 04:45:13 lsrea Exp $
 
 */
 
@@ -13,7 +13,12 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.2 2004/03
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/SvcFactory.h"
 
+#include "GaudiKernel/SmartDataPtr.h"
+//#include "CalibData/CalibModel.h"
+//#include "CalibData/Tkr/TkrSplitsCalib.h"
+
 #include "idents/TowerId.h"
+#include "idents/TkrId.h"
 
 #include <algorithm>
 #include <fstream>
@@ -23,6 +28,13 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.2 2004/03
 // declare the service factories for the TkrSplitsSvc
 static SvcFactory<TkrSplitsSvc> a_factory;
 const ISvcFactory& TkrSplitsSvcFactory = a_factory; 
+
+namespace {
+    // can be removed when geometry is iterfaced here
+    const int NSTRIPS = 64;
+    const int NCHIPS  = 24;
+    const int defaultSplit = (NCHIPS/2)*NSTRIPS - 1;
+}
 
 TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc) 
 : Service(name,svc)
@@ -36,8 +48,6 @@ TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc)
     // Restrictions and Caveats:  None
     
     // declare the properties
-
-    declareProperty("splitsFile", m_splitsFile= "");
 }
 
 StatusCode  TkrSplitsSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -63,26 +73,35 @@ StatusCode TkrSplitsSvc::initialize ()
     // Dependencies: None
     // Restrictions and Caveats:  None
     
-    StatusCode  status = StatusCode::SUCCESS;
+    StatusCode  sc = StatusCode::SUCCESS;
 
     // Open the message log
     MsgStream log( msgSvc(), name() );
       
-    // Call super-class
-    Service::initialize ();
-
     m_geoSvc = 0;
     if( service( "TkrGeometrySvc", m_geoSvc, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't retrieve TkrGeometrySvc" << endreq;
         return StatusCode::FAILURE;
     }
-    
+
+    sc = service("CalibDataSvc", m_pCalibDataSvc, true);
+
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+            << "Could not get IDataProviderSvc interface of CalibDataSvc" 
+            << endreq;
+        return sc;
+    }
+
     // Bind all of the properties for this service
-    if ( (status = setProperties()).isFailure() ) {
+    if ( (sc = setProperties()).isFailure() ) {
         log << MSG::ERROR << "Failed to set properties" << endreq;
     }
         
+    m_pSplits = 0;
 
+    /*
+    // save this for a while
     if (m_splitsFile!="") {
         int ret =  facilities::Util::expandEnvVar(&m_splitsFile);
         if (ret>=0) {
@@ -93,11 +112,64 @@ StatusCode TkrSplitsSvc::initialize ()
             return StatusCode::FAILURE;
         }
     }
+    */
 
-    status = doInit();
+    sc = doInit();
     
-    return status;
+    return sc;
 }
+ 
+int TkrSplitsSvc::getSplitPoint(const int tower, const int layer, const int view) const 
+{
+    //Was: return m_splits[tower][layer][view];
+
+    return getLastC0Strip(tower, layer, view);
+}
+
+int TkrSplitsSvc::getEnd(const int tower, const int layer, 
+                         const int view, const int strip) const 
+{
+    //Was: return (strip<=m_splits[tower][layer][view]? 0 : 1);
+
+    return ( (strip<=getLastC0Strip(tower, layer, view) ? 0 : 1) );
+}
+        
+int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
+{
+    MsgStream log( msgSvc(), name() );
+
+    if (!m_pSplits) {
+        return defaultSplit;
+    } else {
+        int tray, botTop;
+        m_geoSvc->layerToTray(layer, view, tray, botTop);
+        bool isTop = (botTop==1);
+        idents::TowerId twr(tower);
+        int towerX = twr.ix();
+        int towerY = twr.iy();
+        idents::TkrId thisPlane(towerY, towerX, tray, isTop);
+        CalibData::RangeBase* pPlane = m_pSplits->getChannel(thisPlane);
+        CalibData::TkrSplit* pSplit = dynamic_cast<CalibData::TkrSplit*>(pPlane);
+        int highChip = pSplit->getHigh();
+        /*
+        log << MSG::INFO 
+            << "Tower " << tower << " Tray " << tray << " botTop " << botTop 
+            << "High chip = " << highChip << endreq;
+        */
+
+        return pSplit->getHigh()*NSTRIPS - 1;
+    }
+}
+
+void TkrSplitsSvc::update(CalibData::TkrSplitsCalib* pSplits)
+{
+    MsgStream log( msgSvc(), name() );
+
+    m_pSplits = pSplits;
+
+    log << MSG::INFO << "Splits pointer updated" << endreq;
+}
+
 
 StatusCode TkrSplitsSvc::doInit()
 {
@@ -108,10 +180,7 @@ StatusCode TkrSplitsSvc::doInit()
     // test of getting TkrGeometrySvc from inside TkrSplitsSvc... It works!
     //int stripsPerLadder  = m_geoSvc->ladderNStrips();
 
-    // can be removed when geometry is iterfaced here
-    const int NSTRIPS = 64;
-    const int NCHIPS  = 24;
-    const int defaultSplit = (NCHIPS/2)*NSTRIPS - 1;
+    /*  Keep this for a while
 
     int tower, layer, view;
     for(tower=0;tower<NTOWERS;++tower) {
@@ -155,7 +224,7 @@ StatusCode TkrSplitsSvc::doInit()
             }
         }
     }
-
+    */
     return sc;
 }
 

@@ -4,30 +4,29 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.2 2004/03/12 05:49:22 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.3 2004/03/13 19:40:37 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
-//#define TkrSplitsSvc_H 1
+#define TkrSplitsSvc_H 1
 
 // Include files
 #include "TkrUtil/ITkrSplitsSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "GaudiKernel/Service.h"
+#include "GaudiKernel/IDataProviderSvc.h"
 
 /** @class TkrSplitsSvc
-* @brief Service to store and compare to a list of desired failure modes in
+* @brief Service to retrieve the splits constants
 * the TKR.
 *
-* Author:  L. Rochester (after R.Dubois)
+* Author:  L. Rochester
 *
 */
 
 class TkrSplitsSvc : public Service, virtual public ITkrSplitsSvc  {
 
 public:
-
-    enum {NTOWERS=16, NLAYERS=18, NVIEWS=2};
 
     TkrSplitsSvc(const std::string& name, ISvcLocator* pSvcLocator); 
 
@@ -45,31 +44,27 @@ public:
     /// return the service type
     const IID& type() const;
 
-    /// set the pointer to the geometry
-    ///void setTkrGeometrySvc(TkrGeometrySvc* p_geoSvc) { m_geoSvc = p_geoSvc; }
-
     /// get the last C0 strip for this layer
-    int getSplitPoint(const int tower, const int layer, const int view) const {
-        return m_splits[tower][layer][view];
-    }
+    int getSplitPoint(int tower, int layer, int view) const;
 
     /// tell which end this strip belongs to
-    int getEnd(const int tower, const int layer, const int view, const int strip) const {
-        return (strip<=m_splits[tower][layer][view]? 0 : 1);
-    }
+    int getEnd(int tower, int layer, int view, int strip) const;
+
+    /// update the pointer
+    void update(CalibData::TkrSplitsCalib* pSplits);
 
 private:
     /// internal init method
     StatusCode doInit();
-    /// name of file containing splits
-    std::string m_splitsFile;
-    /// array of splits
-    int m_splits[NTOWERS][NLAYERS][NVIEWS];
+    /// get the constant
+    int getLastC0Strip(int tower, int layer, int view) const;
+   /// pointer to data provider svc
+    IDataProviderSvc* m_pCalibDataSvc;
     /// pointer to the geometry
     ITkrGeometrySvc* m_geoSvc;
-
+    /// pointer to the calibration data
+    CalibData::TkrSplitsCalib* m_pSplits;
 };
-
 
 #endif // TkrSplitsSvc_H
 
