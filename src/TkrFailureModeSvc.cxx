@@ -2,12 +2,12 @@
 // for the Tkr.
 // 
 //
-// $Header$
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.1.1.1 2002/12/05 20:17:19 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
 
-#include "TkrUtil/TkrFailureModeSvc.h"
+#include "src/TkrFailureModeSvc.h"
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/SvcFactory.h"
