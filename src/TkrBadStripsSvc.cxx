@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.17 2005/01/03 23:22:44 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.18 2005/03/01 00:57:46 lsrea Exp $
 */
 
 
@@ -183,9 +183,12 @@ StatusCode TkrBadStripsSvc::generateBadClusters()
     if(m_empty) { return sc; }
 
     IToolSvc* toolSvc = 0;
-    if (sc = service("ToolSvc",toolSvc, true).isFailure() ){
-        log << MSG::ERROR << "Couldn't fine ToolSvc" << endreq; 
+    if ((sc=service("ToolSvc",toolSvc, true)).isFailure() ){
+        log << MSG::ERROR << "Couldn't fine ToolSvc" << endreq;
+        return sc;
     }
+    // not sure why this is needed yet...
+    //sc = StatusCode::SUCCESS;
 
     Event::TkrDigiCol* pDigis = new Event::TkrDigiCol;
     makeBadDigiCol(pDigis); // deletes old one if it exists
@@ -194,12 +197,16 @@ StatusCode TkrBadStripsSvc::generateBadClusters()
         Event::TkrIdClusterMap* pMap = new Event::TkrIdClusterMap;
 
         ITkrMakeClustersTool* pMakeClusters;
-        if (toolSvc->retrieveTool("TkrMakeClustersTool", pMakeClusters).isFailure()) {
+        if ((sc=toolSvc->retrieveTool("TkrMakeClustersTool", pMakeClusters)).isFailure()) {
             log << MSG::ERROR << "Couldn't retrieve TkrMakeClusterTool" << endreq;
-            return StatusCode::FAILURE;
+            return sc;
         }
 
-        pMakeClusters->makeClusters(pClusters, pMap, pDigis, BADCLUSTERS);
+        if((sc=pMakeClusters->makeClusters(pClusters, pMap, pDigis, BADCLUSTERS)).isFailure()) {
+            log << MSG::ERROR << "makeClusters failed" << endreq;
+            return sc;
+        }
+
         setBadClusterCol(pClusters);
         int size = pMap->size();
         setBadIdClusterMap(pMap);
