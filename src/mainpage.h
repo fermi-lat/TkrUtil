@@ -6,26 +6,49 @@
  *
  * @section description Description
  *
- * This package provides utilities for common use in the TKR.    
+ * This package provides TKR utilities for common use, both inside and outside of TkrRecon.  
+ 
+ * @section TkrCalibAlg TkrCalibAlg
+ * TkrCalibAlg is called once per event, before any tracker code is executed. It 
+ * checks the TkrBadStrips database for a calibration in the validity interval, and
+ * if a new one is required (or it's the first time through) it calls TkrBadStripsSvc
+ * and TkrFailureModeSvc (see below), to cause them to update their lists.
+ *
+ * The service access methods for TkrCalibAlg are distinct from the usual ones and
+ * modify the class members, so for safety, are implemented
+ * through a separate abstract interface. This requires the services to check against
+ * two interface ID's in their queryInterface() methods.
+ *
+ * The default flavor for TkrCalibAlg is set to "ideal". In this mode the algorithm does
+ * nothing. So the flavor property of the algorithm must be set in the jobOptions for 
+ * anything to happen. 
+ *
+ * For use in the current version of Gleam, TkrCalibAlg requires some help from EvtClock, 
+ * an algorithm which supplies a fake event time. For the moment, this code resides in
+ * TkrUtil, but ultimately should be moved or eliminated.
  *
  * @section TkrFailureModeSvc TkrFailureModeSvc
  * TkrFailureModeSvc creates a list of large-scale failures in the Tkr, 
- * and utilities
- * to search the lists to allow digi and recon algorithms to deal with hits based
- * on those lists.
+ * and utilities to search the lists to allow digi and recon algorithms 
+ * to deal with hits based on those lists.
  *
- * It can take either a list of towers or a list of (tower, layer, view)
- * to create the lists of dead objects. It provides a method to see if a 
- * TKR plane is contained in the lists.
+ * It takes input from two sources: a list of towers and/or a list of (tower, layer, view);
+ * or, from the TkrBadStrips calibration data in the TCDS, through a visitor. The first is
+ * for informal or one-off tests, and the second is ultimately for actual calibration data 
+ * from the detector. In case both sources are present, the input from each is merged into 
+ * a common list, with duplicates removed.
+ *
+ * It provides a method to see if a TKR plane is contained in the lists.
  *
  * @section TkrBadStripsSvc TkrBadStripsSvc
- * TkrBadStripsSvc creates a list of individual strips failures in the Tkr, 
- * and utilities
+ * TkrBadStripsSvc creates a list of individual strips failures in the Tkr, and utilities
  * to search the lists to allow digi and recon algorithms to deal with hits based
  * on those lists.
  *
- * It currently takes an ASCII list of (tower, plane) elements, each with its
- * own list of badstrips (dead or hot). 
+ * As is the case for TkrFailureMode Svc (q.v.), it takes its input from two sources: 
+ * an ASCII list 
+ * of (tower, plane) elements, each with its own list of badstrips (dead or hot); 
+ * and/or from the TkrBadStrips calibration data in the TCDS. 
  *
  * @section TkrGeometrySvc TkrGeometrySvc
  * TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
@@ -42,6 +65,9 @@
  *
  * @section jobOptions jobOptions
  *
+ * @param TkrCalibAlg.flavor
+ * Sets the flavor of calibration requested. Defaults to "ideal", which does nothing.
+ *
  * @param TkrFailureModeSvc.towerList
  * Provide a list of strings of the form "tower" indicating towers that will be made dead.
  * @param TkrFailureModeSvc.layerList
@@ -50,8 +76,7 @@
  *
  * @param TkrBadStripsSvc.badStripsFile
  * The name of the file containing
- * a list of bad (dead and hot) strips. Will eventually be supplanted by
- * the calibration database.
+ * a list of bad (dead and hot) strips (default: null). 
  *
  * @param TkrAlignmentSvc.simFile
  * The name of the file containing the alignment constants to be used

@@ -2,7 +2,7 @@
 #define TkrFailureModeSvc_H 1
 
 // Include files
-#include "TkrUtil/ITkrFailureModeSvc.h"
+#include "TkrUtil/ITkrFailureModeSvcCalib.h"
 #include "GaudiKernel/Service.h"
 
 #include <vector>
@@ -16,7 +16,36 @@
 *
 */
 
-class TkrFailureModeSvc : public Service, virtual public ITkrFailureModeSvc {
+namespace {
+/**
+@class BadVisitorFM
+
+  Minimal class derived from CalibData::BadStripsVisitor to
+  check out BadStrips visitor interface.
+    */
+    class BadVisitorFM : public CalibData::BadStripsVisitor {
+    public:
+        BadVisitorFM(MsgStream* log=0) : m_log(log) {}
+        
+        void setLog(MsgStream* log) {m_log = log;}
+        
+        virtual CalibData::eVisitorRet badTower(unsigned int row, unsigned int col,
+            int badness);
+        
+        virtual CalibData::eVisitorRet badPlane(unsigned int row, unsigned int col, 
+            unsigned int tray, bool top,
+            int badness, bool allBad,
+            const CalibData::StripCol& strips);
+        
+        void setService(ITkrFailureModeSvcCalib* pFailureMode) {m_pFailureMode = pFailureMode;}
+        
+    private:
+        MsgStream* m_log;
+        ITkrFailureModeSvcCalib* m_pFailureMode;
+    };
+}
+
+class TkrFailureModeSvc : public Service, virtual public ITkrFailureModeSvcCalib {
 
 public:
 
@@ -31,10 +60,16 @@ public:
 
     bool empty() const { return m_failureModes==0;}
 
+
+	StatusCode update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot);
+
     enum {TOWER_SHIFT, LAYER_SHIFT};
 
     /// Find out if object is marked Failed
     bool isFailed(int towerId, int layer, int view) const;
+
+    std::vector<int>& getLayers( int tower);
+    std::vector<int>& getTowers ();
 
     /// queryInterface - for implementing a Service this is necessary
     StatusCode queryInterface(const IID& riid, void** ppvUnknown);
@@ -60,6 +95,10 @@ private:
     /// process the input list of layer
     void processLayerList();
 
+    /// do common init for update
+    StatusCode doInit();
+
+private:
 
     /// List of towers from jobOptions
     StringArrayProperty m_towerListProperty;
@@ -73,12 +112,16 @@ private:
     /// vector of towers to fail
     std::vector<int> m_towerList;
 
-    typedef std::map <int, std::vector<int> > layerMap;
+    /// vector of layers to fail
+//    std::map <int, std::vector<int> > m_layerList;
+
+    BadVisitorFM* m_visitor;
+
 
     /// vector of layers to fail
-    layerMap  m_layerList;
-
+    LayerMap  m_layerList;
 };
+
 
 #endif // TkrFailureModeSvc_H
 

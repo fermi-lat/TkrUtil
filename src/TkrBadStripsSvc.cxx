@@ -2,9 +2,13 @@
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/SvcFactory.h"
 #include "src/TkrBadStripsSvc.h"
-#include <fstream>
+#include "idents/TowerId.h"
+
+#include "GaudiKernel/SmartDataPtr.h"
+
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #include "xml/IFile.h"
 
@@ -20,21 +24,24 @@ TkrBadStripsSvc::TkrBadStripsSvc(const std::string& name,
 Service(name, pSvcLocator)
 {
     //Name of the file to get data from   
-    declareProperty("badStripsFile", m_badStripsFile);
-    
+    declareProperty("badStripsFile", m_badStripsFile="");
+    declareProperty("killDigi", m_killDigi=false );
+    m_visitor = 0;
+       
     return;
 }
 
 StatusCode TkrBadStripsSvc::initialize()
 {
-    // Purpose: reads in bad strips and constructs in-memory bad strip vectors
-    // Inputs:  None
-    // Outputs: Status code (Success/Failure)
-    
-    MsgStream log(msgSvc(), name());
-    //log.setLevel(MSG::DEBUG);
     StatusCode sc = StatusCode::SUCCESS;
     
+    MsgStream log(msgSvc(), name());
+
+    if(m_visitor==0) {
+        m_visitor = new BadVisitor;
+        m_visitor->setService(this);
+    }
+
     Service::initialize();
     
     m_badStripsFile = "";
@@ -42,24 +49,43 @@ StatusCode TkrBadStripsSvc::initialize()
     
     setProperties();
     
+    for (int i=0;i<NELEMENTS;i++) { m_stripsCol[i].clear();}
+    
     // commented code in this routine was the original attempt to implement
     //  the bad strips as a vector of vectors.
     
     // int size = 0;
     // makeCol(size); //make sure that Collection is sensibly initialized
+
+    // this method resolves environmental variables in the file name
+    if (m_badStripsFile!="") {
+        xml::IFile::extractEnvVar(&m_badStripsFile);    
+        log << MSG::INFO << "Input file for bad strips: " 
+            << m_badStripsFile << endreq;
+    }
+
+    sc = doInit();
+    
+    return sc;
+}
+
+
+StatusCode TkrBadStripsSvc::doInit()
+{
+    // Purpose: reads in bad strips and constructs in-memory bad strip vectors
+    // Inputs:  None
+    // Outputs: Status code (Success/Failure)
+    
+    MsgStream log(msgSvc(), name());
+    
+    StatusCode sc = StatusCode::SUCCESS;
     
     // If there is no bad strips file, service will do nothing
     if (m_badStripsFile=="") {        
         log << MSG::INFO << "No bad strips file was requested." << endreq;
-        log << MSG::INFO << "  No strip filtering will be done." << endreq;
         return sc;
     }
-    
-    // this method resolves environmental variables in the file name
-    xml::IFile::extractEnvVar(&m_badStripsFile);    
-    log << MSG::INFO << "Input file for bad strips: " 
-        << m_badStripsFile << endreq;
-    
+        
     // open bad strips file
     std::ifstream file;
     file.open( m_badStripsFile.c_str());
@@ -76,9 +102,6 @@ StatusCode TkrBadStripsSvc::initialize()
     
     file.close();
     
-    // log << MSG::DEBUG<< "m_stripsCol has " << 
-    //      m_stripsCol.size() << " elements" << endreq;
-    
     return sc;
 }
 
@@ -93,6 +116,21 @@ StatusCode TkrBadStripsSvc::finalize()
 //  return;
 }
 */
+
+StatusCode TkrBadStripsSvc::update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot)
+{
+    MsgStream log(msgSvc(), name());
+    m_visitor->setLog(&log);
+    log << MSG::INFO << "updater called " << endreq;
+    StatusCode sc = doInit();
+    pDead->traverse(m_visitor);
+    pHot->traverse(m_visitor);
+        
+    //std::cout << fillStream(std::cout) << std::endl;
+    
+    return sc;
+    
+}
 
 void TkrBadStripsSvc::readFromFile(std::ifstream* file)
 {    
@@ -147,12 +185,12 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
         int view = element/2;
         
         stripCol* v;
-		// my private use of getBadStrips requires non-const pointer
-		// to build the vector of bad strips...
-		// but public uses should return const pointer, so...
-
+        // my private use of getBadStrips requires non-const pointer
+        // to build the vector of bad strips...
+        // but public uses should return const pointer, so...
+        
         if (makestrips) v = const_cast<stripCol*> 
-			(getBadStrips(tower, layer, 
+            (getBadStrips(tower, layer, 
             static_cast<idents::GlastAxis::axis>(view)));
         int strip = -1;
         *file >> strip;
@@ -202,14 +240,14 @@ void TkrBadStripsSvc::addStrip(stripCol* v, TaggedStrip taggedStrip)
 }
 
 const stripCol* TkrBadStripsSvc::getBadStrips(int tower, int layer, 
-                                        idents::GlastAxis::axis axis) const
+                                              idents::GlastAxis::axis axis) const
 {
     // Purpose:  return pointer to a bad strip vector
     // Inputs:   tower, layer, axis
     // Outputs:  pointer to that vector
     
     int index = getIndex(tower, layer, axis);
-
+    
     return getBadStrips(index);
 }
 
@@ -221,8 +259,8 @@ const stripCol* TkrBadStripsSvc::getBadStrips(int index) const
     // Outputs:  pointer to that vector
     
     // original code... maybe some day...
-	// int ind = (m_stripsCol.size()==0) ? m_stripsCol.size() : index;
-
+    // int ind = (m_stripsCol.size()==0) ? m_stripsCol.size() : index;
+    
     if (index>=0 && index < NELEMENTS) {return &m_stripsCol[index];}
     else                         {return 0;}
 }
@@ -273,8 +311,9 @@ StatusCode  TkrBadStripsSvc::queryInterface (const IID& riid, void **ppvIF)
 {
     if (IID_ITkrBadStripsSvc == riid) {
         *ppvIF = dynamic_cast<ITkrBadStripsSvc*> (this);
-    }
-    else {
+    } else if(IID_ITkrBadStripsSvcCalib == riid) {
+        *ppvIF = dynamic_cast<ITkrBadStripsSvcCalib*> (this);
+    } else {
         return Service::queryInterface (riid, ppvIF);
     }
     return StatusCode::SUCCESS;
@@ -284,4 +323,59 @@ StatusCode  TkrBadStripsSvc::queryInterface (const IID& riid, void **ppvIF)
 
 const IID&  TkrBadStripsSvc::type () const {
     return IID_ITkrBadStripsSvc;
+}
+
+
+CalibData::eVisitorRet BadVisitor::badTower(unsigned int row, unsigned int col,
+                                            int badness) {
+    return CalibData::CONT;    
+}
+
+CalibData::eVisitorRet BadVisitor::badPlane(unsigned int row, 
+                                            unsigned int col, 
+                                            unsigned int tray, bool top,
+                                            int badness, bool allBad,
+                                            const CalibData::StripCol& strips)
+{
+    *m_log << MSG::DEBUG;
+    if((*m_log).isActive()) {
+        *m_log << "BadVisitor::badPlane called with args" << endreq
+        << "row = " << row << ", col = " << col << ", tray = "
+        << tray << endreq    
+        << "top = " << top << ", badness = " 
+        << badness << " allBad = " << allBad << endreq
+        << "Strip collection contains " << strips.size()
+        << " strips. ";
+    }
+    *m_log << endreq;
+    
+    if (!allBad) { 
+        int i;
+        int tower = idents::TowerId(row, col).id();
+        int layer = top ? tray : tray-1;
+        int view  = layer%2 ? 1-top : top;
+        int tag = 1;
+        idents::GlastAxis::axis iview = view ? idents::GlastAxis::Y : idents::GlastAxis::X;
+
+        TkrBadStripsSvc* pBad = dynamic_cast<TkrBadStripsSvc*>(m_pBadStrips);
+        
+        stripCol* v;
+        v = const_cast<stripCol*> (pBad->getBadStrips(tower, layer, iview));
+        if(v==0) {
+            std::cout << " error in plane specification! Plane will be skipped!" << std::endl;
+            return CalibData::CONT;
+        }
+        
+        for (i=0;i<strips.size();i++) {
+            int strip = strips[i];
+            pBad->addStrip(v, TaggedStrip(strip, tag));
+        }
+
+        // removing duplicates
+        std::sort(v->begin(), v->end());     
+        stripCol::iterator p = std::unique(v->begin(), v->end());
+        v->erase(p, v->end());
+    }
+        
+    return CalibData::CONT;
 }

@@ -9,12 +9,10 @@
 *
 * First version 3-Jun-2001
 *
-* The bad strips are currently kept in ascii files, which are read in under
+* The bad strips are kept in ascii files and/or in the TkrBadStrips database
+* The files are read in under
 * the control of the jobOptions file. In the ascii files, strips are
 * marked as hot or dead, but in memory, strips are only bad.
-*
-* This will be changing shortly when we interface to Joanne's calibration 
-* database.
 *
 * The service creates an array of vectors.  The singly indexed array
 * corresponds to a doubly indexed array by tower and layer.
@@ -36,17 +34,48 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.1 2003/01/06 18:22:48 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.2 2003/02/07 20:42:35 lsrea Exp $
 */
 
 #include "GaudiKernel/Service.h"
 
 #include "TkrUtil/ITkrBadStripsSvc.h"
+#include "TkrUtil/ITkrBadStripsSvcCalib.h"
 
 #include <string>
-#include <vector>
 
-class TkrBadStripsSvc : public Service, virtual public ITkrBadStripsSvc
+namespace {
+/**
+@class BadVisitor
+
+  Minimal class derived from CalibData::BadStripsVisitor to
+  check out BadStrips visitor interface.
+    */
+    class BadVisitor : public CalibData::BadStripsVisitor {
+    public:
+        BadVisitor(MsgStream* log=0) : m_log(log) {}
+        
+        void setLog(MsgStream* log) {m_log = log;}
+        
+        virtual CalibData::eVisitorRet badTower(unsigned int row, unsigned int col,
+            int badness);
+        
+        virtual CalibData::eVisitorRet badPlane(unsigned int row, unsigned int col, 
+            unsigned int tray, bool top,
+            int badness, bool allBad,
+            const CalibData::StripCol& strips);
+        
+        void setService(ITkrBadStripsSvcCalib* pBadStrips) {m_pBadStrips = pBadStrips;}
+        
+    private:
+        MsgStream* m_log;
+        ITkrBadStripsSvcCalib* m_pBadStrips;
+    };
+}
+
+
+class TkrBadStripsSvc : public Service, virtual public ITkrBadStripsSvcCalib,
+virtual public ITkrBadStripsSvc
 {
 public:
     
@@ -75,8 +104,16 @@ public:
     /// returns true if the given strip is found in the vector pointed 
     /// to by stripCol
     bool isBadStrip(const stripCol* v, int strip) const;
+	
+    bool killDigi() const {return m_killDigi;}
+		
+    std::ostream& fillStream( std::ostream& s ) const;        
 
     bool empty() const;
+
+    /// called by TrkCalibAlg to cause an update of the strip lists
+    StatusCode update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot);
+
     
     /// queryInterface - required for a service
     StatusCode queryInterface(const IID& riid, void** ppvUnknown);
@@ -88,12 +125,15 @@ public:
     const IID& type() const;   
     
 private:
+	
     
     //void makeCol(const int size); // left over from original attempt
     
     /// reads bad strips from file file
     void readFromFile(std::ifstream* file);
-
+	
+    StatusCode doInit();
+	
     /// File name for constants
     std::string m_badStripsFile;  
     
@@ -102,11 +142,42 @@ private:
     
     /// array to hold bad strips vectors  [ max needed: 576 = 16*18*2 ]   
     stripCol m_stripsCol[NELEMENTS];
+	
+	BadVisitor* m_visitor;
+	
+    bool m_killDigi;
 
     bool m_empty;
+
 };
 
-    
+//! Fill the ASCII output stream
+
+inline std::ostream& TkrBadStripsSvc::fillStream( std::ostream& s ) const 
+{
+	
+	s << "class TkrBadStripsSvc bad strip lists from fillStream: " << std::endl;
+	for(int i=0;i<NELEMENTS;i++) {
+		const stripCol* v = getBadStrips(i);
+		int size = v->size();
+		int tower = i/(NLAYERS*NVIEWS);
+		int layer = i%(NLAYERS*NVIEWS)/2;
+		int view  = i%2;
+		if (size) {
+			s << " index " << i <<" tower " << tower << " layer "
+				<< layer << " view " << view <<" size " << size << std::endl << " strips " ;
+			for (int j=0;j<size;j++) {
+				int strip = (*v)[j].getStripNumber();
+				s << strip<< " " ;
+			}
+			s << std::endl;
+		}
+	}
+	return s;
+}
+
+
+
 #endif // TKRBADSTRIPSSVC_H
-    
-    
+
+

@@ -4,9 +4,9 @@
 #include "GaudiKernel/IInterface.h"
 #include "idents/GlastAxis.h"
 
-#include <string>
+#include "GaudiKernel/IDataProviderSvc.h"
+
 #include <vector>
-#include <fstream>
 
 //----------------------------------------------
 //
@@ -18,11 +18,12 @@
 //             Leon Rochester, 3-June-2001
 //----------------------------------------------
 
-static const InterfaceID IID_ITkrBadStripsSvc(907, 1 , 0); 
+static const InterfaceID IID_ITkrBadStripsSvc("ITkrBadStripsSvc", 2 , 0); 
 
 /// A small class to define tagged strips 
 class TaggedStrip 
 {
+
 public: 
     enum {tagShift = 12, stripMask = 0xFFF, BIG = stripMask};
     
@@ -76,6 +77,10 @@ public:
     virtual bool isBadStrip(int tower, int layer, 
         idents::GlastAxis::axis axis, int strip) const = 0;
     virtual bool isBadStrip(const stripCol* v, int strip) const = 0;
+    virtual bool killDigi() const = 0;
+    //! Fill the ASCII output stream
+    virtual std::ostream& fillStream( std::ostream& s ) const = 0;        
+
     virtual bool empty() const = 0;
  };
 
