@@ -59,7 +59,9 @@
  * @section TkrToTSvc TkrToTSvc
  * TkrToTSvc maintains the ToT thresholds and gains for each strip in the detector. The default
  * settings are: all strips the same, and set to produce the same result as before this
- * service was introduced.
+ * service was introduced. "EM" mode internally generates a set of thresholds and gains 
+ * similar to the those measured in the Engineering module. In this case, the default values
+ * are ignored.
  *
  * @section TkrGeometrySvc TkrGeometrySvc
  * TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
@@ -100,6 +102,9 @@
  * @param TkrToTSvc.ToTFile
  * The name of the file containing the thresholds and gains. Currently
  * has no effect.
+ * @param TkrToTSvc.mode
+ * Current values are "EM" (to generate EM-like constants) and "ideal" (gives
+ * the default uniform constants below.
  * @param TkrToTSvc.defaultThreshold
  * For ideal mode, all thresholds are set to this value 
  * (default = -2.92 microsec/fC).

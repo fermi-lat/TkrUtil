@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.2 2004/03/12 05:49:22 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.1 2004/03/13 19:40:37 lsrea Exp $
 
 */
 
@@ -19,6 +19,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.2 2004/03/12
 #include <fstream>
 #include "facilities/Util.h"
 #include "xml/IFile.h"
+#include "CLHEP/Random/Random.h"
+#include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandGauss.h"
 
 // declare the service factories for the TkrToTSvc
 static SvcFactory<TkrToTSvc> a_factory;
@@ -42,6 +45,7 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     // previous behavior of the ToT
     declareProperty("defaultGain",      m_defaultGain      = 2.50267833 );
     declareProperty("defaultThreshold", m_defaultThreshold = -2.92);
+    declareProperty("mode"            , m_mode             = "ideal");
 }
 
 StatusCode  TkrToTSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -118,26 +122,66 @@ StatusCode TkrToTSvc::doInit()
     const int NCHIPS  = 24;
 
     int tower, layer, view, strip, chip;
-    for(tower=0;tower<NTOWERS;++tower) {
-        for (layer=0;layer<NLAYERS;++layer) {
-            for (view=0;view<NVIEWS;++view) {
-                for(chip=0;chip<NCHIPS;++chip) {
-                    for (strip=0;strip<NSTRIPS;++strip) {
-                        int theStrip = chip*NSTRIPS + strip;
-                        m_ToTGain[tower][layer][view][theStrip] = 
-                            m_defaultGain;
-                        m_ToTThreshold[tower][layer][view][theStrip] = 
-                            m_defaultThreshold;
+
+    if(m_mode.substr(0,5)=="ideal") {
+        for(tower=0;tower<NTOWERS;++tower) {
+            for (layer=0;layer<NLAYERS;++layer) {
+                for (view=0;view<NVIEWS;++view) {
+                    for(chip=0;chip<NCHIPS;++chip) {
+                        for (strip=0;strip<NSTRIPS;++strip) {
+                            int theStrip = chip*NSTRIPS + strip;
+                            m_ToTGain[tower][layer][view][theStrip] = 
+                                m_defaultGain;
+                            m_ToTThreshold[tower][layer][view][theStrip] = 
+                                m_defaultThreshold;
+                        }
+                    }
+                }
+            }
+    }
+    } else if (m_mode.substr(0,2)=="EM") {
+        int mySeed = 123456789;
+        HepRandom::setTheSeed(mySeed);
+        for(tower=0;tower<NTOWERS;++tower) {
+            for (layer=0;layer<NLAYERS;++layer) {
+                for (view=0;view<NVIEWS;++view) {
+                    for(chip=0;chip<NCHIPS;++chip) {
+                        // generate chip thresholds and gains
+                        double chipGain = RandGauss::shoot(1.789, 0.3088);
+                        double chipThresh = -0.8546 - 0.2142*chipGain + RandGauss::shoot(0.013, 0.167);
+                        for (strip=0;strip<NSTRIPS;++strip) {
+                            int theStrip = chip*NSTRIPS + strip;
+                            double test = RandFlat::shoot(432.);
+                            double devGain;
+                            if (test>320.) {
+                                devGain = RandGauss::shoot(0.188, 0.399);
+                            } else {
+                                devGain = RandGauss::shoot(-0.107, 0.262);
+                            }
+                            double devThresh = -0.541*devGain + RandGauss::shoot(0, 0.262);
+
+                            m_ToTGain[tower][layer][view][theStrip] = 
+                                chipGain + devGain;
+                            m_ToTThreshold[tower][layer][view][theStrip] = 
+                                chipThresh + devThresh;
+                        }
                     }
                 }
             }
         }
+    } else {
+        log << MSG::ERROR << "Called with mode: """ << m_mode 
+            << """, should be ""default"" or ""EM"" "
+            << std::endl;
+        sc = StatusCode::FAILURE;
     }
+
     return sc;
 }
 
 StatusCode TkrToTSvc::finalize() {
     
-    MsgStream log(msgSvc(), name());  
+    MsgStream log(msgSvc(), name());
+    log <<MSG::INFO << "Finalize" << endreq;
     return StatusCode::SUCCESS;
 }

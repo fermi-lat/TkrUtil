@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.2 2004/03/12 05:49:22 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.1 2004/03/13 19:40:37 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -70,6 +70,8 @@ public:
 private:
     /// internal init method
     StatusCode doInit();
+    /// mode: currently "default" or "EM"
+    std::string m_mode;
     /// name of file containing splits
     std::string m_ToTFile;
     /// default Gain
