@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.5 2003/04/26 01:02:47 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.6 2003/04/26 18:40:21 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -85,7 +85,7 @@ public:
     convType getReconLayerType(int layer) const;
 
     /// return number of layers of each type
-    int getNumType(TkrGeometrySvc::convType type) const { return m_numLayers[(int)type];}
+    int getNumType(convType type) const { return m_numLayers[(int)type];}
     /// get average radlen of converter for each type
     double getAveConv(convType type) const { return m_aveRadLenConv[(int)type];}
     /// get average radlen of rest for each type)
