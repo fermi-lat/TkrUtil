@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.5 2004/10/01 19:40:58 usher Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.6 2004/10/09 04:42:51 lsrea Exp $
 
 // Include files
 
@@ -72,6 +72,12 @@ public:
     */
     Point nearestHitOutside(int v, int layer, 
         double inDistance, const Point& Pini, int& id) const;
+    /** returns the nearest point outside of "inDistance" of a point "Pini"
+    * in the measured view, within "one tower" in the other view, and a ref. 
+    * to the id
+    */
+    Event::TkrCluster* nearestClusterOutside(int v, int layer, 
+                                     double inDistance, const Point& Pini) const;
     
     /// Finds the number of clusters with measured distances 
     /// inside a square of side 2*inDistance of a point
@@ -371,6 +377,66 @@ Point TkrQueryClustersTool::nearestHitOutside(int view, int layer, double inDist
         }
     }
     return Pnear;
+}
+
+Event::TkrCluster* TkrQueryClustersTool::nearestClusterOutside(int view, 
+                                                               int layer, 
+                                                               double inDistance, 
+                                                               const Point& Pcenter) const
+{
+    // Purpose and Method: returns the position of the closest cluster
+    //    outside of a given distance from a point in the measured direction,
+    //    and in the same or adjacent tower in the other direction.
+    // Inputs:  view and layer, center and distance
+    // Outputs:  Position of nearest cluster
+    // Dependencies: None
+    // Restrictions and Caveats:  None
+    
+    Event::TkrCluster* nearCluster = 0;
+    
+    if (!validLayer(layer)) return nearCluster;
+
+    const Event::TkrClusterVec clusters = getClusters(view, layer);
+    int nhits = clusters.size();
+    if (nhits == 0) return nearCluster;
+    
+    double minDistance = inDistance;
+    double maxDistance = 1e6;
+    Point Pini(0.,0.,0.);
+    for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
+    {
+        const Event::TkrCluster* cluster = (*clusIter);
+
+        if (cluster->hitFlagged()) continue;
+        
+        Pini = cluster->position();
+        
+        // Kludge to prevent crashes when z layer incorrect
+        //double zDistance   = fabs(Pini.z() - Pcenter.z());
+        //if (zDistance > .3) continue;
+        
+        double hitDistance = fabs(Pini.x() - Pcenter.x());
+        double twrDistance = fabs(Pini.y() - Pcenter.y());
+        
+        if      (view == idents::TkrId::eMeasureY) 
+        {
+            hitDistance = fabs(Pini.y() - Pcenter.y());
+            twrDistance = fabs(Pini.x() - Pcenter.x());
+        }
+        else if (view != idents::TkrId::eMeasureX) 
+        {
+            hitDistance = (Pini-Pcenter).mag();
+            twrDistance = 0.;
+        }
+        
+        if ( hitDistance >= minDistance && hitDistance < maxDistance 
+                                        && twrDistance < m_testDistance) 
+        {
+            maxDistance = hitDistance;
+            nearCluster = const_cast<Event::TkrCluster*>(cluster);
+        }
+    }
+    return nearCluster;
 }
 
 int TkrQueryClustersTool::numberOfHitsNear(int layer, double inDistance, 

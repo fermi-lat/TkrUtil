@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.10 2004/09/18 18:38:42 usher Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.11 2004/10/01 19:40:58 usher Exp $
 */
 
 
@@ -77,6 +77,11 @@ public:
     */
     virtual Point nearestHitOutside(int v, int layer, 
         double inDistance, const Point& Pini, int& id) const = 0;
+    /** returns the nearest cluster found outside of "inDistance" of a point "Pini"
+    * in the measured view, within one tower in the other view
+    */
+    virtual Event::TkrCluster* nearestClusterOutside(int v, int layer, 
+                               double inDistance, const Point& Pini) const = 0;
     
     /// Finds the number of clusters with measured distances 
     /// inside a square of side 2*inDistance of a point, in requested bilayer
