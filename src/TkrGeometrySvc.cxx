@@ -9,13 +9,13 @@
 #include "GlastSvc/Reco/IPropagatorTool.h"
 
 #include "idents/TowerId.h"
+#include "Event/Recon/TkrRecon/TkrCluster.h"
 
 #include <iostream>
 #include <algorithm>
 
 static const SvcFactory<TkrGeometrySvc> s_factory;
 const ISvcFactory& TkrGeometrySvcFactory = s_factory;
-
 
 //------------------------------------------------------------------------------
 /// Service parameters which can be set at run time must be declared.
@@ -896,15 +896,104 @@ int TkrGeometrySvc::getPlaneSeparation(const idents::TkrId& id1, const idents::T
 int TkrGeometrySvc::getPlane(double z) const
 {
     if(z >= m_planeZ[m_numPlanes-1]) return m_numPlanes-1;
-    if(z <= m_planeZ[0])             return 0;
 
     int i;
     for(i=0; i<m_numPlanes-1; ++i) {
-        if(m_planeZ[i] <= z && z <= m_planeZ[i+1]) {
+        if(z <= m_planeZ[i+1]) {
             return (fabs(m_planeZ[i] - z) < fabs(m_planeZ[i+1] - z)) ? i : i+1;
         }
     }
-    return -1;  // this is guaranteed never to happen!! (FLW)
+    return -1;  // this will never happen!!
 }
 
+// Good a place as any for this one...
+unsigned int TkrGeometrySvc::getDefaultClusterStatus() const
+{
+    using namespace Event;
+    int planeOffset = -trayToPlane(0, 0);
+    int layerOffset = getLayer(1) - getLayer(0);
+    return 
+        (layerOffset>0 ? TkrCluster::maskLAYEROFFSET : 0) |
+        (planeOffset>0 ? TkrCluster::maskPLANEOFFSET : 0) |
+        (TkrCluster::maskVERSION&(TkrCluster::VERSION<<TkrCluster::shiftVERSION));
+}
 
+double TkrGeometrySvc::truncateCoord( double x, double pitch, 
+                     int numElements, int& elementNumber, bool reverse) const
+{
+    //Returns an element number and the coordinates in the local element
+
+    double xScaled = x/pitch;
+    // this is the correction for odd number of elements (towers in EM, for example)
+    double delta = 0.5*(numElements%2);
+    double xMod = xScaled + delta;
+    int theFloor = (int) floor(xMod);
+    elementNumber = theFloor + numElements/2;
+    // if it's outside the actual element, assign the closest
+    // this will not happen for real hits, but may for extrapolated hits
+    // or transformed hits.
+    elementNumber = std::max(std::min(elementNumber, numElements-1),0);
+    if (reverse) elementNumber = numElements - 1 - elementNumber;
+    return pitch*(xMod - theFloor - 0.5);
+}
+
+bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower, 
+                             double& xActiveDist, double& yActiveDist, 
+                             double& xGap, double& yGap) const
+{
+    double twrPitch = towerPitch();
+    double numX = numXTowers();
+    double numY = numYTowers();
+    bool isInTower = true;
+    double xTower = truncateCoord(p.x(), twrPitch, numX, iXTower);
+    double yTower = truncateCoord(p.y(), twrPitch, numY, iYTower);
+    // check if the point is in an inter-tower gap
+    int nWafer = nWaferAcross();
+    double xPitch, yPitch, xSiGap, ySiGap;
+    double deadGap = siDeadDistance();
+    if (view==0) {
+        xPitch = ladderPitch();
+        yPitch = waferPitch();
+        xSiGap   = ladderGap();
+        ySiGap   = ladderInnerGap();
+    } else {
+        yPitch = ladderPitch();
+        xPitch = waferPitch();
+        ySiGap   = ladderGap();
+        xSiGap   = ladderInnerGap();
+    }
+
+    // if these are negative, track misses active area of tower
+    // probably no point in constraining hit in this plane
+    xGap = xSiGap + 2*deadGap;
+    yGap = ySiGap + 2*deadGap;
+    xActiveDist = fabs(xTower) - nWafer*xPitch + xGap; 
+    yActiveDist = fabs(yTower) - nWafer*yPitch + yGap;
+    if (xActiveDist>0 && yActiveDist>0) { // test for "inside active Tower"
+        // look for internal gaps
+        double xWafer, yWafer;
+        int iXWafer, iYWafer;
+        xWafer = truncateCoord(xTower, xPitch, nWafer, iXWafer);
+        yWafer = truncateCoord(yTower, yPitch, nWafer, iYWafer);
+
+        double activeWaferSide = siActiveWaferSide();
+        xActiveDist = activeWaferSide - fabs(xWafer);
+        yActiveDist = activeWaferSide - fabs(yWafer);
+    } else {
+        // towerGap is big, so no point in keeping 2 versions
+        double towerGap    = twrPitch - nWafer*xPitch + xGap;
+
+        // note that if we are on the outside of an edge tower the "gap" 
+        // is infinite, but the simple intertower gap is effectively infinite
+        // as far as the fit is concerned, so it shouldn't matter.
+        isInTower = false;
+        if (xActiveDist<0 ) {
+            yGap = twrPitch;
+            xGap = (yActiveDist<0 ? twrPitch : towerGap);
+        } else {
+            xGap = twrPitch;
+            yGap = towerGap;
+        }
+    }
+    return isInTower;
+}

@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.14 2004/09/18 18:38:42 usher Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.15 2004/10/12 19:04:55 lsrea Exp $
 */
 
 
@@ -46,8 +46,6 @@ StatusCode TkrBadStripsSvc::initialize()
 {
     StatusCode sc = StatusCode::SUCCESS;
     
-    Service::initialize();
-    
     MsgStream log(msgSvc(), name());
 
     Service::initialize();
@@ -83,6 +81,11 @@ StatusCode TkrBadStripsSvc::initialize()
             return StatusCode::FAILURE;
         }
     }
+
+    m_pBadDigi = 0;
+    m_pBadClus = 0;
+    m_pBadMap  = 0;
+
     sc = doInit();
     
     return sc;
@@ -129,6 +132,8 @@ StatusCode TkrBadStripsSvc::doInit()
     
     file.close();
     
+    sc = makeBadDigiCol();
+
     return sc;
 }
 
@@ -337,6 +342,31 @@ bool TkrBadStripsSvc::isBadStrip(const stripCol* v, int strip) const
 bool TkrBadStripsSvc::empty() const
 {
     return m_empty;
+}
+
+StatusCode TkrBadStripsSvc::makeBadDigiCol() 
+{ 
+    MsgStream log( msgSvc(), name() );
+
+    // loop over all the bad strips and make an empty digi for each plane
+    m_pBadDigi = new Event::TkrDigiCol(0);
+    int tower, layer, view;
+    for (tower=0; tower<NTOWERS; ++tower) {
+        for (layer=0; layer<NLAYERS; ++layer) {
+            for (view=0; view<NVIEWS; ++view) {
+                idents::GlastAxis::axis axis = ( view ? idents::GlastAxis::X : idents::GlastAxis::Y);
+                const stripCol* strips = getBadStrips(tower, layer, axis);
+                if (strips==0 || strips->size()==0) continue;
+                int tot[2] = { 0, 0};
+                Event::TkrDigi* digi = new Event::TkrDigi(layer, axis, idents::TowerId(tower), tot);
+                m_pBadDigi->push_back(digi);
+            }
+        }
+    }
+
+    log << MSG::INFO << m_pBadDigi->size() <<" fake digis generated " << endreq;
+
+    return StatusCode::SUCCESS;
 }
 
 // queryInterface

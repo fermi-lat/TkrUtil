@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.29 2004/10/09 04:42:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.30 2004/10/12 19:04:55 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -41,26 +41,6 @@ const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
 // Service parameters which can be set at run time must be declared.
 // This should be done in the constructor.
 
-
-namespace {
-    double truncateCoord( double x, double pitch, 
-        int numElements, int& elementNumber, bool reverse = false)
-    {
-        double xScaled = x/pitch;
-        // this is the correction for odd number of elements (towers in EM, for example)
-        double delta = 0.5*(numElements%2);
-        double xMod = xScaled + delta;
-        int theFloor = (int) floor(xMod);
-        elementNumber = theFloor + numElements/2;
-        // if it's outside the actual element, assign the closest
-        // this will not happen for real hits, but may for extrapolated hits
-        // or transformed hits.
-        elementNumber = std::max(std::min(elementNumber, numElements-1),0);
-        if (reverse) elementNumber = numElements - 1 - elementNumber;
-        return pitch*(xMod - theFloor - 0.5);
-    }
-   
-}
 TkrAlignmentSvc::TkrAlignmentSvc(const std::string& name, 
                                  ISvcLocator* pSvcLocator) :
 Service(name, pSvcLocator)
@@ -1017,9 +997,9 @@ void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, const HepVector3D& dir,
 HepPoint3D TkrAlignmentSvc::getTowerCoordinates(
     const HepPoint3D& globalPoint, int& nXTower, int& nYTower) const
 {
-    double xTower = truncateCoord(globalPoint.x(), m_tkrGeom->towerPitch(), 
+    double xTower = m_tkrGeom->truncateCoord(globalPoint.x(), m_tkrGeom->towerPitch(), 
         m_tkrGeom->numXTowers(), nXTower);
-    double yTower = truncateCoord(globalPoint.y(), m_tkrGeom->towerPitch(), 
+    double yTower = m_tkrGeom->truncateCoord(globalPoint.y(), m_tkrGeom->towerPitch(), 
         m_tkrGeom->numYTowers(), nYTower);
     return HepPoint3D(xTower, yTower, globalPoint.z());
 }
@@ -1048,8 +1028,8 @@ idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(
     double yTower = towerPoint.y();
 
     if (view==1) std::swap(xTower, yTower);
-    xLocal = truncateCoord(xTower, ladderPitch, nLadders, ladder);
-    yLocal = truncateCoord(yTower, waferPitch,  nLadders, wafer);
+    xLocal = m_tkrGeom->truncateCoord(xTower, ladderPitch, nLadders, ladder);
+    yLocal = m_tkrGeom->truncateCoord(yTower, waferPitch,  nLadders, wafer);
 
     int tray, botTop;
     m_tkrGeom->layerToTray(layer, view, tray, botTop);

@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrBadStripsSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.5 2003/07/02 20:15:06 cohen Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.6 2004/08/24 23:45:44 lsrea Exp $
 */
 
 
@@ -13,6 +13,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.5 2
 #include "idents/GlastAxis.h"
 
 #include "GaudiKernel/IDataProviderSvc.h"
+
+#include "Event/Digi/TkrDigi.h"
+#include "Event/Recon/TkrRecon/TkrCluster.h"
 
 #include <vector>
 
@@ -26,7 +29,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.5 2
 //             Leon Rochester, 3-June-2001
 //----------------------------------------------
 
-static const InterfaceID IID_ITkrBadStripsSvc("ITkrBadStripsSvc", 2 , 0); 
+static const InterfaceID IID_ITkrBadStripsSvc("ITkrBadStripsSvc", 3 , 0); 
 
 /// A small class to define tagged strips 
 class TaggedStrip 
@@ -73,6 +76,8 @@ class ITkrBadStripsSvc : public virtual IInterface
 {
 public:
 
+    enum clusterType { STANDARDCLUSTERS, BADCLUSTERS };
+
     //! Constructor of this form must be provided
 
     static const InterfaceID& interfaceID() { return IID_ITkrBadStripsSvc; }
@@ -89,6 +94,14 @@ public:
     virtual std::ostream& fillStream( std::ostream& s ) const = 0;        
 
     virtual bool empty() const = 0;
+    
+    // for bad clusters
+    virtual void setBadClusterCol(Event::TkrClusterCol* pClus) = 0;
+    virtual void setBadIdClusterMap(Event::TkrIdClusterMap* pMap) = 0;
+
+    virtual Event::TkrDigiCol*      getBadDigiCol() const = 0;
+    virtual Event::TkrClusterCol*   getBadClusterCol() const = 0;
+    virtual Event::TkrIdClusterMap* getBadIdClusterMap() const = 0;
  };
 
 #endif

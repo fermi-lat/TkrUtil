@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r1     26-Dec-04 LSR Cleanup, mods to ToT, Geometry, BadStrips
   v3r0p1   16-Dec-04 TU  Necessary to merge ToT back into main branch for TkrDigi
   v3r0p0   16-Dec-04 TU  First tag with new Tracker Recon TDS and code
            12-Oct-04 LSR change to m_tkrGeom throughout

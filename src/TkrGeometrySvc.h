@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.18 2004/10/22 17:02:52 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.19 2004/11/10 22:27:54 atwood Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -206,6 +206,14 @@ public:
     }
     int getBottomTrayFlag() const { return (m_bottomTrayNumber>-1 ? 1 : 0); }
     int getTopTrayFlag()    const { return (m_topTrayNumber>-1    ? 1 : 0); }
+
+    unsigned int getDefaultClusterStatus() const;
+
+    double truncateCoord( double x, double pitch, 
+        int numElements, int& elementNumber, bool reverse = false) const;
+
+    bool inTower(int view, const Point p, int& iXTower, int& iYTower,
+        double& xActiveDist, double& yActiveDist, double& xGap, double &yGap) const;
 
 private:
     

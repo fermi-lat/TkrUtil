@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /home/cvs/SLAC/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.3.2.1 2004/12/14 02:57:14 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.4 2004/12/16 23:28:30 usher Exp $
 */
 
 #ifndef ITkrToTSvc_H
@@ -11,7 +11,6 @@ $Header: /home/cvs/SLAC/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.3.2.1 2004/12/14 02:57:
 // Include files
 #include "GaudiKernel/IInterface.h"
 #include "idents/VolumeIdentifier.h"
-#include "Event/Recon/TkrRecon/TkrCluster.h"
 
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
@@ -19,7 +18,7 @@ $Header: /home/cvs/SLAC/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.3.2.1 2004/12/14 02:57:
 static const InterfaceID IID_ITkrToTSvc("ITkrToTSvc", 3 , 0);
 
 /** @class ITkrToTSvc
-* @brief Interface class for TkrSplitsSvc
+* @brief Interface class for TkrToTSvc
 *
 * Author:  L. Rochester
 *
@@ -31,17 +30,14 @@ public:
     static const InterfaceID& interfaceID() { return IID_ITkrToTSvc; }
 
     /// interface methods here
-    virtual double getGain      (const int tower, const int layer, const int view,
-        const int strip) const = 0;
-    virtual double getThreshold (const int tower, const int layer, const int view,
-        const int strip) const = 0;
-    virtual double getGain2     (const int tower, const int layer, const int view,
-        const int strip) const = 0;
-    virtual double getQuality   (const int tower, const int layer, const int view,
-        const int strip) const = 0;
+    virtual double getGain       (int tower, int layer, int view, int strip) const = 0;
+    virtual double getThreshold  (int tower, int layer, int view, int strip) const = 0;
+    virtual double getGain2      (int tower, int layer, int view, int strip) const = 0;
+    virtual double getQuality    (int tower, int layer, int view, int strip) const = 0;
+    virtual double getMuonFactor (int tower, int layer, int view, int strip) const = 0;
     virtual double getCountsPerMicrosecond () const = 0;
+    virtual double getFCPerMip()  const = 0;
     virtual double getMevPerMip() const = 0;
-    virtual double getFCPerMip() const = 0;
     virtual int    getMaxToT() const = 0;
     
     virtual double getCharge(double ToT, int tower, int layer, int view, int strip) const = 0;

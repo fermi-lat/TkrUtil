@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /home/cvs/SLAC/TkrUtil/src/TkrToTSvc.h,v 1.4.2.1 2004/12/14 02:57:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.6 2004/12/16 23:28:30 usher Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -45,45 +45,42 @@ public:
     /// return the service type
     const IID& type() const;
 
-    double getGain(const int tower, const int layer, const int view, 
-        const int strip) const 
-    {
-        if (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
-            && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS) 
+    double getGain(int tower, int layer, int view, int strip) const 
         {
+        if (valid(tower, layer, view, strip)) {
             return (double) m_ToTGain[tower][layer][view][strip];
         }else {
             return -1.;
         }
     }
-    double getGain2(const int tower, const int layer, const int view, 
-        const int strip) const 
-    {
-        if (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
-            && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS) 
+    double getGain2(int tower, int layer, int view, int strip) const 
         {
+        if (valid(tower, layer, view, strip)) {
             return (double) m_ToTGain2[tower][layer][view][strip];
         }else {
             return -1.;
         }
     }
-    double getThreshold(const int tower, const int layer, const int view, 
-        const int strip) const
-    {
-        if (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
-            && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS) 
+    double getThreshold(int tower, int layer, int view, int strip) const 
         {
+        if (valid(tower, layer, view, strip)) {
             return (double) m_ToTThreshold[tower][layer][view][strip];
         }else {
             return -1.;
         }
     }
-    double getQuality(const int tower, const int layer, const int view, 
-        const int strip) const
+    double getQuality(int tower, int layer, int view, int strip) const 
     {
-        if (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
-            && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS) 
+        if (valid(tower, layer, view, strip)) {
+            return (double) m_ToTQuality[tower][layer][view][strip];
+        }else {
+            return -1.;
+        }
+    }
+
+    double getMuonFactor(int tower, int layer, int view, int strip) const 
         {
+        if (valid(tower, layer, view, strip)) {
             return (double) m_ToTQuality[tower][layer][view][strip];
         }else {
             return -1.;
@@ -101,6 +98,14 @@ public:
 private:
     /// internal init method
     StatusCode doInit();
+
+    /// check index
+    bool valid(int tower, int layer, int view, int strip) const
+    {
+        return (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
+            && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS);
+    }
+
     /// mode: currently "default" or "EM"
     std::string m_mode;
     /// name of file containing splits

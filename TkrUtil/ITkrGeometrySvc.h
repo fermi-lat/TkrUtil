@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.17 2004/10/22 17:02:51 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.18 2004/11/10 22:27:18 atwood Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -29,7 +29,7 @@
  * @author Tracy Usher
  */
 
-static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 9 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 10 , 0); 
 
 namespace {
     enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
@@ -173,10 +173,15 @@ public:
     virtual int planeToBotTop(int plane) const = 0;
     virtual int getBottomTrayFlag() const = 0;
     virtual int getTopTrayFlag()    const = 0;
+    virtual unsigned int getDefaultClusterStatus() const = 0;
 
     // changes added at end for minimal disruption, should reorganize later
     virtual int getPlaneSeparation(const idents::TkrId& id1, const idents::TkrId& id2) const = 0;
 
+    virtual double truncateCoord( double x, double pitch, 
+        int numElements, int& elementNumber, bool reverse = false) const = 0;
+    virtual bool inTower(int view, const Point p, int& iXTower, int& iYTower,
+        double& xActiveDist, double& yActiveDist, double& xGap, double &yGap) const = 0;
 };
 
 #endif
