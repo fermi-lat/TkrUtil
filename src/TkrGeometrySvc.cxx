@@ -367,6 +367,8 @@ StatusCode TkrGeometrySvc::getTowerLimits()
         volId.append(0); volId.append(0); // ladder and wafer
         sc = m_pDetSvc->getTransform3DByID(volId,&T);
         if (sc.isSuccess()) {
+            // mark tower as existing
+            m_towerType[tower] = 0;
             foundTower = StatusCode::SUCCESS;
             // find the lowest and highest towers in each direction
             m_xLim[0] = std::min(m_xLim[0], t.ix());
