@@ -529,7 +529,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         idBot.append(view);          // try both views
         idBot.append(1);             // top silicon (*most* bottom trays have one!)
         idBot.append(0); idBot.append(0);  // ladder, wafer
-        std::cout << "view " << view << " idBot " << idBot.name() << std::endl;
+        //std::cout << "view " << view << " idBot " << idBot.name() << std::endl;
         if(sc = m_pDetSvc->getTransform3DByID(idBot, &botTransform).isSuccess()) {
             break;
         }
@@ -851,7 +851,7 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
                     sc = m_pDetSvc->getTransform3DByID(vId3,&T);
                     if (sc.isSuccess()) {
                         found = true;
-                        std::cout << " Id of this element: " << vId3.name() << " exists " << std::endl;
+                        //std::cout << " Id of this element: " << vId3.name() << " exists " << std::endl;
                         plane = trayToPlane(tray, botTop); // definition no!
                         layer = trayToBiLayer(tray, botTop); // definition no!
                         if (layer0!=layer) m_numLayers[ALL]++;
