@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.19 2004/12/26 23:27:13 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.20 2005/01/17 19:14:56 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -147,7 +147,6 @@ public:
     /// Provide access to the ToT service
     virtual ITkrToTSvc*         getTkrToTSvc()         const = 0;
 
-
     /// calculate the tray number, botTop from layer, view
     virtual void layerToTray (int layer, int view, int& tray, int& botTop) const = 0;
     /// calculate layer, view from tray, botTop
@@ -184,6 +183,7 @@ public:
         double& xActiveDist, double& yActiveDist, double& xGap, double &yGap) const = 0;
     virtual double getConvZ(int layer) const = 0;
     virtual bool isTopPlaneInLayer(int plane) const = 0;
+    virtual double gettkrZBot() const = 0;
 };
 
 #endif

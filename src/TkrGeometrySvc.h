@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.21 2005/01/02 23:49:13 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.22 2005/01/17 19:14:56 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -67,7 +67,9 @@ public:
     double siThickness()    const {return m_siThickness;}
     double siDeadDistance() const {return m_siDeadDistance;}
 
-	double calZTop()        const {return m_calZTop;}
+    double gettkrZBot() const  {return m_tkrZBot; }
+    
+    double calZTop()        const {return m_calZTop;}
 	double calZBot()        const {return m_calZBot;}
 	double calXWidth()      const {return m_calXWidth;}
 	double calYWidth()      const {return m_calYWidth;}
@@ -268,6 +270,8 @@ private:
     double m_siDeadDistance;
     /// size of Wafer
     double m_siWaferSide;
+    /// nominal bottom of the TKR envelope
+    double m_tkrZBot;
     /// z coordinate of top of the top CAL crystal
 	double m_calZTop;
 	/// z coordinate of bottom of the bottom CAL crystal

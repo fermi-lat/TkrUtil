@@ -540,14 +540,16 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         id = track->getStepVolumeId(istep);
         id.prepend(prefix);
         std::string idName = id.name();
-        //double arclen = track->getStepArcLen(istep);
         radlen = track->getStepRadLength(istep);
         /*
+        double arclen = track->getStepArcLen(istep);
+        
         std::cout << "step " << istep << " rl " << radlen 
         << " arclen " << arclen 
         << " volid " << id.name()
         << " pos " << stepPoint <<   std::endl;
         */
+        
         //check if in a layer
         if(id[0]==0 && id[3]==1 && id.size()>6) {
             int tray = id[4];
@@ -558,6 +560,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             if (!startCount) continue;
             // only the "top" silicon in each layer is in the same tray as layer
             // the "bottom" silicon is one tray up
+            // NOT TRUE IN GENERAL!!! NEEDS LOOKING AT!!!
             int layer = (item==2 || item==6 || item==0) ? tray-1 : tray;
             if (item==2) { // converter
                 m_radLenConv[layer] = radlen;
@@ -565,6 +568,10 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             } else {
                 m_radLenRest[layer] += radlen;
             }
+        }
+        if (startCount && (id.size()<4 || (id.size()>3 && !(id[0]==0 && id[3]==1)))) {
+            m_tkrZBot = stepPoint.z() + 0.5*track->getStepArcLen(istep);
+            break;
         }
     }
 
@@ -688,14 +695,23 @@ StatusCode TkrGeometrySvc::getCalInfo()
     double cellHorPitch, cellVertPitch;
     int nCsiPerLayer, CALnLayer;
 
+    // sensible defaults if no CAL
+    m_calZTop = m_tkrZBot - 1.0;
+    m_calZBot = m_calZTop - 1.0;
+    m_calXWidth = m_numX*m_towerPitch;
+    m_calYWidth = m_numY*m_towerPitch;
+
     if (m_pDetSvc->getNumericConstByName("CsILength",  &csiLength).isFailure() ||
         m_pDetSvc->getNumericConstByName("CsIHeight",  &csiHeight).isFailure() ||
         m_pDetSvc->getNumericConstByName("CsIWidth",   &csiWidth ).isFailure() ||
         m_pDetSvc->getNumericConstByName("CALnLayer",  &CALnLayer).isFailure() ||
         m_pDetSvc->getNumericConstByName("nCsIPerLayer",  &nCsiPerLayer).isFailure() ||
         m_pDetSvc->getNumericConstByName("cellHorPitch",  &cellHorPitch).isFailure() ||
-        m_pDetSvc->getNumericConstByName("cellVertPitch", &cellVertPitch).isFailure())
-    {return StatusCode::FAILURE;}
+        m_pDetSvc->getNumericConstByName("cellVertPitch", &cellVertPitch).isFailure()) 
+    {
+        log << MSG::INFO << "No CAL defined; will run without it." << endreq;
+        return StatusCode::SUCCESS;
+    }
 
     //get the top and bottom of the CAL crystals... why do I need to do this?
 
@@ -722,12 +738,12 @@ StatusCode TkrGeometrySvc::getCalInfo()
         if((sc = m_pDetSvc->getTransform3DByID(topLayerId,&transfTop)).isSuccess()) break;
     }
     if(sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't get Id for layer 0 of CAL" << endreq;
-        return sc;
+        log << MSG::INFO << "Couldn't get Id for layer 0 of CAL, will assume CAL absent." << endreq;
+        return StatusCode::SUCCESS;
     }
+
     Vector vecTop = transfTop.getTranslation();
     m_calZTop = vecTop.z()+ 0.5*csiHeight;
-
     m_calZBot = m_calZTop - (CALnLayer-1)*cellVertPitch - csiHeight;
 
     // get the maximum horizontal dimension of the crystals in a layer
