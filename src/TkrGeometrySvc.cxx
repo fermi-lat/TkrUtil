@@ -72,8 +72,7 @@ StatusCode TkrGeometrySvc::initialize()
     m_siDeadDistance = 0.5*(m_siWaferSide - siWaferActiveSide);
     m_siStripPitch = siWaferActiveSide/m_ladderNStrips;
     m_siResolution = m_siStripPitch/sqrt(12.);
-    
-    
+        
     // fill up the m_volId arrays, used for providing volId prefixes
     
     for(int tower=0;tower<m_numX*m_numY;tower++) {
@@ -126,12 +125,32 @@ StatusCode TkrGeometrySvc::initialize()
     IPropagatorSvc* propagatorSvc = 0;
     sc = service("GlastPropagatorSvc", propagatorSvc, true);
     if (sc.isFailure()) {
-        log << MSG::ERROR << "GlastPropagatorSvc is required for this algorithm." << endreq;
+        log << MSG::ERROR << "GlastPropagatorSvc is required for this algorithm." 
+            << endreq;
         return sc;
     }
     m_KalParticle = propagatorSvc->getPropagator();
 
-    return sc;
+       // Get the failure mode service 
+    m_tkrFail = 0;
+    if( service( "TkrFailureModeSvc", m_tkrFail, false).isFailure() ) {
+        log << MSG::INFO << "Couldn't set up TkrFailureModeSvc" << endreq;
+        log << MSG::INFO << "Will assume it is not required"    << endreq;
+    }
+
+    // Get the alignment service 
+    m_tkrAlign = 0;
+    if( service( "TkrAlignmentSvc", m_tkrAlign, false).isFailure() ) {
+        log << MSG::INFO << "Couldn't set up TkrAlignmentSvc" << endreq;
+        log << MSG::INFO << "Will assume it is not required"    << endreq;
+    }
+
+    m_badStrips = 0;
+    if( service( "TkrBadStripsSvc", m_badStrips, false).isFailure() ) {
+        log << MSG::INFO << "Couldn't set up TkrBadStripsSvc" << endreq;
+        log << MSG::INFO << "Will assume it is not required"    << endreq;
+    }
+    return StatusCode::SUCCESS;
 }
 
 StatusCode TkrGeometrySvc::finalize()

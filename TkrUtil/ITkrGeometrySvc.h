@@ -1,9 +1,18 @@
+/** @file ITkrGeometrySvc
+@brief Supplies useful geometry information for TKR digitization and reconstruction
+
+  $Header$
+*/
+
 #ifndef __ITKRGEOMETRYSVC_H
 #define __ITKRGEOMETRYSVC_H 1
 
 #include "GaudiKernel/IInterface.h"
 
 #include "GlastSvc/Reco/IKalmanParticle.h"
+#include "TkrUtil/ITkrAlignmentSvc.h"
+#include "TkrUtil/ITkrFailureModeSvc.h"
+#include "TkrUtil/ITkrBadStripsSvc.h"
 
 #include "CLHEP/Geometry/Point3D.h"
 
@@ -15,11 +24,9 @@
  * @brief Abstract interface to TkrGeometrySvc (q.v.)
  * 
  * @author Tracy Usher
- *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.1 2003/01/10 19:35:43 lsrea Exp $
  */
 
-static const InterfaceID IID_ITkrGeometrySvc(905, 1 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 2 , 0); 
 
 class ITkrGeometrySvc : public virtual IInterface
 {
@@ -69,6 +76,12 @@ public:
 
     /// Provide access to the propagator
     virtual IKalmanParticle* getPropagator() = 0;
+    /// Provide access to the failure mode service
+    virtual ITkrFailureModeSvc* getTkrFailureModeSvc() = 0;
+    /// Provide acess to the alignment service
+    virtual ITkrAlignmentSvc* getTkrAlignmentSvc() = 0;
+    /// Provide access to the bad strips service
+    virtual ITkrBadStripsSvc* getTkrBadStripsSvc() = 0;
 };
 
 #endif

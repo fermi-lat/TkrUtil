@@ -15,7 +15,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.1 2003/01/10 19:35:43 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.2 2003/03/12 23:14:07 usher Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -76,7 +76,14 @@ public:
     double getReconLayerZ(int layer);
 
     /// Provide access to the propagator
-    IKalmanParticle* getPropagator() {return m_KalParticle;}
+    IKalmanParticle* getPropagator()      {return m_KalParticle;}
+
+    /// Provide access to the failure mode service
+    ITkrFailureModeSvc* getTkrFailureModeSvc()     { return m_tkrFail;}
+    /// Provide access to the bad strips service
+    ITkrBadStripsSvc*  getTkrBadStripsSvc()  { return m_badStrips;}
+    /// Provide access to the alignment service
+    ITkrAlignmentSvc*   getTkrAlignmentSvc()   { return m_tkrAlign;}   
 
     /// calculate the tray number, botTop from layer, view
     void layerToTray (int layer, int view, int& tray, int& botTop);
@@ -150,8 +157,15 @@ private:
     /// array to hold the tray part of the volumeIds of the silicon planes
     idents::VolumeIdentifier m_volId_layer[NLAYERS][NVIEWS];
 
-    // This maintains a pointer to the particular propagator needed by the track fit
+    /// Pointer to the particular propagator needed by the track fit
     IKalmanParticle* m_KalParticle;
+    /// pointer to the failure mode service
+    ITkrFailureModeSvc* m_tkrFail;
+    /// pointer to alignment service
+    ITkrAlignmentSvc* m_tkrAlign;
+    /// pointer to bad strips service
+    ITkrBadStripsSvc* m_badStrips;
+
 };
 
 #endif // TKRGEOMETRYSVC_H

@@ -54,6 +54,10 @@
  * TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
  * with TKR geometry.
  *
+ * In addition, it stores pointers for TkrFailureModeSvc, TkrAlignmentSvc, and
+ * TkrBadStripsSvc, and GlastPropagatorSvc, which simplifies a lot of code, since many modules that use
+ * the geometry use the other services as well.
+ *
  * @section TkrQueryClustersTool TkrQueryClustersTool
  * TkrQueryClustersTool allows algorithms to access certain quantities based on,
  * but not immediately available in the TDS.
