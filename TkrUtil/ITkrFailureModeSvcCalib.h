@@ -20,8 +20,8 @@ static const InterfaceID IID_ITkrFailureModeSvcCalib("ITkrFailureModeSvcCalib", 
 typedef std::map <int, std::vector<int> > LayerMap;
 
 
-/** @class ITkrFailureModeSvc
-* @brief Interface class for TkrFailureModeSvc
+/** @class ITkrFailureModeSvcCalib
+* @brief An interface class for TkrFailureModeSvc
 *
 * Author:  L. Rochester (after R. Dubois)
 *
