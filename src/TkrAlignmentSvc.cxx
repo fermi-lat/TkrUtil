@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.28 2004/10/01 19:40:58 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.29 2004/10/09 04:42:51 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -97,7 +97,7 @@ StatusCode TkrAlignmentSvc::initialize()
 
     // we need the detModel and geometry service
 
-    sc = service("TkrGeometrySvc", m_pGeoSvc, true);
+    sc = service("TkrGeometrySvc", m_tkrGeom, true);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
             << "Could not get TkrGeometrySvc" 
@@ -184,47 +184,47 @@ StatusCode TkrAlignmentSvc::getGeometry()
 
     m_pDetSvc->accept(*visitor);
 
-    for (tray =1; tray<m_pGeoSvc->numLayers(); ++tray) {
-        m_pGeoSvc->trayToLayer(tray,0,layer,view);
-        zBot = m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view);
-        m_pGeoSvc->trayToLayer(tray,1,layer,view);
-        zTop = m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view);
+    for (tray =1; tray<m_tkrGeom->numLayers(); ++tray) {
+        m_tkrGeom->trayToLayer(tray,0,layer,view);
+        zBot = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view);
+        m_tkrGeom->trayToLayer(tray,1,layer,view);
+        zTop = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view);
         m_trayZ[tray] = 0.5*(zBot+zTop);
         m_faceZ[tray][0] = zBot - m_trayZ[tray];
         m_faceZ[tray][1] = zTop - m_trayZ[tray];
     }
 
-    double siThickness = m_pGeoSvc->siThickness();
+    double siThickness = m_tkrGeom->siThickness();
 
     //bottom tray
     double trayBotHeight = visitor->getTrayBotHeight();
-    m_pGeoSvc->trayToLayer(0,1,layer,view);
-    zTop = m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view); 
+    m_tkrGeom->trayToLayer(0,1,layer,view);
+    zTop = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view); 
     m_trayZ[0] = zTop + 0.5*siThickness - 0.5*trayBotHeight;
     m_faceZ[0][1] = 0.5*(trayBotHeight - siThickness);
     m_faceZ[0][0] = - 0.5*trayBotHeight;
 
     //top tray
     double trayTopHeight = visitor->getTrayTopHeight();
-    tray = m_pGeoSvc->numLayers();
-    m_pGeoSvc->trayToLayer(tray,0,layer, view);
-    zBot = m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view);
+    tray = m_tkrGeom->numLayers();
+    m_tkrGeom->trayToLayer(tray,0,layer, view);
+    zBot = m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view);
     m_trayZ[tray] = zBot - 0.5*siThickness + 0.5*trayTopHeight;
     m_faceZ[tray][0] = -0.5*(trayTopHeight - siThickness);
     m_faceZ[tray][1] = 0.5*trayTopHeight;
     
     log << MSG::DEBUG ;
     if (log.isActive()) {
-        for(tray = 0; tray<m_pGeoSvc->numLayers()+1; ++tray) {
+        for(tray = 0; tray<m_tkrGeom->numLayers()+1; ++tray) {
             std::cout << "tray " << tray << " z: " << m_trayZ[tray] << " "
                 << m_faceZ[tray][0] << " " << m_faceZ[tray][1] << std::endl;
         }        
         std::cout << std::endl;
 
-        for (layer = 0; layer<m_pGeoSvc->numLayers(); ++layer ) {
+        for (layer = 0; layer<m_tkrGeom->numLayers(); ++layer ) {
             for (view = 0; view<2; ++view) {
                 std::cout << "rlayer/view z " << layer << " " << view << " "
-                    << m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view) 
+                    << m_tkrGeom->getReconLayerZ(m_tkrGeom->reverseLayerNumber(layer), view) 
                     << std::endl;
             }
         }
@@ -477,7 +477,7 @@ StatusCode TkrAlignmentSvc::processConstants()
 
     while (getNextItem(TOWER,item)) {
         m_tower = item.getNumber();
-        if (!m_pGeoSvc->isTower(m_tower)) {
+        if (!m_tkrGeom->isTower(m_tower)) {
             log << MSG::ERROR << "Tower " << m_tower 
                 << " doesn't exist. Check input." << endreq;
         }
@@ -510,7 +510,7 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     while (itry--) { done[itry] = false; }
     
     AlignmentItem item;
-    int nTrays = m_pGeoSvc->numLayers() + 1;
+    int nTrays = m_tkrGeom->numLayers() + 1;
 
     // do the ones that are in the input file
     while (getNextItem(TRAY,item)) {
@@ -653,7 +653,7 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     while (itry--) {done[itry] = false;}
                
     AlignmentItem item;
-    int nLadders = m_pGeoSvc->nWaferAcross();
+    int nLadders = m_tkrGeom->nWaferAcross();
     while (getNextItem(LADDER,item)) {
         m_ladder = item.getNumber();
         if (m_ladder>=nLadders) {
@@ -692,11 +692,11 @@ void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder) const
     // Caveats: None
 
     int layer, view;
-    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
+    m_tkrGeom->trayToLayer(m_tray, m_face, layer, view);
 
-    int nLadder = m_pGeoSvc->nWaferAcross();
-    double trayWidth   = m_pGeoSvc->trayWidth();
-    double ladderGap   = m_pGeoSvc->ladderGap();
+    int nLadder = m_tkrGeom->nWaferAcross();
+    double trayWidth   = m_tkrGeom->trayWidth();
+    double ladderGap   = m_tkrGeom->ladderGap();
     // why don't we ask TkrGeometrySvc to calculate this?
     double ladderWidth = (trayWidth - (nLadder-1)*ladderGap)/nLadder;
     double offset      = -0.5*trayWidth + 0.5*ladderWidth;
@@ -729,9 +729,9 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     int itry = NWAFERS;
     while (itry--) {done[itry] = false;}
  
-    int nWafers = m_pGeoSvc->nWaferAcross();
+    int nWafers = m_tkrGeom->nWaferAcross();
     int layer, view;
-    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
+    m_tkrGeom->trayToLayer(m_tray, m_face, layer, view);
 
     int index;
     AlignmentItem item;
@@ -781,10 +781,10 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer) const
     // Dependencies: None
     // Caveats: None
     
-    int nWafer = m_pGeoSvc->nWaferAcross();
+    int nWafer = m_tkrGeom->nWaferAcross();
 
-    double trayWidth   = m_pGeoSvc->trayWidth();
-    double waferGap    = m_pGeoSvc->ladderInnerGap();
+    double trayWidth   = m_tkrGeom->trayWidth();
+    double waferGap    = m_tkrGeom->ladderInnerGap();
     double waferWidth  = (trayWidth - (nWafer-1)*waferGap + .1)/nWafer;
     double trayWidth1   = nWafer*waferWidth + (nWafer-1)*waferGap;
     double offset      = -0.5*trayWidth1 + 0.5*waferWidth;
@@ -793,7 +793,7 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer) const
     double xWafer = 0.0;
     double yWafer = offset;
     int layer, view;
-    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
+    m_tkrGeom->trayToLayer(m_tray, m_face, layer, view);
     if (view==1) std::swap(xWafer, yWafer);
 
     double deltaX = thisWafer.getDeltaX() + m_ladderConsts.getDeltaX()
@@ -851,7 +851,7 @@ const AlignmentConsts* TkrAlignmentSvc::getConsts(constType type,
     int tray   = id[4];
     int botTop = id[6];
     int layer, view;
-    m_pGeoSvc->trayToLayer(tray, botTop, layer, view);
+    m_tkrGeom->trayToLayer(tray, botTop, layer, view);
     view       = id[5];
     int ladder = id[7];
     int wafer  = id[8];
@@ -972,7 +972,7 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
         // need to generate the "face" constants to apply to the "face" coordinates
         // first get tray and view
         int tray, face;
-        m_pGeoSvc->layerToTray(layer, view, tray, face);
+        m_tkrGeom->layerToTray(layer, view, tray, face);
         m_tray = tray;
         m_face = face;
         // now the input consts
@@ -1017,10 +1017,10 @@ void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, const HepVector3D& dir,
 HepPoint3D TkrAlignmentSvc::getTowerCoordinates(
     const HepPoint3D& globalPoint, int& nXTower, int& nYTower) const
 {
-    double xTower = truncateCoord(globalPoint.x(), m_pGeoSvc->towerPitch(), 
-        m_pGeoSvc->numXTowers(), nXTower);
-    double yTower = truncateCoord(globalPoint.y(), m_pGeoSvc->towerPitch(), 
-        m_pGeoSvc->numYTowers(), nYTower);
+    double xTower = truncateCoord(globalPoint.x(), m_tkrGeom->towerPitch(), 
+        m_tkrGeom->numXTowers(), nXTower);
+    double yTower = truncateCoord(globalPoint.y(), m_tkrGeom->towerPitch(), 
+        m_tkrGeom->numYTowers(), nYTower);
     return HepPoint3D(xTower, yTower, globalPoint.z());
 }
 
@@ -1032,9 +1032,9 @@ idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(
     HepPoint3D towerPoint
         = getTowerCoordinates(globalPoint, nXTower, nYTower);
 
-    double ladderPitch = m_pGeoSvc->ladderPitch();
-    double waferPitch  = m_pGeoSvc->waferPitch();
-    int nLadders = m_pGeoSvc->nWaferAcross();
+    double ladderPitch = m_tkrGeom->ladderPitch();
+    double waferPitch  = m_tkrGeom->waferPitch();
+    int nLadders = m_tkrGeom->nWaferAcross();
     double xLocal, yLocal;
 
     // local means in the coordinate system of the wafer...
@@ -1052,7 +1052,7 @@ idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(
     yLocal = truncateCoord(yTower, waferPitch,  nLadders, wafer);
 
     int tray, botTop;
-    m_pGeoSvc->layerToTray(layer, view, tray, botTop);
+    m_tkrGeom->layerToTray(layer, view, tray, botTop);
     idents::VolumeIdentifier id;
     id.init(0,0);
     id.append(0);

@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.12.2.3 2004/09/23 04:19:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.13 2004/10/01 19:40:58 usher Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -276,7 +276,7 @@ private:
     std::string m_mode;
     std::ifstream* m_dataFile;
 
-    ITkrGeometrySvc* m_pGeoSvc;
+    ITkrGeometrySvc* m_tkrGeom;
     IGlastDetSvc* m_pDetSvc;
 
     typedef std::vector<AlignmentItem*> alignCol;

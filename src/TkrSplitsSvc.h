@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.4 2004/08/18 00:46:36 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.5 2004/08/24 23:45:45 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
@@ -62,7 +62,7 @@ private:
    /// pointer to data provider svc
     IDataProviderSvc* m_pCalibDataSvc;
     /// pointer to the geometry
-    ITkrGeometrySvc* m_pGeoSvc;
+    ITkrGeometrySvc* m_tkrGeom;
     /// pointer to the calibration data
     CalibData::TkrSplitsCalib* m_pSplits;
     /// name of the input file, if present

@@ -41,12 +41,12 @@ namespace {
             const CalibData::StripCol& strips);
 
         void setService(ITkrFailureModeSvcCalib* pFailureMode) {m_pFailureMode = pFailureMode;}
-        void setService(ITkrGeometrySvc*         pGeoSvc)      {m_pGeoSvc      = pGeoSvc;}
+        void setService(ITkrGeometrySvc*         tkrGeom)      {m_tkrGeom      = tkrGeom;}
 
     private:
         MsgStream* m_log;
         ITkrFailureModeSvcCalib* m_pFailureMode;
-        ITkrGeometrySvc*         m_pGeoSvc;
+        ITkrGeometrySvc*         m_tkrGeom;
     };
 }
 
@@ -128,7 +128,7 @@ private:
     /// vector of layers to fail
     LayerMap  m_layerList;
 
-    ITkrGeometrySvc*     m_pGeoSvc;
+    ITkrGeometrySvc*     m_tkrGeom;
     };
 
 

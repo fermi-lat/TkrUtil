@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.13 2004/09/18 18:05:14 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.14 2004/09/18 18:38:42 usher Exp $
 */
 
 
@@ -55,7 +55,7 @@ StatusCode TkrBadStripsSvc::initialize()
     if(m_visitor==0) {
         m_visitor = new BadVisitor;
         m_visitor->setService(this);
-        m_visitor->setService(m_pGeoSvc);
+        m_visitor->setService(m_tkrGeom);
     }
 
     m_badStripsFile = "";
@@ -99,7 +99,7 @@ StatusCode TkrBadStripsSvc::doInit()
     
     StatusCode sc = StatusCode::SUCCESS;
 
-    sc = service("TkrGeometrySvc", m_pGeoSvc, true);
+    sc = service("TkrGeometrySvc", m_tkrGeom, true);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
             << "Could not get TkrGeometrySvc" 
@@ -216,7 +216,7 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
         //int view = element/2;
 
         int layer, view;
-        m_pGeoSvc->planeToLayer(plane, layer, view);
+        m_tkrGeom->planeToLayer(plane, layer, view);
         
         stripCol* v;
         // my private use of getBadStrips requires non-const pointer
@@ -390,7 +390,7 @@ CalibData::eVisitorRet BadVisitor::badPlane(unsigned int row,
         //int layer = top ? tray : tray-1;
         //int view  = layer%2 ? 1-top : top;
         int layer, view;
-        m_pGeoSvc->trayToLayer(tray, top, layer, view);
+        m_tkrGeom->trayToLayer(tray, top, layer, view);
         int tag = 1;
         idents::GlastAxis::axis iview = view ? idents::GlastAxis::Y : idents::GlastAxis::X;
 

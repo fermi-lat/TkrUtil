@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.3 2004/04/10 05:57:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.4 2004/05/10 23:58:51 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -117,7 +117,7 @@ private:
     /// array of quality factors
     float m_ToTQuality   [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
     /// pointer to geometry service
-    ITkrGeometrySvc* m_geoSvc;
+    ITkrGeometrySvc* m_tkrGeom;
 };
 
 

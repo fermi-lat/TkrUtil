@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.6 2004/08/19 08:17:32 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.7 2004/08/24 23:45:45 lsrea Exp $
 */
 
 
@@ -80,14 +80,14 @@ namespace {
             const CalibData::StripCol& strips);
         
         void setService(ITkrBadStripsSvcCalib* pBadStrips) {m_pBadStrips = pBadStrips;}
-        void setService(ITkrGeometrySvc*       pGeoSvc)    {m_pGeoSvc    = pGeoSvc;}
+        void setService(ITkrGeometrySvc*       tkrGeom)    {m_tkrGeom    = tkrGeom;}
 
         bool isEmpty() { return m_nStrips==0; }
         
     private:
         MsgStream* m_log;
         ITkrBadStripsSvcCalib* m_pBadStrips;
-        ITkrGeometrySvc*       m_pGeoSvc;
+        ITkrGeometrySvc*       m_tkrGeom;
         int m_nStrips;
     };
 }
@@ -164,7 +164,7 @@ private:
 	
 	BadVisitor* m_visitor;
 
-    ITkrGeometrySvc* m_pGeoSvc;
+    ITkrGeometrySvc* m_tkrGeom;
 	
     //bool m_killDigi;
     bool m_empty;

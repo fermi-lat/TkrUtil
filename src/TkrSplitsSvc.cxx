@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.7 2004/09/18 18:05:14 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.8 2004/09/18 18:38:42 usher Exp $
 
 */
 
@@ -84,8 +84,8 @@ StatusCode TkrSplitsSvc::initialize ()
 
     Service::initialize();
       
-    m_pGeoSvc = 0;
-    if( service( "TkrGeometrySvc", m_pGeoSvc, true).isFailure() ) {
+    m_tkrGeom = 0;
+    if( service( "TkrGeometrySvc", m_tkrGeom, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't retrieve TkrGeometrySvc" << endreq;
         return StatusCode::FAILURE;
     }
@@ -144,7 +144,7 @@ int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
         return defaultSplit;
     } else {
         int tray, botTop;
-        m_pGeoSvc->layerToTray(layer, view, tray, botTop);
+        m_tkrGeom->layerToTray(layer, view, tray, botTop);
         bool isTop = (botTop==1);
         idents::TowerId twr(tower);
         int towerX = twr.ix();
@@ -205,7 +205,7 @@ StatusCode TkrSplitsSvc::doInit()
                 }
                 int plane;
                 for (plane=0; plane<NLAYERS*NVIEWS; ++plane) {
-                    m_pGeoSvc->planeToLayer(plane, layer, view);
+                    m_tkrGeom->planeToLayer(plane, layer, view);
 
                     int split = splits[plane];
                     if(split<-1 || split>(NCHIPS-1)) {

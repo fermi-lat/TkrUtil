@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.4 2004/09/07 21:20:32 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.5 2004/10/09 04:42:51 lsrea Exp $
 
 */
 
@@ -82,8 +82,8 @@ StatusCode TkrToTSvc::initialize ()
     // Call super-class
     Service::initialize ();
     
-    m_geoSvc = 0;
-    if( service( "TkrGeometrySvc", m_geoSvc, true).isFailure() ) {
+    m_tkrGeom = 0;
+    if( service( "TkrGeometrySvc", m_tkrGeom, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't retrieve TkrGeometrySvc" << endreq;
         return StatusCode::FAILURE;
     }
@@ -117,9 +117,9 @@ StatusCode TkrToTSvc::doInit()
 
     // can be removed when geometry is iterfaced here
 
-    const int nChips  = m_geoSvc->chipsPerLadder();
-    const int nStrips = m_geoSvc->ladderNStrips()/nChips;
-    const int numLayers = m_geoSvc->numLayers();
+    const int nChips  = m_tkrGeom->chipsPerLadder();
+    const int nStrips = m_tkrGeom->ladderNStrips()/nChips;
+    const int numLayers = m_tkrGeom->numLayers();
 
     int tower, layer, view, strip, chip;
 

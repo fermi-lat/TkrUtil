@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+           12-Oct-04 LSR change to m_tkrGeom throughout
   v2r0p2   11-Sep-04 LSR Remove TkrMeritTool, remove extraneous random output
   v2r0     07-Sep-04 LSR Alignment seems to be working, new interface
   v1r12p10 31-Aug-04 LSR Add methods TkrGeometrySvc::getBottom(Top)TrayFlag()... 

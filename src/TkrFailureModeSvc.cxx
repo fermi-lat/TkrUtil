@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.14 2004/08/24 23:45:45 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.15 2004/09/18 18:05:14 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -73,7 +73,7 @@ StatusCode TkrFailureModeSvc::initialize ()
 
     Service::initialize();
 
-    sc = service("TkrGeometrySvc", m_pGeoSvc, true);
+    sc = service("TkrGeometrySvc", m_tkrGeom, true);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
             << "Could not get TkrGeometrySvc" 
@@ -84,7 +84,7 @@ StatusCode TkrFailureModeSvc::initialize ()
     if(m_visitor==0) {
         m_visitor = new BadVisitorFM;
         m_visitor->setService(this);
-        m_visitor->setService(m_pGeoSvc);
+        m_visitor->setService(m_tkrGeom);
     }
 
     // Bind all of the properties for this service
@@ -340,12 +340,12 @@ CalibData::eVisitorRet BadVisitorFM::badPlane(unsigned int row,
         //view = ((layer%2==0) ? botTop : (1 - botTop));
 
         int layer, view;
-        m_pGeoSvc->trayToLayer(tray, top, layer, view);
+        m_tkrGeom->trayToLayer(tray, top, layer, view);
 
         // last remnant of hardwired stuff... need to think about this a bit
         //    but it's effectively a definition
         //int plane = 2*tray + top - 1;
-        int plane = m_pGeoSvc->trayToPlane(tray, top);
+        int plane = m_tkrGeom->trayToPlane(tray, top);
 
         std::vector<int>& curList = m_pFailureMode->getLayers(tower);
         unsigned int i = 0;
