@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.12 2004/11/15 21:11:35 usher Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.13 2004/12/26 23:27:13 lsrea Exp $
 */
 
 
@@ -18,7 +18,7 @@
 
 
 // Declaration of the interface ID ( interface id, major version, minor version) 
-static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 2 , 0); 
+static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 3 , 0); 
 
 /** @class ITkrQueryClustersTool
 * @brief Abstract interface for methods to query TkrClusters
@@ -52,14 +52,15 @@ public:
     
     /// Finds the number of clusters with measured distances 
     /// inside a rectangle of side 2*dX by 2*dY of a point, in requested bilayer
-    virtual int numberOfHitsNear( int layer, double dX, double dY, const Point& x0) const = 0;
+    virtual int numberOfHitsNear( int layer, double dX, double dY, 
+        const Point& x0, const Vector dir = Vector(0., 0., 1.)) const = 0;
 
     /// Finds the number of unused clusters within 2*dX by 2*dY of a point 
     /// and within one tower, in requested layer and view
     virtual int numberOfUUHitsNear( int layer, double dX, double dY, 
-        const Point& x0) const = 0;
+        const Point& x0, const Vector dir = Vector(0., 0., 1.)) const = 0;
     virtual int numberOfHitsNear( int v, int layer, double inDistance, 
-        const Point& x0) const = 0;
+        const Point& x0, const Vector dir = Vector(0., 0., 1.)) const = 0;
 
     /// Access clusters by view and layer or by TkrId
     virtual const Event::TkrClusterVec  getClustersReverseLayer(int view, int layer) const = 0;
