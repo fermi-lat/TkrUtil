@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.16 2004/10/09 04:42:50 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.17 2004/10/22 17:02:51 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -105,6 +105,7 @@ public:
 
     /// new stuff, based on plane and TkrId;
     virtual int    getPlane (const idents::TkrId& tkrId) const = 0;
+    virtual int getPlane(double z) const = 0;
 
     virtual double getPlaneZ(int plane) const = 0;
     virtual double getPlaneZ(const idents::TkrId& tkrId) const = 0;

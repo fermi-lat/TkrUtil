@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.17 2004/10/09 04:42:51 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.18 2004/10/22 17:02:52 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -93,6 +93,9 @@ public:
     int    getPlane (const idents::TkrId& tkrId) const {
         return 2*tkrId.getTray() + tkrId.getBotTop() - getBottomTrayFlag();
     }
+	/// returns the nearest plane to the given z
+    int getPlane(double z) const;
+
     /// returns number of planes between two objects specified by TkrId
     int getPlaneSeparation(const idents::TkrId& id1, const idents::TkrId& id2) const;
 
@@ -250,7 +253,7 @@ private:
 	double m_calXWidth;
 	/// (maximum) width in y of active CsI across the entire instrument
 	double m_calYWidth;
-    /// z positions of all the layers (digi convention)
+    /// z positions of all the planes (digi convention)
     double m_planeZ[NPLANES];
 
     /// radiation lengths of converter, by recon layer *** really digi layer, I think!

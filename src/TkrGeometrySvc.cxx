@@ -892,3 +892,19 @@ int TkrGeometrySvc::getPlaneSeparation(const idents::TkrId& id1, const idents::T
     int plane2 = getPlane(id2);
     return abs(plane1 - plane2);
 }
+
+int TkrGeometrySvc::getPlane(double z) const
+{
+    if(z >= m_planeZ[m_numPlanes-1]) return m_numPlanes-1;
+    if(z <= m_planeZ[0])             return 0;
+
+    int i;
+    for(i=0; i<m_numPlanes-1; ++i) {
+        if(m_planeZ[i] <= z && z <= m_planeZ[i+1]) {
+            return (fabs(m_planeZ[i] - z) < fabs(m_planeZ[i+1] - z)) ? i : i+1;
+        }
+    }
+    return -1;  // this is guaranteed never to happen!! (FLW)
+}
+
+
