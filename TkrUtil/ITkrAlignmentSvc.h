@@ -30,28 +30,28 @@ class AlignmentConsts
 public:
     
     AlignmentConsts (double deltaX=0., double deltaY=0., double deltaZ=0.,
-        double deltaRotX=0., double deltaRotY=0., double deltaRotZ=0.):
+        double rotX=0., double rotY=0., double rotZ=0.):
         m_deltaX(deltaX), m_deltaY(deltaY), m_deltaZ(deltaZ),
-        m_deltaRotX(deltaRotX), m_deltaRotY(deltaRotY), m_deltaRotZ(deltaRotZ)
+H        m_rotX(rotX), m_rotY(rotY), m_rotZ(rotZ)
     {}
     
     ~AlignmentConsts() {} 
 
-    double getDeltaX()     const {return m_deltaX;}
-    double getDeltaY()     const {return m_deltaY;}
-    double getDeltaZ()     const {return m_deltaZ;}
-    double getDeltaRotX()  const {return m_deltaRotX;}
-    double getDeltaRotY()  const {return m_deltaRotY;}
-    double getDeltaRotZ()  const {return m_deltaRotZ;}
+    double getDeltaX()  const {return m_deltaX;}
+    double getDeltaY()  const {return m_deltaY;}
+    double getDeltaZ()  const {return m_deltaZ;}
+    double getRotX()    const {return m_rotX;}
+    double getRotY()    const {return m_rotY;}
+    double getRotZ()    const {return m_rotZ;}
     
 private:
 
     double m_deltaX;
     double m_deltaY;
     double m_deltaZ;
-    double m_deltaRotX;
-    double m_deltaRotY;
-    double m_deltaRotZ;   
+    double m_rotX;
+    double m_rotY;
+    double m_rotZ;   
 };
 
 class ITkrAlignmentSvc : public virtual IInterface
