@@ -1,4 +1,4 @@
-// $Header$
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.1.1.1 2002/12/05 20:17:19 lsrea Exp $
 
 // Include files
 // Gaudi system includes
@@ -9,7 +9,7 @@
 #include "GaudiKernel/SmartDataPtr.h"
 #include "GaudiKernel/Algorithm.h"
 
-#include "TkrUtil/TkrFailureModeSvc.h"
+#include "TkrUtil/ITkrFailureModeSvc.h"
 
 // Define the class here instead of in a header file: not needed anywhere but here!
 //------------------------------------------------------------------------------

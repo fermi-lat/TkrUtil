@@ -3,7 +3,7 @@
 * @brief This is needed for forcing the linker to load all components
 * of the library.
 *
-*  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/Dll/TkrUtil_load.cxx,v 1.1.1.1 2002/12/05 20:17:19 lsrea Exp $
+*  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/Dll/TkrUtil_load.cxx,v 1.2 2003/01/06 18:22:47 lsrea Exp $
 */
 
 #include "GaudiKernel/DeclareFactoryEntries.h"
@@ -12,8 +12,9 @@
 
 
 DECLARE_FACTORY_ENTRIES(TkrUtil) {
-    DECLARE_SERVICE( TkrFailureModeSvc);
-    DECLARE_SERVICE( TkrBadStripsSvc);
+    DECLARE_SERVICE( TkrFailureModeSvc );
+    DECLARE_SERVICE( TkrBadStripsSvc   );
+    DECLARE_SERVICE( TkrGeometrySvc    );
 } 
 
 
