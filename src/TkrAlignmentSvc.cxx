@@ -236,12 +236,14 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     
     log << MSG::DEBUG ;
     if (log.isActive()) {
-        std::cout << m_mode <<" consts for tower 6, view 0, ladder 0, wafer 0" << std::endl;
-        for (int layer=0; layer<NLAYERS; ++layer) {
-            int index = getIndex(6, layer, 0, 0, 0);
-            std::cout << "layer " << layer << " ";
-            if (m_mode=="sim") {m_simConsts[index].fillStream(std::cout);}
-            else               {m_recConsts[index].fillStream(std::cout);}
+        for (int tower = 0; tower < NTOWERS; ++tower) {
+            std::cout << m_mode <<" consts for tower " << tower << ", view 0, ladder 0, wafer 0" << std::endl;
+            for (int layer=0; layer<NLAYERS; ++layer) {
+                int index = getIndex(tower, layer, 0, 0, 0);
+                std::cout << "layer " << layer << " ";
+                if (m_mode=="sim") {m_simConsts[index].fillStream(std::cout);}
+                else               {m_recConsts[index].fillStream(std::cout);}
+            }
         }
     }
     log << endreq;
@@ -292,27 +294,38 @@ StatusCode TkrAlignmentSvc::readFromFile()
     MsgStream log(msgSvc(), name());
     
     std::string junk;
+    std::string flag;
     
     while(!m_dataFile->eof()) {
-        *m_dataFile >> m_tower ;
-        if(m_tower==-1) { // comment line, just skip 
+        *m_dataFile >> flag ;
+        if(flag == "//") { // comment line, just skip 
             std::getline(*m_dataFile, junk);
             continue;
+        } else {
+            if (flag=="tower") {
+                
+                *m_dataFile >> m_tower;
+                
+                if(m_tower>=m_pGeoSvc->numXTowers()*m_pGeoSvc->numYTowers()) {
+                    return StatusCode::FAILURE;
+                }
+                if (m_dataFile->eof()) break;
+                
+                double a,b,c,d,e,f;       
+                *m_dataFile >> a >> b >> c >> d >> e >> f ;
+                m_towerConsts = AlignmentConsts(a,b,c,d,e,f);
+                
+                if (m_towerConsts.isNull()) { continue; }
+                
+                
+                if (fillTrayConsts().isFailure()) {
+                    log << MSG::ERROR << "fillTrayConsts failed!" << endreq;
+                    return StatusCode::FAILURE;
+                } 
+            } else {
+                std::getline(*m_dataFile, junk);
+            }
         }
-        
-        if(m_tower>=m_pGeoSvc->numXTowers()*m_pGeoSvc->numYTowers()) {
-            return StatusCode::FAILURE;
-        }
-        if (m_dataFile->eof()) break;
-        
-        double a,b,c,d,e,f;       
-        *m_dataFile >> a >> b >> c >> d >> e >> f ;
-        m_towerConsts = AlignmentConsts(a,b,c,d,e,f);
-
-        if (m_towerConsts.isNull()) { continue; }
-       
-        
-        if (fillTrayConsts().isFailure()) {return StatusCode::FAILURE;}        
     }       
     return sc;
 }
@@ -393,7 +406,7 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
             double deltaY = thisPlane.getDeltaY() + trayConsts.getDeltaY()
                 - trayConsts.getRotX()*zPlane + trayConsts.getRotZ()*xPlane;
             double deltaZ = thisPlane.getDeltaZ() + trayConsts.getDeltaZ()
-                +trayConsts.getRotX()*yPlane + trayConsts.getRotY()*xPlane;
+                +trayConsts.getRotX()*yPlane - trayConsts.getRotY()*xPlane;
             double rotX = thisPlane.getRotX() + trayConsts.getRotX();
             double rotY = thisPlane.getRotY() + trayConsts.getRotY();
             double rotZ = thisPlane.getRotZ() + trayConsts.getRotZ();
@@ -448,7 +461,7 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
         double deltaY = thisWafer.getDeltaY() + ladderConsts.getDeltaY()
             + ladderConsts.getRotZ()*xWafer;
         double deltaZ = thisWafer.getDeltaZ() + ladderConsts.getDeltaZ()
-            +ladderConsts.getRotX()*yWafer + ladderConsts.getRotY()*xWafer;
+            +ladderConsts.getRotX()*yWafer - ladderConsts.getRotY()*xWafer;
         double rotX = thisWafer.getRotX() + ladderConsts.getRotX();
         double rotY = thisWafer.getRotY() + ladderConsts.getRotY();
         double rotZ = thisWafer.getRotZ() + ladderConsts.getRotZ();

@@ -1,7 +1,7 @@
 /** @file ITkrAlignmentSvc
 @brief Supplies alignment constants for TKR digitization and reconstruction
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.3 2003/03/13 19:06:06 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.5 2003/04/07 21:48:10 lsrea Exp $
 */
 
 
@@ -60,7 +60,7 @@ public:
     double getRotZ()    const {return m_rotZ;}
 
     /// check for a zero AlignmentConsts
-    bool isNull() { return (m_deltaX==0. && m_deltaY==0. && m_deltaX==0.
+    bool isNull() { return (m_deltaX==0. && m_deltaY==0. && m_deltaZ==0.
         && m_rotX==0. &&m_rotY==0. && m_rotZ==0.);}  
     /*
     //! Serialize the object for reading
