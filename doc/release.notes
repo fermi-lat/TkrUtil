@@ -3,6 +3,7 @@
 
 @verbatim
 
+  v2r0     07-Sep-04 LSR Alignment seems to be working, new interface
   v1r12p10 31-Aug-04 LSR Add methods TkrGeometrySvc::getBottom(Top)TrayFlag()... 
                             but code isn't working yet for non-standard setups
   v1r12p9  24-Aug-04 LSR Fix the test program and jobOptions

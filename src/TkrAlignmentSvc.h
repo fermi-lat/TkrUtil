@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.10 2004/06/14 18:39:24 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.11 2004/06/17 04:45:13 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -153,8 +153,10 @@ public:
     /// moves a TkrCluster according to deltaX and deltaY alignment consts
     void moveCluster(int tower, int layer, int view, int ladder, HepPoint3D& point) const;
 
-    void moveReconHit(int tower, int layer, int view, int ladder,
-        HepPoint3D& point, HepVector3D dir) const;
+    HepVector3D deltaReconPoint(
+        HepPoint3D& point, HepVector3D dir, int layer, int view, int tower) const;
+    void moveReconPoint(
+        HepPoint3D& point, HepVector3D dir, int layer, int view, int tower) const;
 
     /// Get the volId and the local coordinates for the point to be aligned
     virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
@@ -183,7 +185,13 @@ private:
     /// to calculate delta of a point
     HepVector3D getDelta(int view,  const HepPoint3D& point, const HepVector3D& dir,
         const AlignmentConsts* alConsts) const;
-    
+
+    void applyDelta(
+        double pointX, double pointY, double alphaX, double alphaY,
+        const AlignmentConsts* alConsts, 
+        double& deltaPointX, double& deltaPointY) const;
+
+
     /// returns index
     int getIndex(int tower, int layer, int view, int ladder, int wafer) const;
     

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.2 2004/03/16 00:47:08 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.3 2004/05/10 23:58:51 lsrea Exp $
 
 */
 
@@ -196,6 +196,5 @@ StatusCode TkrToTSvc::doInit()
 StatusCode TkrToTSvc::finalize() {
     
     MsgStream log(msgSvc(), name());
-    log <<MSG::INFO << "Finalize" << endreq;
     return StatusCode::SUCCESS;
 }

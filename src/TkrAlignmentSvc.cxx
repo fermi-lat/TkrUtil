@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.25 2004/06/14 18:39:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.26 2004/06/17 04:45:13 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -43,13 +43,20 @@ const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
 
 
 namespace {
-    double truncateCoord( double x, double pitch, int numElements, int& elementNumber) 
+    double truncateCoord( double x, double pitch, 
+        int numElements, int& elementNumber, bool reverse = false) 
     {
         double xScaled = x/pitch;
+        // this is the correction for odd number of elements (towers in EM, for example)
         double delta = 0.5*(numElements%2);
         double xMod = xScaled + delta;
         int theFloor = (int) floor(xMod);
         elementNumber = theFloor + numElements/2;
+        // if it's outside the actual element, assign the closest
+        // this will not happen for real hits, but may for extrapolated hits
+        // or transformed hits.
+        elementNumber = std::max(std::min(elementNumber, numElements-1),0);
+        if (reverse) elementNumber = numElements - 1 - elementNumber;
         return pitch*(xMod - theFloor - 0.5);
     }
    
@@ -137,14 +144,14 @@ StatusCode TkrAlignmentSvc::initialize()
         log << MSG::ERROR << "Simulation Alignment constants not read" << endreq;
         return StatusCode::FAILURE;
     }
-    m_fileFlag = m_fileFlag|(1<<SIM_SHIFT);
+    if (m_simFile!="") m_fileFlag = m_fileFlag|(1<<SIM_SHIFT);
 
     m_mode = "rec";
     if(getData(m_recFile).isFailure()) {
         log << MSG::ERROR << "Reconstruction Alignment constants not read" << endreq;
         return StatusCode::FAILURE;
     }
-    m_fileFlag = m_fileFlag|(1<<REC_SHIFT);
+    if (m_recFile!="") m_fileFlag = m_fileFlag|(1<<REC_SHIFT);
 
     return sc;
 }
@@ -174,8 +181,6 @@ StatusCode TkrAlignmentSvc::getGeometry()
     double zTop, zBot;
 
     TkrAlignmentGeomVisitor* visitor = new TkrAlignmentGeomVisitor();
-
-    std::cout << std::endl;
 
     m_pDetSvc->accept(*visitor);
 
@@ -787,7 +792,7 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
         xWafer = 0.;
         yWafer = offset;
     } else {
-        xWafer = offset;
+        xWafer = offset; // you might think this should be negative, but think again!
         yWafer = 0.;
     }
 
@@ -911,7 +916,7 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     HepVector3D deltaEntry = getDelta(view, entry, dir, alConsts);
     HepVector3D deltaExit  = getDelta(view, exit,  dir, alConsts);
 
-    // for now, limit delta to 5 mm (modifiable in jobOptions
+    // for now, limit delta to m_maxDelta (default = 5mm, modifiable in jobOptions
     // later fix transformation for special cases
 
     double mag;
@@ -941,6 +946,7 @@ void TkrAlignmentSvc::moveCluster(int tower, int layer, int view, int ladder,
     // Inputs:   tower, layer, view, ladder, and cluster position
     // Output:   modified position argument
     
+    /*
     int wafer = 0;
     const AlignmentConsts* alConsts = getConsts(REC, tower, layer, view, ladder, wafer);
     // "x" is the only thing we can correct at this stage...
@@ -951,18 +957,57 @@ void TkrAlignmentSvc::moveCluster(int tower, int layer, int view, int ladder,
     view = -1;
 
     point = point - getDelta(view, point, dir, &alConsts1);
+    */
 }
 
-void TkrAlignmentSvc::moveReconHit(int /*tower*/, int /*layer*/, int /*view*/, int /*ladder*/,
-                                   HepPoint3D& /*point*/, HepVector3D /*dir*/) const
+HepVector3D TkrAlignmentSvc::deltaReconPoint(HepPoint3D& point, HepVector3D dir, 
+                                   int layer, int view, int tower) const
+{   // not sure what happens when tower = -1
+
+    //bool doRotation = (view==1 && rotate);
+    
+    HepPoint3D localPoint;
+    idents::VolumeIdentifier volId = getGeometryInfo(layer, view, point, localPoint);
+
+    double small = 1.e-3;
+    double dirZ   = dir.z();
+    if (fabs(dirZ)<small) dirZ = small;
+    double alphaX = dir.x()/dirZ;
+    double alphaY = dir.y()/dirZ;
+    
+    double deltaPointX, deltaPointY;
+    const AlignmentConsts* alConsts = getConsts(REC, volId);
+    applyDelta(localPoint.x(), localPoint.y(), alphaX, alphaY, alConsts,
+        deltaPointX, deltaPointY);
+
+    // for now, limit delta to m_maxDelta (default is 5 mm, modifiable in jobOptions
+    // later fix transformation for special cases
+    double mag;
+    HepVector3D dirDelta;
+    HepVector3D deltaPoint = HepVector3D(deltaPointX, deltaPointY, 0.0);
+
+    mag = std::min(m_maxDelta, deltaPoint.mag());
+    dirDelta = deltaPoint.unit();
+    deltaPoint = mag*dirDelta;
+
+    return -deltaPoint;
+}
+
+void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, HepVector3D dir, 
+                                   int layer, int view, int tower = -1) const
 {
-    //placeholder for now
+    HepVector3D deltaPoint = deltaReconPoint(point, dir, layer, view, tower);
+    
+   //now subtract(??) this delta from the global point
+    point = point + deltaPoint;
+    return;
 }
 
 idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(int layer, int view, HepPoint3D globalPoint, 
-                                                          HepPoint3D& /*alignmentPoint*/) const
+                                                          HepPoint3D& alignmentPoint) const
 {
     int nXTower, nYTower, ladder, wafer;
+    //bool doRotation = (view==1 && rotate);
     double xTower = truncateCoord(globalPoint.x(), m_pGeoSvc->towerPitch(), 
         m_pGeoSvc->numXTowers(), nXTower);
     double yTower = truncateCoord(globalPoint.y(), m_pGeoSvc->towerPitch(), 
@@ -974,13 +1019,17 @@ idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(int layer, int view, H
     double waferPitch  = WaferSide + m_pGeoSvc->ladderInnerGap();
     int nLadders = m_pGeoSvc->nWaferAcross();
     double xLocal, yLocal;
-    if (view == 0) {
-        xLocal = truncateCoord(xTower, ladderPitch, nLadders, ladder);
-        yLocal = truncateCoord(yTower, waferPitch,  nLadders, wafer);
-    } else {
-        xLocal = truncateCoord(yTower, ladderPitch, nLadders, ladder);
-        yLocal = truncateCoord(xTower, waferPitch,  nLadders, wafer);
-    }
+
+    // local means in the coordinate system of the wafer...
+    //  for y-measuring trays, this is rotated 90 degrees
+    // 
+    // because the wafers are *numbered backwards* for the y-measuring planes,
+    //  the transformation is not obvious. The minus signs that you would expect
+    //  are *not* there.
+
+    if (view==1) std::swap(xTower, yTower);
+    xLocal = truncateCoord(xTower, ladderPitch, nLadders, ladder);
+    yLocal = truncateCoord(yTower, waferPitch,  nLadders, wafer);
 
     int tray, botTop;
     m_pGeoSvc->layerToTray(layer, view, tray, botTop);
@@ -995,6 +1044,10 @@ idents::VolumeIdentifier TkrAlignmentSvc::getGeometryInfo(int layer, int view, H
     id.append(botTop);
     id.append(ladder);
     id.append(wafer);
+
+    if(view==1) std::swap(xLocal, yLocal);
+    alignmentPoint = HepPoint3D(xLocal, yLocal, 0.);
+
     return id;
 }
 
@@ -1011,15 +1064,6 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
     double point1 = point.x(); 
     double point2 = point.y(); 
     //double pointZ = point.z(); not yet used
-    
-    double deltaX = alConsts->getDeltaX();
-    double deltaY = alConsts->getDeltaY();
-    double deltaZ = alConsts->getDeltaZ();
-    
-    double rotX = alConsts->getRotX();
-    double rotY = alConsts->getRotY();
-    double rotZ = alConsts->getRotZ();
-    
     double dirZ   = dir.z();
     if (fabs(dirZ)<small) dirZ = small;
     double alpha1 = dir.x()/dirZ;
@@ -1039,13 +1083,9 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
         alphaX = -alpha2;
         alphaY = alpha1;
     }
-  
-    double rotTerm = deltaZ + rotX*pointY - rotY*pointX; 
     
-    double deltaPointX = - deltaX + rotZ*pointY
-        + alphaX*rotTerm;
-    double deltaPointY = - deltaY - rotZ*pointX
-        + alphaY*rotTerm;
+    double deltaPointX, deltaPointY;
+    applyDelta(pointX, pointY, alphaX, alphaY, alConsts, deltaPointX, deltaPointY);
 
     if (view==0) {
         return HepVector3D(deltaPointX,  deltaPointY, 0.);
@@ -1054,6 +1094,26 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
     }
 }
 
+void TkrAlignmentSvc::applyDelta(double pointX, double pointY, 
+                                 double alphaX, double alphaY,
+                                 const AlignmentConsts* alConsts, 
+                                 double& deltaPointX, double& deltaPointY) const
+{
+    double deltaX = alConsts->getDeltaX();
+    double deltaY = alConsts->getDeltaY();
+    double deltaZ = alConsts->getDeltaZ();
+
+    double rotX = alConsts->getRotX();
+    double rotY = alConsts->getRotY();
+    double rotZ = alConsts->getRotZ();
+
+    double rotTerm = deltaZ + rotX*pointY - rotY*pointX; 
+
+    deltaPointX = - deltaX + rotZ*pointY
+        + alphaX*rotTerm;
+    deltaPointY = - deltaY - rotZ*pointX
+        + alphaY*rotTerm;
+}
 
 IGeometry::VisitorRet TkrAlignmentGeomVisitor::pushShape(ShapeType /* s */, const UintVector& idvec, 
         std::string name, std::string /* material*/, const DoubleVector& params, 
