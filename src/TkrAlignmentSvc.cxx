@@ -250,8 +250,10 @@ AlignmentConsts* TkrAlignmentSvc::getConsts(constType type, int index) const
         
         if (type==SIM) {
             return const_cast<AlignmentConsts*>(&m_simConsts[index]);
+            //return &m_simConsts[index];
         } else {
             return const_cast<AlignmentConsts*>(&m_recConsts[index]);
+            //return &m_recConsts[index];
         }
         
     } else {
@@ -316,6 +318,7 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
     // Inputs:   view, point and direction
     // Output:   vector of translation
     
+    double small = 1.e-3;
     
     double pointX = point.x(); 
     double pointY = point.y(); 
@@ -329,14 +332,16 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
     double rotY = alConsts->getRotY();
     double rotZ = alConsts->getRotZ();
     
-    double alphaX = dir.x();
-    double alphaY = dir.y();
+    double dirZ   = dir.z();
+    if (fabs(dirZ)<small) dirZ = small;
+    double alphaX = dir.x()/dirZ;
+    double alphaY = dir.y()/dirZ;
     
-    double rotTerm = deltaZ + rotY*pointX - rotX*pointY; 
+    double rotTerm = deltaZ + rotX*pointY - rotY*pointX; 
     
-    double deltaPointXLocal = - deltaX - rotZ*pointY
+    double deltaPointXLocal = - deltaX + rotZ*pointY
         + alphaX*rotTerm;
-    double deltaPointYLocal = - deltaY + rotZ*pointX
+    double deltaPointYLocal = - deltaY - rotZ*pointX
         + alphaY*rotTerm;
     
     if(view==1) {
