@@ -5,7 +5,7 @@
  *
  * @author Tracy Usher
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/users/TkrGroup/TkrUtil/TkrUtil/TkrTrkParams.h,v 1.1 2004/09/07 21:51:09 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrTrkParams.h,v 1.1 2004/09/18 18:38:42 usher Exp $
  */
 
 #ifndef TkrTrkParams_h
@@ -15,7 +15,7 @@
 #include "Event/Recon/TkrRecon/TkrTrackParams.h"
 
 
-class TkrTrkParams : public HepVector, public Event::ITkrTrackParamsAccess
+class TkrTrkParams : public HepVector, virtual public Event::ITkrTrackParamsAccess
 {
 public:
 

@@ -6,7 +6,7 @@
  *
  * @author Tracy Usher
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/users/TkrGroup/TkrUtil/TkrUtil/TkrCovMatrix.h,v 1.1 2004/09/07 21:51:09 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrCovMatrix.h,v 1.1 2004/09/18 18:38:42 usher Exp $
  */
 
 #ifndef TkrCovMatrix_h
@@ -15,7 +15,7 @@
 #include "CLHEP/Matrix/Matrix.h"
 #include "Event/Recon/TkrRecon/TkrTrackParams.h"
 
-class TkrCovMatrix : public HepMatrix, public Event::ITkrTrackParamsAccess
+class TkrCovMatrix : public HepMatrix, virtual public Event::ITkrTrackParamsAccess
 {
 public:
 
