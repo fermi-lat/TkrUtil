@@ -1,6 +1,8 @@
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/SvcFactory.h"
+#include "GaudiKernel/IToolSvc.h"
+
 #include "src/TkrGeometrySvc.h"
 
 #include "GlastSvc/Reco/IPropagatorSvc.h"
@@ -47,7 +49,7 @@ StatusCode TkrGeometrySvc::initialize()
         m_pDetSvc->getNumericConstByName("xNum", &m_numX).isSuccess() &&
         m_pDetSvc->getNumericConstByName("xNum", &m_numY).isSuccess() &&    
         m_pDetSvc->getNumericConstByName("nWaferAcross", &m_nWaferAcross).isSuccess() &&   
-        m_pDetSvc->getNumericConstByName("numTrays", &m_nlayers).isSuccess() &&   
+        //m_pDetSvc->getNumericConstByName("numTrays", &m_nlayers).isSuccess() &&   
         m_pDetSvc->getNumericConstByName("towerPitch", &m_towerPitch).isSuccess() &&
         m_pDetSvc->getNumericConstByName("SiThick", &m_siThickness).isSuccess() &&
         m_pDetSvc->getNumericConstByName("SiWaferSide", &m_siWaferSide).isSuccess() &&
@@ -55,9 +57,10 @@ StatusCode TkrGeometrySvc::initialize()
         "SiWaferActiveSide", &siWaferActiveSide).isSuccess() &&
         m_pDetSvc->getNumericConstByName("stripPerWafer", &m_ladderNStrips).isSuccess() &&
         m_pDetSvc->getNumericConstByName("ladderGap", &m_ladderGap).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("ssdGap", &m_ladderInnerGap).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("numSuperGlast", &m_nSuperGlast).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("numNoCnvTrays", &m_nNoConverter).isSuccess() )
+        m_pDetSvc->getNumericConstByName("ssdGap", &m_ladderInnerGap).isSuccess() //&&
+        //m_pDetSvc->getNumericConstByName("numSuperGlast", &m_nSuperGlast).isSuccess() &&
+        //m_pDetSvc->getNumericConstByName("numNoCnvTrays", &m_nNoConverter).isSuccess() 
+        )
     {
         sc = StatusCode::SUCCESS;
     } else {
@@ -65,9 +68,35 @@ StatusCode TkrGeometrySvc::initialize()
         return StatusCode::FAILURE;
     }
     
+    IToolSvc* toolSvc = 0;
+    if (sc = service("ToolSvc",toolSvc, true).isSuccess() )
+    {
+        sc = toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool);
+        if (sc.isSuccess()) {
+            log << MSG::INFO << "Retrieved G4PropagationTool" << endreq;
+        } else {
+            log << MSG::ERROR << "Couldn't retrieve G4PropagationTool" << endreq;
+        }
+        
+    } else { 
+        log << MSG::INFO << "ToolSvc not found" << endreq;
+        return sc; 
+    }   
+    
+    sc = fillPropagatorInfo();
+    if( sc.isFailure()) {
+        log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
+        return sc;
+    }
+
+    //m_nlayers      = getNumType(ALL);
+    //m_nSuperGlast  = getNumType(SUPER);
+    //m_nNoConverter = getNumType(NOCONV);
+    //m_nRegular     = getNumType(REGULAR);
+    
     // finish up the constants
-    m_nlayers--;
-    m_nNoConverter--;
+    //m_nlayers--;
+    //m_nNoConverter--;
     m_trayWidth = m_nWaferAcross*m_siWaferSide +(m_nWaferAcross-1)*m_ladderGap;
     m_siDeadDistance = 0.5*(m_siWaferSide - siWaferActiveSide);
     m_siStripPitch = siWaferActiveSide/m_ladderNStrips;
@@ -87,7 +116,7 @@ StatusCode TkrGeometrySvc::initialize()
     }
     
     int bilayer;
-    for(bilayer=0;bilayer<m_nlayers;bilayer++) {
+    for(bilayer=0;bilayer<numLayers();bilayer++) {
         for (int view=0; view<2; view++) {
             int tray;
             int botTop;            
@@ -131,7 +160,7 @@ StatusCode TkrGeometrySvc::initialize()
         return sc;
     }
     m_KalParticle = propagatorSvc->getPropagator();
-
+   
        // Get the failure mode service 
     m_tkrFail = 0;
     if( service( "TkrFailureModeSvc", m_tkrFail, false).isFailure() ) {
@@ -160,7 +189,7 @@ StatusCode TkrGeometrySvc::finalize()
 }
 
 HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view, 
-                                            double stripId)
+                                            double stripId) const
 {
     // Purpose: return the global position
     // Method:  pass it on to the detector service
@@ -175,7 +204,7 @@ HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view,
 
 
 void TkrGeometrySvc::trayToLayer(int tray, int botTop, 
-                                       int& layer, int& view)
+                                       int& layer, int& view) const
 {
     // Purpose: calculate layer and view from tray and botTop
     // Method: use knowledge of the structure of the Tracker
@@ -187,7 +216,7 @@ void TkrGeometrySvc::trayToLayer(int tray, int botTop,
 }
 
 void TkrGeometrySvc::layerToTray(int layer, int view, 
-                                       int& tray, int& botTop) 
+                                       int& tray, int& botTop) const
 {   
     // Purpose: calculate tray and botTop from layer and view.
     // Method:  use knowledge of the structure of the Tracker
@@ -199,7 +228,7 @@ void TkrGeometrySvc::layerToTray(int layer, int view,
 
 
 void TkrGeometrySvc::planeToLayer(int plane, 
-                                       int& layer, int& view)
+                                       int& layer, int& view) const
 {
     // Purpose: calculate tray and botTop from plane
     // Method:  use knowledge of the structure of the Tracker
@@ -242,7 +271,7 @@ StatusCode TkrGeometrySvc::getMinTrayHeight(double &trayHeight)
     trayHeight = 10000.0;
     
     // Geometry service knows about trays, recon wants layers
-    for (int tray = 2; tray<=m_nlayers; tray++) {
+    for (int tray = 2; tray<=numLayers(); tray++) {
 
         idents::VolumeIdentifier volId1, volId2;
         int layer1, layer2;
@@ -284,7 +313,7 @@ StatusCode TkrGeometrySvc::fillLayerZ()
     StatusCode sc = StatusCode::SUCCESS;
     HepTransform3D T;
     
-    for (int bilayer=0; bilayer<m_nlayers; bilayer++) {
+    for (int bilayer=0; bilayer<numLayers(); bilayer++) {
         for (int view=0; view<2; view++) {
             idents::VolumeIdentifier volId;
             volId.append(m_volId_tower[0]);
@@ -298,11 +327,122 @@ StatusCode TkrGeometrySvc::fillLayerZ()
     return sc;
 }
 
-double TkrGeometrySvc::getReconLayerZ(int layer, int view)
+StatusCode TkrGeometrySvc::fillPropagatorInfo()
+{
+    // Purpose: Fills the m_radLen arrays with radiation lengths
+    // Method:  runs G4PropagationTool and accesses step info
+    // Inputs:  
+    // Outputs: filled arrays; stored in digi order 
+    // Caveats:
+
+    StatusCode sc = StatusCode::SUCCESS;
+
+    MsgStream log(msgSvc(), name());
+
+
+    Point startPoint = Point(40., 40., 700.);
+    Vector startDir  = Vector(0., 0., -1.);
+
+    int i, ind;
+
+    for(i=0; i<NLAYERS; ++i) {
+        m_radLenConv[i] = 0.;
+        m_radLenRest[i] = 0.;
+    }
+    for (ind=0; ind<NTYPES; ++ind) {
+        m_numLayers[ind]     = 0;
+        m_aveRadLenConv[ind] = 0.;
+        m_aveRadLenRest[ind] = 0.;
+    }
+
+    IPropagator* track = m_G4PropTool;
+    track->setStepStart(startPoint, startDir);
+    track->step(699.);
+    
+    int numSteps = track->getNumberSteps();
+    int istep = 0;
+    idents::VolumeIdentifier id;
+    double radlen;
+
+    bool startCount = false;
+    for (; istep<numSteps; ++istep) {
+        Point stepPoint = track->getStepPosition(istep);
+        id = track->getStepVolumeId(istep);
+        std::string idName = id.name();
+        double arclen = track->getStepArcLen(istep);
+        radlen = track->getStepRadLength(istep);
+        /*
+        std::cout << "step " << istep << " rl " << radlen 
+            << " arclen " << arclen 
+            << " volid " << id.name()
+            << " pos " << stepPoint <<   std::endl;
+        */
+        //check if in a layer
+        if(id[0]==0 && id[3]==1 && id.size()>6) {
+            int tray = id[4];
+            int item = id[6];
+            if (item==2) {
+                startCount = true;
+            }
+            if (!startCount) continue;
+            // only the "top" silicon in each layer is in the same tray as layer
+            // the others are one tray up
+            int layer = (item==2 || item==6 || item==0) ? tray-1 : tray;
+            if (item==2) { // converter
+                m_radLenConv[layer] = radlen;
+            } else {
+                m_radLenRest[layer] += radlen;
+            }
+        }
+    }
+    
+    // choose layer types based on thickness of converter:
+    //   under 1% -> NoConverter
+    //   over 10% -> SuperGlast
+    //   else        Standard
+
+    log << MSG::DEBUG;
+
+    for (i=0; i<NLAYERS; ++i) {
+        ind = (int) getDigiLayerType(i);
+        radlen = m_radLenConv[i];
+        m_numLayers[ind]++;
+        m_aveRadLenConv[ind] += radlen;
+        m_aveRadLenRest[ind] += m_radLenRest[i];
+        m_numLayers[(int)ALL]++;
+        m_aveRadLenConv[(int)ALL] += radlen;
+        m_aveRadLenRest[(int)ALL] += m_radLenRest[i];
+
+        if(log.isActive()) {
+        log << " digiLayer " << i << " Conv " << m_radLenConv[i] << " Rest " 
+            << m_radLenRest[i] << endreq;
+        }
+    }
+
+    log << endreq;
+
+// reverseLayerNumber() starts working here!
+
+
+    log << MSG::INFO << endreq;
+    for (ind=0;ind<NTYPES;++ind) {
+        m_aveRadLenConv[ind] = m_numLayers[ind] ? m_aveRadLenConv[ind]/m_numLayers[ind] : 0;
+        m_aveRadLenRest[ind] = m_numLayers[ind] ? m_aveRadLenRest[ind]/m_numLayers[ind] : 0;
+        log << MSG::INFO  << "Type " << ind << " numLayers " << m_numLayers[ind] 
+            << " aveConv " << m_aveRadLenConv[ind] << " aveRest " << m_aveRadLenRest[ind]
+            << endreq;
+    }  
+    log<< MSG::INFO << endreq;
+    
+    return sc;
+}
+
+
+double TkrGeometrySvc::getReconLayerZ(int layer, int view) const
 {
     // Purpose: returns the z for a given plane and view
     // Method:  accesses m_layerZ
-    // Inputs   layer and view
+    // Inputs   layer and optional view (if absent, return average)
     // Outputs: z position
     // Caveats:
 
@@ -318,13 +458,31 @@ double TkrGeometrySvc::getReconLayerZ(int layer, int view)
         return 0.5*(m_layerZ[digiLayer][0] + m_layerZ[digiLayer][1]);
     }
 }
-    
-double TkrGeometrySvc::getReconLayerZ(int layer) 
+   
+convType TkrGeometrySvc::getReconLayerType(int layer) const
 {
-    // Purpose: returns the average z for a given layer
-    // Method:  call getReconLayerZ with 2nd argument
+    // Purpose: returns the converter type for a layer
+    // Method:  reverses layer, and calls getDigiLayerType()
     // Inputs   layer
-    // Outputs: z position
+    // Outputs: layer type
     // Caveats:
-    return getReconLayerZ(layer, 2);
+    
+    return getDigiLayerType(reverseLayerNumber(layer));
+}
+
+convType TkrGeometrySvc::getDigiLayerType(int digiLayer) const
+{
+    // Purpose: returns the converter type for a layer
+    // Method:  tests radlen for this layer
+    // Inputs   layer
+    // Outputs: layer type
+    // Caveats:
+
+    double radlen = m_radLenConv[digiLayer];
+    convType type;
+    if (radlen<0.01)      { type = NOCONV;}
+    else if (radlen>0.10) { type = SUPER;}
+    else                  { type = STANDARD;}
+
+    return type;
 }

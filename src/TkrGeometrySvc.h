@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.3 2003/03/13 19:06:06 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.4 2003/04/07 21:48:10 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -37,57 +37,80 @@ public:
     
     //Retrieve stored information
 
-    int    numXTowers()      {return m_numX;} 
-    int    numYTowers()      {return m_numY;} 
-    int    numViews()        {return m_nviews;} 
-    int    numLayers()       {return m_nlayers;}
-    int    numNoConverter()  {return m_nNoConverter;}
-    int    numSuperGlast()   {return m_nSuperGlast;}
-    int    nWaferAcross()    {return m_nWaferAcross;}
+    int    numXTowers() const     {return m_numX;} 
+    int    numYTowers() const     {return m_numY;} 
+    int    numViews()   const     {return m_nviews;} 
+    int    numLayers()  const     {return getNumType(ALL);}
+    int    numNoConverter() const {return getNumType(NOCONV);}
+    int    numSuperGlast()  const {return getNumType(SUPER);}
+    int    numRegular()     const {return getNumType(STANDARD);}
+    int    nWaferAcross()   const {return m_nWaferAcross;}
 
-    int    numPlanes()       {return m_nlayers;}
+    int    numPlanes()      const {return numLayers();}
 
-    double towerPitch()      {return m_towerPitch;}
-    double trayWidth()       {return m_trayWidth;}
-    double trayHeight()      {return m_trayHeight;}
+    double towerPitch()     const {return m_towerPitch;}
+    double trayWidth()      const {return m_trayWidth;}
+    double trayHeight()     const {return m_trayHeight;}
     
-    double ladderGap()       {return m_ladderGap;}
-    double ladderInnerGap()  {return m_ladderInnerGap;}
-    int    ladderNStrips()   {return m_ladderNStrips;} 
+    double ladderGap()      const {return m_ladderGap;}
+    double ladderInnerGap() const {return m_ladderInnerGap;}
+    int    ladderNStrips()  const {return m_ladderNStrips;} 
     
-    double siStripPitch()    {return m_siStripPitch;}
-    double siResolution()    {return m_siResolution;}
-    double siThickness()     {return m_siThickness;}
-    double siDeadDistance()  {return m_siDeadDistance;}
+    double siStripPitch()   const {return m_siStripPitch;}
+    double siResolution()   const {return m_siResolution;}
+    double siThickness()    const {return m_siThickness;}
+    double siDeadDistance() const {return m_siDeadDistance;}
 
     /// reverse the numbering of the bilayers (goes both ways)
-    int ilayer(int layer)   {return numLayers()-layer-1;} // deprecated
-    int reverseLayerNumber(int layer) {return numLayers()-layer-1;}
+    int reverseLayerNumber(int layer) const {return numLayers()-layer-1;}
 
     /// return the position of a strip, will accept int or double
-    HepPoint3D getStripPosition(int tower, int layer, int view, double stripid);
+    HepPoint3D getStripPosition(int tower, int layer, int view, double stripid) const;
 
     /// return the z position for a reconLayer and view
-    double getReconLayerZ(int layer, int view);
+    double getReconLayerZ(int layer, int view) const;
     /// return the average z position for a reconLayer
-    double getReconLayerZ(int layer);
+    //double getReconLayerZ(int layer);
+    /// return the rad length of the converter for each layer
+    double getReconRadLenConv(int layer) const { 
+        return m_radLenConv[reverseLayerNumber(layer)];
+    }
+    /// return the rad length of the rest of the layer, for each layer
+    ///   counting down from the bottom of the converter
+    double getReconRadLenRest(int layer) const { 
+        return m_radLenRest[reverseLayerNumber(layer)];
+    }
 
-    /// Provide access to the propagator
-    IKalmanParticle* getPropagator()      {return m_KalParticle;}
+    /// return converter type for a layer
+    convType getReconLayerType(int layer) const;
+
+    /// return number of layers of each type
+    int getNumType(TkrGeometrySvc::convType type) const { return m_numLayers[(int)type];}
+    /// get average radlen of converter for each type
+    double getAveConv(TkrGeometrySvc::convType type) const { return m_aveRadLenConv[(int)type];}
+    /// get average radlen of rest for each type)
+    ///    counting down from the bottom of the converter
+    double getAveRest(TkrGeometrySvc::convType type) const {return m_aveRadLenRest[(int) type];}
+
+
+    /// Provide access to the old propagator
+    IKalmanParticle* getPropagator()     const {return m_KalParticle;}
+    /// provide access to the new propagator
+    IPropagator* getG4PropagationTool()  const {return m_G4PropTool;}
 
     /// Provide access to the failure mode service
-    ITkrFailureModeSvc* getTkrFailureModeSvc()     { return m_tkrFail;}
+    ITkrFailureModeSvc* getTkrFailureModeSvc()   const  { return m_tkrFail;}
     /// Provide access to the bad strips service
-    ITkrBadStripsSvc*  getTkrBadStripsSvc()  { return m_badStrips;}
+    ITkrBadStripsSvc*  getTkrBadStripsSvc() const { return m_badStrips;}
     /// Provide access to the alignment service
-    ITkrAlignmentSvc*   getTkrAlignmentSvc()   { return m_tkrAlign;}   
+    ITkrAlignmentSvc*   getTkrAlignmentSvc()  const { return m_tkrAlign;}   
 
     /// calculate the tray number, botTop from layer, view
-    void layerToTray (int layer, int view, int& tray, int& botTop);
+    void layerToTray (int layer, int view, int& tray, int& botTop) const;
     /// calculate layer, view from tray, botTop
-    void trayToLayer (int tray, int botTop, int& layer, int& view);
+    void trayToLayer (int tray, int botTop, int& layer, int& view) const;
     /// calculate layer (digi format) and view from plane
-    void planeToLayer (int plane, int& layer, int& view);
+    void planeToLayer (int plane, int& layer, int& view) const;
     
 
     
@@ -108,11 +131,11 @@ private:
     /// two views, always!
     int    m_nviews;        
     /// total number of x-y layers
-    int    m_nlayers; 
+    //int    m_nlayers; 
     /// number of no-converter layers
-    int m_nNoConverter;
+    //int m_nNoConverter;
     /// number of superglast layers
-    int m_nSuperGlast;
+    //int m_nSuperGlast;
     ///  number of wafers in a ladder
     int m_nWaferAcross;
 
@@ -144,11 +167,30 @@ private:
     /// z positions of all the layers (digi convention)
     double m_layerZ[NLAYERS][NVIEWS];
 
+    /// radiation lengths of converter, by recon layer
+    double m_radLenConv[NLAYERS];
+    /// radiation lengths of remainder of layer
+    /// we count from the bottom of the converter to the top of the next lower converter
+    double m_radLenRest[NLAYERS];
+    /// number of layers of each type
+    int m_numLayers[NTYPES];
+    /// average radlen of converter
+    double m_aveRadLenConv[NTYPES];
+    /// average radlen of the rest
+    double m_aveRadLenRest[NTYPES];
+
     /// Returns minimum trayHeight... I hope we can stop using this soon
     StatusCode getMinTrayHeight(double & trayHeight);
 
     /// returns z position of X, Y or average plane for each layer
     StatusCode fillLayerZ();
+
+    /// fill rad lengths
+    StatusCode fillPropagatorInfo();
+
+    /// return converter type for a layer
+    convType getDigiLayerType(int digiLayer) const;
+
 
     /// pointer to the detector service
     IGlastDetSvc * m_pDetSvc;
@@ -158,8 +200,10 @@ private:
     /// array to hold the tray part of the volumeIds of the silicon planes
     idents::VolumeIdentifier m_volId_layer[NLAYERS][NVIEWS];
 
-    /// Pointer to the particular propagator needed by the track fit
+    /// Pointer to the old-style propagator needed by the track fit
     IKalmanParticle* m_KalParticle;
+    /// pointer to the new propagation tool
+    IPropagator* m_G4PropTool;
     /// pointer to the failure mode service
     ITkrFailureModeSvc* m_tkrFail;
     /// pointer to alignment service
