@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r2p1   11-Feb-05 LSR Remove random character introduced into test program
   v3r2     10-Feb-05 LSR ToTSvc now can read charge-inj files; also refactor
                          fix unix warnings
   v3r1p9   07-Feb-05 LSR redo for new TkrCluster; generalize geometry a bit

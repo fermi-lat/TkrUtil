@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.4 2004/10/01 19:40:58 usher Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.5 2005/02/11 07:12:54 lsrea Exp $
 
 // Include files
 // Gaudi system includes
@@ -38,31 +38,19 @@ private:
 
 };
 
-//------------------------------------------------------------------------
-
 // necessary to define a Factory for this algorithm
 // expect that the xxx_load.cxx file contains a call     
 //     DLL_DECL_ALGORITHM( test_TkrUtil );
 
 static const AlgFactory<test_TkrUtil>  Factory;
 const IAlgFactory& test_TkrUtilFactory = Factory;
-h
-//------------------------------------------------------------------------
-//! ctor
 
+//! ctor
 test_TkrUtil::test_TkrUtil(const std::string& name, ISvcLocator* pSvcLocator)
 :Algorithm(name, pSvcLocator)
-,m_count(0)
-{
-
-}
-
-
-
-//------------------------------------------------------------------------
+,m_count(0){}
 
 //! set parameters and attach to various perhaps useful services.
-
 StatusCode test_TkrUtil::initialize(){
     StatusCode  sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
@@ -76,8 +64,6 @@ StatusCode test_TkrUtil::initialize(){
 
     return sc;
 }
-
-//------------------------------------------------------------------------
 
 //! process an event
 StatusCode test_TkrUtil::execute()
@@ -155,10 +141,6 @@ StatusCode test_TkrUtil::execute()
     return sc;
 }
 
-
-
-//------------------------------------------------------------------------
-
 //! clean up, summarize
 StatusCode test_TkrUtil::finalize(){
     StatusCode  sc = StatusCode::SUCCESS;
@@ -167,10 +149,3 @@ StatusCode test_TkrUtil::finalize(){
 
     return sc;
 }
-
-
-
-
-
-
-

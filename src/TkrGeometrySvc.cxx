@@ -276,7 +276,7 @@ StatusCode TkrGeometrySvc::getConsts()
 
     if (service("GlastDetSvc", m_pDetSvc).isSuccess() &&
         m_pDetSvc->getNumericConstByName("xNum", &m_numX).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("xNum", &m_numY).isSuccess() &&    
+        m_pDetSvc->getNumericConstByName("yNum", &m_numY).isSuccess() &&    
         m_pDetSvc->getNumericConstByName("nWaferAcross", &m_nWaferAcross).isSuccess() &&   
         m_pDetSvc->getNumericConstByName("towerPitch",   &m_towerPitch).isSuccess() &&
         m_pDetSvc->getNumericConstByName("SiThick",      &m_siThickness).isSuccess() &&
