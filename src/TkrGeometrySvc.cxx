@@ -842,7 +842,7 @@ StatusCode TkrGeometrySvc::getTestTower()
     int tower;
 
     int tray, botTop, view;
-    int layer0 = -1;
+    //int layer0 = -1;
 
     for(tower=0;tower<m_numX*m_numY;++tower) {
         idents::VolumeIdentifier vId, vId1, vId2, vId3, vIdTest;
@@ -950,8 +950,8 @@ bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower
                              double& xGap, double& yGap) const
 {
     double twrPitch = towerPitch();
-    double numX = numXTowers();
-    double numY = numYTowers();
+    int numX = numXTowers();
+    int numY = numYTowers();
     bool isInTower = true;
     double xTower = truncateCoord(p.x(), twrPitch, numX, iXTower);
     double yTower = truncateCoord(p.y(), twrPitch, numY, iYTower);
