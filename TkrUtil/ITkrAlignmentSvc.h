@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.8 2003/05/08 04:25:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.9 2003/07/02 20:15:06 cohen Exp $
 */
 
 
@@ -88,7 +88,7 @@ private:
 };
 
 /** 
-  @class ITkrAligmentSvc 
+  @class ITkrAlignmentSvc 
   @brief Abstract interface to TkrAlignmentSvc (q.v.)  
   @author Leon Rochester 23-Jan-2003
  */
