@@ -99,9 +99,15 @@ StatusCode TkrGeometrySvc::initialize()
         m_volId_tower[tower].append(vId);
     }
  
-    // find the test tower
+    // fill the towerType array, and find the test tower
+    m_testTower = -1;
+    m_xLim[0] = 1000; m_xLim[1] = -1;
+    m_yLim[0] = 1000; m_yLim[1] = -1;
     HepTransform3D T;
+    StatusCode foundTower = StatusCode::FAILURE;
     for (tower=0;tower<m_numX*m_numY;++tower) {
+        idents::TowerId t = idents::TowerId(tower);
+        m_towerType[tower] = 0;
         idents::VolumeIdentifier volId;
         volId.init(0,0);
         volId.append(m_volId_tower[tower]);
@@ -115,14 +121,61 @@ StatusCode TkrGeometrySvc::initialize()
         volId.append(botTop);
         volId.append(0); volId.append(0); // ladder and wafer
         sc = m_pDetSvc->getTransform3DByID(volId,&T);
-        if (sc.isFailure()) continue;
-        m_testTower = tower;
-        break;
+        if (sc.isFailure()) {
+            // start by marking missing towers
+            m_towerType[tower] = -1;
+            continue;
+        } else {
+            foundTower = StatusCode::SUCCESS;
+            // find the lowest and highest towers in each direction
+            m_xLim[0] = std::min(m_xLim[0], t.ix());
+            m_xLim[1] = std::max(m_xLim[1], t.ix());
+            m_yLim[0] = std::min(m_yLim[0], t.iy());
+            m_yLim[1] = std::max(m_yLim[1], t.iy());
+        }
+           
+        // set test tower to first tower actually present
+        if(m_testTower<0) m_testTower = tower;  
     }
-    if( sc.isFailure()) {
+    if( foundTower.isFailure()) {
         // for now, just fail; might be more clever later
         log << MSG::ERROR << "Failed to find any tower... check geometry!"<< endreq;
         return sc;
+    }
+
+    // use the list of existing towers to generate the tower type of each tower.
+    // tower type is number of edges not touching another tower (0-4);
+    int ix, iy;
+    idents::TowerId tempTower;
+    for (ix=0; ix<m_numX; ++ix) {
+        for (iy=0; iy<m_numY; ++iy) {
+            int nExposed = 0;
+            idents::TowerId t = idents::TowerId(ix, iy);
+            tower = t.id();
+            if (m_towerType[tower]==-1) continue;
+            // tower exists, check the 4 sides
+            if (ix==0) ++nExposed;
+            else {
+                tempTower = idents::TowerId(ix-1,iy);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            if (ix==m_numX-1) ++nExposed; 
+            else {
+                tempTower = idents::TowerId(ix+1,iy);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            if(iy==0) ++nExposed;
+            else {
+                tempTower = idents::TowerId(ix,iy-1);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            if (iy==m_numY-1) ++nExposed;
+            else {
+                tempTower = idents::TowerId(ix,iy+1);
+                if (m_towerType[tempTower.id()]==-1) ++nExposed;
+            }
+            m_towerType[tower] = nExposed;
+        }
     }
 
     sc = fillPropagatorInfo(); 
@@ -610,3 +663,22 @@ StatusCode TkrGeometrySvc::getCalInfo()
     return StatusCode::SUCCESS;
 }
 
+double TkrGeometrySvc::getLATLimit(int view, limitType type) const
+{
+    int towerNum = getLimitingTower(view, type);
+    int nTowers  = (view==0 ? m_numX     : m_numY );
+    // lower edge
+    double limit = (-0.5*nTowers + towerNum)*m_towerPitch;
+    // upper edge
+    if (type==HIGH) { limit += m_towerPitch; }
+    
+    return limit;
+}
+
+bool TkrGeometrySvc::isInActiveLAT(Point pos) const
+{
+    double x = pos.x();
+    double y = pos.y();
+    return (x>getLATLimit(0,LOW) && x<getLATLimit(0,HIGH) 
+        && y>getLATLimit(1,LOW) && y<getLATLimit(1,HIGH) ? true : false );
+}

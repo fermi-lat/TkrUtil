@@ -4,6 +4,7 @@
 
 @verbatim
 
+  v1r12p1  31-May-04 LSR Add some functionality for incomplete LATs
   v1r12p0  10-May-04 LSR Fix fix bug in TkrGeometrySvc::trayHeight;
                          Add new parameters in TkrToTSvc
   v1r11p6  30-Apr-04 LSR Fix 2nd bug uncovered by Xin (tower(2,2) was special in previous code)
