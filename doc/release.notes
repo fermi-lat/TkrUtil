@@ -3,6 +3,7 @@
 
 @verbatim
 
+  v1r12p6  21-Jul-04 LSR Fix req. file according to Traudl's suggestion
   v1r12p5  24-Jun-04 LSR TkrFailureModeSvc and TkrBadStripsSvc should work now!
   v1r12p4  14-Jun-04 LSR Another bug fixed.
   v1r12p3  12-Jun-04 LSR fix unix errors, warnings, and a bug... need to revisit...
