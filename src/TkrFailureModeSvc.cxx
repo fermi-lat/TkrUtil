@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.8 2003/02/17 18:06:58 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.9 2003/03/01 02:13:29 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -69,7 +69,6 @@ StatusCode TkrFailureModeSvc::initialize ()
 
     // Open the message log
     MsgStream log( msgSvc(), name() );
-    std::cout << "pointer to log file " << &log << std::endl;
 
     if(m_visitor==0) {
         m_visitor = new BadVisitorFM;
