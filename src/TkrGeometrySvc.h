@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.15 2004/08/19 08:17:32 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.16 2004/08/31 23:54:55 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -46,13 +46,13 @@ public:
     int    numRegular()     const {return getNumType(STANDARD);}
     int    nWaferAcross()   const {return m_nWaferAcross;}
     double siWaferSide()    const {return m_siWaferSide;}
+    double siActiveWaferSide() const {return m_siWaferSide - 2.*m_siDeadDistance;}
+    double ladderPitch()    const {return m_siWaferSide + m_ladderGap; }
+    double waferPitch()     const {return m_siWaferSide + m_ladderInnerGap; }
+    int    chipsPerLadder() const {return m_chipsPerLadder; }
+    int    stripsPerChip () const {return m_ladderNStrips/m_chipsPerLadder; }
 
-    int    numPlanes()      const {
-        int nPlanes = 2*numLayers() 
-            - (m_bottomTrayNumber>-1? 0: 1) 
-            - (m_topTrayNumber>-1? 0: 1);
-        return nPlanes;
-    }
+    int    numPlanes()      const {return m_numPlanes; }
 
     double towerPitch()     const {return m_towerPitch;}
     double trayWidth()      const {return m_trayWidth;}
@@ -74,26 +74,63 @@ public:
 
     /// reverse the numbering of the bilayers (goes both ways)
     int reverseLayerNumber(int layer) const {return numLayers()-layer-1;}
+    /// same for planes
+    int reversePlaneNumber(int plane) const {return numPlanes()-plane-1;}
 
     /// return the position of a strip, will accept int or double
     HepPoint3D getStripPosition(int tower, int layer, int view, double stripid) const;
 
     /// return the z position for a reconLayer and view
-    double getReconLayerZ(int layer, int view=2) const;
-    /// return the average z position for a reconLayer
-    //double getReconLayerZ(int layer);
+    double getReconLayerZ(int reconLayer, int view=2) const;
+    /// return the z position for a digiLayer and view
+    double getLayerZ     (int digiLayer,  int view=2) const;
+    /// returns Z of *Layer* (average of x and y plane)
+    /// TkrId of either plane will work
+    double getLayerZ     (const idents::TkrId& tkrId) const {
+        return getLayerZ(tkrId.getLayer());
+    }
+    /// new stuff, based on plane and TkrId;
+    int    getPlane (const idents::TkrId& tkrId) const {
+        return 2*tkrId.getTray() + tkrId.getBotTop() - getBottomTrayFlag();
+    }
+    double getPlaneZ(int plane) const {
+        return m_planeZ[plane];
+    }
+    double getPlaneZ(const idents::TkrId& tkrId) const {
+        return getPlaneZ(getPlane(tkrId));
+    }
+    int    getLayer (int plane) const {
+        return m_planeToLayer[plane];
+    }
+    int    getLayer (const idents::TkrId& tkrId) const {
+        return getLayer(getPlane(tkrId));
+    }
+    int    getView  (int plane) const {
+        return m_planeToView [plane];
+    }
+    int    getView  (const idents::TkrId& tkrId) const {
+        return getView(getPlane(tkrId));
+    }
+
     /// return the rad length of the converter for each layer
     double getReconRadLenConv(int layer) const { 
-        return m_radLenConv[reverseLayerNumber(layer)];
+        return getRadLenConv(reverseLayerNumber(layer));
+    }
+    double getRadLenConv(int layer) const { 
+        return m_radLenConv[layer];
     }
     /// return the rad length of the rest of the layer, for each layer
     ///   counting down from the bottom of the converter
     double getReconRadLenRest(int layer) const { 
-        return m_radLenRest[reverseLayerNumber(layer)];
+        return getRadLenRest(reverseLayerNumber(layer));
+    }
+    double getRadLenRest(int layer) const { 
+        return m_radLenRest[layer];
     }
 
     /// return converter type for a layer
     convType getReconLayerType(int layer) const;
+    convType getLayerType(int layer) const;
 
     /// return number of layers of each type
     int getNumType(convType type) const { return m_numLayers[(int)type];}
@@ -139,8 +176,7 @@ public:
     void trayToLayer (int tray, int botTop, int& layer, int& view) const;
     /// calculate layer (digi format) and view from plane
     void planeToLayer (int plane, int& layer, int& view) const;
-    
- 
+     
     StatusCode queryInterface(const IID& riid, void** ppvUnknown);
 
     static const InterfaceID& interfaceID() {
@@ -174,6 +210,7 @@ private:
     /// two views, always!
     int    m_nviews;        
     int m_nWaferAcross;
+    int m_numPlanes;
 
     /// Distance between centers of adjacent towers
     double m_towerPitch;
@@ -189,6 +226,8 @@ private:
     double m_ladderInnerGap;
     /// number of strips in a ladder
     int    m_ladderNStrips; 
+    ///
+    int    m_chipsPerLadder;
     
     /// distance between two strips
     double m_siStripPitch; 
@@ -209,9 +248,9 @@ private:
 	/// (maximum) width in y of active CsI across the entire instrument
 	double m_calYWidth;
     /// z positions of all the layers (digi convention)
-    double m_layerZ[NLAYERS][NVIEWS];
+    double m_planeZ[NPLANES];
 
-    /// radiation lengths of converter, by recon layer
+    /// radiation lengths of converter, by recon layer *** really digi layer, I think!
     double m_radLenConv[NLAYERS];
     /// radiation lengths of remainder of layer
     /// we count from the bottom of the converter to the top of the next lower converter
@@ -246,17 +285,12 @@ private:
     /// Returns minimum trayHeight... I hope we can stop using this soon
     StatusCode getMinTrayHeight(double& trayHeight);
 
-    /// returns z position of X, Y or average plane for each layer
-    StatusCode fillLayerZ();
-
     /// fill rad lengths
     StatusCode fillPropagatorInfo();
 
 	/// get the relevant CAL info();
 	StatusCode getCalInfo();
 
-    /// return converter type for a layer
-    convType getDigiLayerType(int digiLayer) const;
     /// find the test tower
     StatusCode getTestTower();
     /// find the legal volumes and store the info

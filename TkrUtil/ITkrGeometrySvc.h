@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.14 2004/08/24 23:45:44 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.15 2004/08/31 23:54:54 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -67,6 +67,12 @@ public:
     virtual int    ladderNStrips()  const = 0;
     virtual int    nWaferAcross()   const = 0;
     virtual double siWaferSide()    const = 0;
+    virtual double siActiveWaferSide() const = 0;
+    virtual double ladderPitch()    const = 0;
+    virtual double waferPitch()     const = 0;
+    virtual int    chipsPerLadder() const = 0;
+    virtual int    stripsPerChip () const = 0;
+
     
     virtual double siStripPitch()   const = 0;
     virtual double siResolution()   const = 0;
@@ -82,6 +88,7 @@ public:
     // Digi and Reco layers differ in the ordering
     /// convert from digi<->recon layer number
     virtual int reverseLayerNumber(int layer) const = 0;
+    virtual int reversePlaneNumber(int plane) const = 0;
 
     /// Return the strip position (in local coordinates) given the stripId
     virtual HepPoint3D getStripPosition( int tower, int layer, int view, 
@@ -90,13 +97,31 @@ public:
     /// Return z position for layer and view
     virtual double getReconLayerZ(int layer, int view=2) const = 0;
 
+        /// return the z position for a digiLayer and view
+    virtual double getLayerZ     (int digiLayer,  int view=2) const = 0;
+    /// returns Z of *Layer* (average of x and y plane)
+    /// TkrId of either plane will work
+    virtual double getLayerZ     (const idents::TkrId& tkrId) const = 0;
+
+    /// new stuff, based on plane and TkrId;
+    virtual int    getPlane (const idents::TkrId& tkrId) const = 0;
+    virtual double getPlaneZ(int plane) const = 0;
+    virtual double getPlaneZ(const idents::TkrId& tkrId) const = 0;
+    virtual int    getLayer (int plane) const = 0;
+    virtual int    getLayer (const idents::TkrId& tkrId) const = 0;
+    virtual int    getView  (int plane) const = 0;
+    virtual int    getView  (const idents::TkrId& tkrId) const = 0;
+
     /// Return radlen for the converter in a layer
     virtual double getReconRadLenConv(int layer) const = 0;
+    virtual double getRadLenConv(int layer) const = 0;
     /// Return radlen for the rest of the layer
     ///    counting down from the bottom of the converter
     virtual double getReconRadLenRest(int layer) const = 0;
+    virtual double getRadLenRest(int layer) const = 0;
     /// Return converter type for a layer
     virtual convType getReconLayerType(int layer) const = 0;
+    virtual convType getLayerType(int layer) const = 0;
     
     virtual int getNumType(convType type) const = 0;
     /// get average radlen of converter for each type

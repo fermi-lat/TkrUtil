@@ -33,15 +33,15 @@ StatusCode TkrGeometrySvc::initialize()
     // Purpose: load up constants from GlastDetSvc and do some calcs
     // Inputs:  none
     // Output:  TkrGeometrySvc statics initialized
-    
+
     StatusCode sc = StatusCode::SUCCESS;
-    
+
     Service::initialize();
     setProperties();
     MsgStream log(msgSvc(), name());
 
     sc = getConsts();
-    
+
     IToolSvc* toolSvc = 0;
     if (sc = service("ToolSvc",toolSvc, true).isSuccess() )
     {
@@ -51,7 +51,7 @@ StatusCode TkrGeometrySvc::initialize()
         } else {
             log << MSG::ERROR << "Couldn't retrieve G4PropagationTool" << endreq;
         }
-        
+
     } else { 
         log << MSG::INFO << "ToolSvc not found" << endreq;
         return sc; 
@@ -61,36 +61,30 @@ StatusCode TkrGeometrySvc::initialize()
     // these are the Id's for the 15 towers, with just the first 3 fields
     initializeArrays();
 
+    // getTestTower checks to see if there is a "bottom Tray"
+    // this is crucial for numbering of the planes, 
+    //    so must be done before anything else!!!
     sc = getTestTower();
     if( sc.isFailure()) {
         log << MSG::ERROR << "Failed to find test tower"<< endreq;
         return sc;
     }
-   
-/*
-   makeTowerIds();
 
-    sc = fillPropagatorInfo(); 
-    if( sc.isFailure()) {
-        log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
-        return sc;
-    }
- */   
     sc = getVolumeInfo();
     if( sc.isFailure()) {
         log << MSG::ERROR << "Failed to find correct volumes for tracker"<< endreq;
         return sc;
     }
-    
+
     // number of layers is now known...
     // but will get be calculated another way later... the two *should* agree!
     makeTowerIds();
 
-    sc = getTestTower();
-    if( sc.isFailure()) {
-        log << MSG::ERROR << "Failed to find test tower"<< endreq;
-        return sc;
-    }
+    //sc = getTestTower();
+    //if( sc.isFailure()) {
+    //    log << MSG::ERROR << "Failed to find test tower"<< endreq;
+    //    return sc;
+    //}
 
     sc  = getTowerLimits();
 
@@ -107,30 +101,23 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
         return sc;
     }
-   
+
     makeLayerIds();
 
-    // fill the m_layerZ arrays
-    sc = fillLayerZ();
-    if( sc.isFailure()) {
-        log << MSG::ERROR << "Failed to fill layerZ"<< endreq;
-        return sc;
-    }
-   
     // the minimum "trayHeight" (actually tray pitch)
-    // uses layerZ info, so must follow call to fillLayerZ()
+    // uses planeZ info, so must follow call to fillPlaneZ()
     sc = getMinTrayHeight(m_trayHeight);
     if( sc.isFailure()) {
         log << MSG::ERROR << "Failed to get minTrayHeight"<< endreq;
         return sc;
     }
 
-	// Get cal info necessary for tracker recon
-	sc = getCalInfo();
+    // Get cal info necessary for tracker recon
+    sc = getCalInfo();
     if (sc.isFailure()) return sc;
 
     // Get propagator from the service
-    
+
     IPropagatorSvc* propagatorSvc = 0;
     sc = service("GlastPropagatorSvc", propagatorSvc, true);
     if (sc.isFailure()) {
@@ -139,8 +126,8 @@ StatusCode TkrGeometrySvc::initialize()
         return sc;
     }
     m_KalParticle = propagatorSvc->getPropagator();
-   
-       // Get the failure mode service 
+
+    // Get the failure mode service 
     m_tkrFail = 0;
     if( service( "TkrFailureModeSvc", m_tkrFail, true).isFailure() ) {
         log << MSG::INFO << "Couldn't set up TkrFailureModeSvc" << endreq;
@@ -194,21 +181,17 @@ HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view,
 
     idents::VolumeIdentifier volId;
     volId.append(m_volId_tower[tower]);
-    //volId.append(1); // TKR
     volId.append(m_volId_layer[layer][view]);
     return m_pDetSvc->getStripPosition(volId, stripId);
 }
 
 
 void TkrGeometrySvc::trayToLayer(int tray, int botTop, 
-                                       int& layer, int& view) const
+                                 int& layer, int& view) const
 {
     // Purpose: calculate layer and view from tray and botTop
     // Method: use knowledge of the structure of the Tracker
-    
-    //int plane = 2*tray + botTop - 1;
-    //layer = (plane+10)/2 - 5; // homemade "floor"
-    //view = ((layer%2==0) ? botTop : (1 - botTop));
+
     int plane = trayToPlane(tray, botTop);
     layer = m_planeToLayer[plane];
     view  = m_planeToView[plane];
@@ -216,15 +199,17 @@ void TkrGeometrySvc::trayToLayer(int tray, int botTop,
 }
 
 void TkrGeometrySvc::layerToTray(int layer, int view, 
-                                       int& tray, int& botTop) const
+                                 int& tray, int& botTop) const
 {   
     // Purpose: calculate tray and botTop from layer and view.
     // Method:  use knowledge of the structure of the Tracker
-    
-    //int plane = (2*layer) + (((layer % 2) == 0) ? (1 - view) : (view));
-    //tray = (plane+1)/2;
-    //botTop = (1 - (plane % 2));
+
     int plane = m_layerToPlane[layer][view];
+    if (plane==-1) {
+        tray = -1;
+        botTop = -1;
+        return;
+    }
     tray = planeToTray(plane);
     botTop = planeToBotTop(plane);
     return;
@@ -232,13 +217,10 @@ void TkrGeometrySvc::layerToTray(int layer, int view,
 
 
 void TkrGeometrySvc::planeToLayer(int plane, 
-                                       int& layer, int& view) const
+                                  int& layer, int& view) const
 {
     // Purpose: calculate tray and botTop from plane
     // Method:  use knowledge of the structure of the Tracker
-    //    layer = plane/2;
-    //    int element = (plane+3)%4;
-    //    view = element/2;
     layer = m_planeToLayer[plane];
     view  = m_planeToView[plane];
 }
@@ -272,41 +254,13 @@ StatusCode TkrGeometrySvc::getMinTrayHeight(double& trayHeight)
     // Caveats:
 
     StatusCode sc = StatusCode::SUCCESS;
-    //HepTransform3D T1, T2;
     trayHeight = 10000.0;
-    
+
     // Geometry service knows about trays, recon wants layers
 
     for (int layer = 1; layer<numLayers(); ++layer) {
         double trayPitch = getReconLayerZ(layer-1) - getReconLayerZ(layer);
         trayHeight = std::min(trayPitch, trayHeight);  
-    }
-    return sc;
-}
-
-StatusCode TkrGeometrySvc::fillLayerZ() 
-{
-    // Purpose: Fills the m_layerZ arrays with z positions
-    // Method:  cycles through the layers and recovers z from the geometry
-    // Inputs:  list of volIds of layers
-    // Outputs: fills m_layerZ
-    // Caveats:
-
-    StatusCode sc = StatusCode::SUCCESS;
-    HepTransform3D T;
-    
-    for (int bilayer=0; bilayer<numLayers(); ++bilayer) {
-        for (int view=0; view<2; ++view) {
-            idents::VolumeIdentifier volId;
-            volId.append(m_volId_tower[m_testTower]);
-            //volId.append(1); // TKR
-            volId.append(m_volId_layer[bilayer][view]);
-            if ((sc=m_pDetSvc->getTransform3DByID(volId,&T)).isFailure()) {
-                break;
-            } else {
-                m_layerZ[bilayer][view] = (T.getTranslation()).z();  
-            }
-        }
     }
     return sc;
 }
@@ -324,14 +278,15 @@ StatusCode TkrGeometrySvc::getConsts()
         m_pDetSvc->getNumericConstByName("xNum", &m_numX).isSuccess() &&
         m_pDetSvc->getNumericConstByName("xNum", &m_numY).isSuccess() &&    
         m_pDetSvc->getNumericConstByName("nWaferAcross", &m_nWaferAcross).isSuccess() &&   
-        m_pDetSvc->getNumericConstByName("towerPitch", &m_towerPitch).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("SiThick", &m_siThickness).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("SiWaferSide", &m_siWaferSide).isSuccess() &&
-        m_pDetSvc->getNumericConstByName(
-        "SiWaferActiveSide", &siWaferActiveSide).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("towerPitch",   &m_towerPitch).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("SiThick",      &m_siThickness).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("SiWaferSide",  &m_siWaferSide).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("SiWaferActiveSide", 
+                                      &siWaferActiveSide).isSuccess() &&
         m_pDetSvc->getNumericConstByName("stripPerWafer", &m_ladderNStrips).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("ladderGap", &m_ladderGap).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("ssdGap", &m_ladderInnerGap).isSuccess() 
+        m_pDetSvc->getNumericConstByName("ladderGap",    &m_ladderGap).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("ssdGap",       &m_ladderInnerGap).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("nFeChips",     &m_chipsPerLadder).isSuccess()
         )
     {
         sc = StatusCode::SUCCESS;
@@ -345,7 +300,7 @@ StatusCode TkrGeometrySvc::getConsts()
     m_siDeadDistance = 0.5*(m_siWaferSide - siWaferActiveSide);
     m_siStripPitch = siWaferActiveSide/m_ladderNStrips;
     m_siResolution = m_siStripPitch/sqrt(12.);
-    
+
     return sc;
 }
 
@@ -357,9 +312,12 @@ void TkrGeometrySvc::initializeArrays()
     for (plane=0; plane<NPLANES; ++plane) {
         m_planeToView[plane] = -1;
         m_planeToLayer[plane] = -1;
-        layer = plane/2;
-        view  = plane%2;
-        m_layerToPlane[layer][view] = -1;
+    }
+
+    for (layer=0;layer<NLAYERS;++layer) {
+        for (view=0;view<NVIEWS;++view) {
+            m_layerToPlane[layer][view] = -1; 
+        }
     }
 
     int i, ind;
@@ -379,12 +337,12 @@ void TkrGeometrySvc::initializeArrays()
 
     // and for now...
     m_bottomTrayNumber = 0;
-    m_topTrayNumber    = 18;
+    m_topTrayNumber    = NLAYERS;
 }
 
 StatusCode TkrGeometrySvc::getTowerLimits()
 {
-    
+
     StatusCode sc;
 
     HepTransform3D T;
@@ -401,6 +359,7 @@ StatusCode TkrGeometrySvc::getTowerLimits()
         int tray;
         int botTop;
         layerToTray(0, 0,tray, botTop);
+        if(tray==-1) layerToTray(0, 1, tray, botTop);
         // get the right combination for this plane...
         volId.append(tray);
         volId.append(0);
@@ -480,15 +439,15 @@ void TkrGeometrySvc::makeLayerIds()
         for (view=0; view<NVIEWS; ++view) {
             int tray;
             int botTop;            
+            m_volId_layer[bilayer][view].init(0,0);
             layerToTray(bilayer, view, tray, botTop);
-
+            if (tray==-1) continue;
             idents::VolumeIdentifier vId;
             vId.append(tray);
             vId.append(view);
             vId.append(botTop);
             vId.append(0); vId.append(0); // ladder and wafer
 
-            m_volId_layer[bilayer][view].init(0,0);
             m_volId_layer[bilayer][view].append(vId);
         }
     }  
@@ -505,7 +464,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
 
     StatusCode sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
-    
+
     double stayClear;
 
     if(m_pDetSvc->getNumericConstByName("TKRVertStayClear", &stayClear).isFailure()) {
@@ -564,39 +523,11 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     double propBot = propTop - propRange;
     track->step(propRange);
     log << MSG::INFO  << "Propagator goes from "<< propTop << " to " << propBot << std::endl;
-    
+
     int numSteps = track->getNumberSteps();
     int istep;
     idents::VolumeIdentifier id;
     idents::VolumeIdentifier prefix = m_pDetSvc->getIDPrefix();
-
-    // check on first and last planes...
-    // if "first" plane is a bottom, then the there's a top tray
-    // if "last" plane is a top, then there's a bottom tray
-    /*
-    m_bottomTrayNumber = -1;
-    m_topTrayNumber    = -1;
-  
-    bool firstSiliconPlane = true;
-    for (istep=0; istep<numSteps; ++istep) { // we're going from top to bottom
-        Point stepPoint = track->getStepPosition(istep);
-        id = track->getStepVolumeId(istep);
-        id.prepend(prefix);
-        //check if in the tracker, and then if in a silicon plane
-        if(id[0]==0 && id[3]==1 && id.size()>6) {
-            int tray   = id[4];
-            int item   = id[6];
-            if (item==0 || item==1) { //silicon plane, bottom or top
-                if (firstSiliconPlane) {
-                    if (item==0) m_topTrayNumber = tray;
-                    firstSiliconPlane = false;
-                }
-                // this will end up with the info for the last plane encountered
-                if (item==1) m_bottomTrayNumber = tray;
-            }
-        }
-    }
-    */
 
     // now do the layer stuff
 
@@ -611,9 +542,9 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         radlen = track->getStepRadLength(istep);
         /*
         std::cout << "step " << istep << " rl " << radlen 
-            << " arclen " << arclen 
-            << " volid " << id.name()
-            << " pos " << stepPoint <<   std::endl;
+        << " arclen " << arclen 
+        << " volid " << id.name()
+        << " pos " << stepPoint <<   std::endl;
         */
         //check if in a layer
         if(id[0]==0 && id[3]==1 && id.size()>6) {
@@ -638,7 +569,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     int numAll = 0;
     int i, ind;
     for (i=0; i<NLAYERS; ++i) {
-        convType type = getDigiLayerType(i);
+        convType type = getLayerType(i);
         if (type==ABSENT) continue;
         ind = (int) type;
         radlen = m_radLenConv[i];
@@ -650,8 +581,8 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         m_aveRadLenRest[(int)ALL] += m_radLenRest[i];
 
         if(log.isActive()) {
-        log << " digiLayer " << i << " Conv " << m_radLenConv[i] << " Rest " 
-            << m_radLenRest[i] << endreq;
+            log << " digiLayer " << i << " Conv " << m_radLenConv[i] << " Rest " 
+                << m_radLenRest[i] << endreq;
         }
     }
     log << endreq;
@@ -665,42 +596,53 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     }
 
 
-// reverseLayerNumber() starts working here!
+    // reverseLayerNumber() starts working here!
 
     log << MSG::INFO << endreq;
     for (ind=0;ind<NTYPES;++ind) {
         m_aveRadLenConv[ind] = m_numLayers[ind] ? m_aveRadLenConv[ind]/m_numLayers[ind] : 0;
         m_aveRadLenRest[ind] = m_numLayers[ind] ? m_aveRadLenRest[ind]/m_numLayers[ind] : 0;
         log << MSG::INFO  << "Type " << ind << " numLayers " << m_numLayers[ind] 
-            << " aveConv " << m_aveRadLenConv[ind] << " aveRest " << m_aveRadLenRest[ind]
-            << endreq;
+        << " aveConv " << m_aveRadLenConv[ind] << " aveRest " << m_aveRadLenRest[ind]
+        << endreq;
     }  
     log<< MSG::INFO << endreq;
-    
+
     return sc;
+}
+
+double TkrGeometrySvc::getLayerZ(int digiLayer, int view) const
+{
+    // Purpose: returns the z for a given plane and view
+    // Method:  accesses m_planeZ
+    // Inputs   layer and optional view (if absent, return average)
+    // Outputs: z position
+    // Caveats:
+
+    switch (view) {
+    case 0:
+        return m_planeZ[m_layerToPlane[digiLayer][view]];
+        break;
+    case 1:
+        return m_planeZ[m_layerToPlane[digiLayer][view]];
+        break;
+    default:
+        return 0.5*(m_planeZ[m_layerToPlane[digiLayer][0]] 
+        + m_planeZ[m_layerToPlane[digiLayer][0]]);
+    }
 }
 
 double TkrGeometrySvc::getReconLayerZ(int layer, int view) const
 {
     // Purpose: returns the z for a given plane and view
-    // Method:  accesses m_layerZ
+    // Method:  accesses m_planeZ
     // Inputs   layer and optional view (if absent, return average)
     // Outputs: z position
     // Caveats:
 
-    int digiLayer = reverseLayerNumber(layer);
-    switch (view) {
-    case 0:
-        return m_layerZ[digiLayer][0];
-        break;
-    case 1:
-        return m_layerZ[digiLayer][1];
-        break;
-    default:
-        return 0.5*(m_layerZ[digiLayer][0] + m_layerZ[digiLayer][1]);
-    }
+    return getLayerZ(reverseLayerNumber(layer), view);
 }
-   
+
 convType TkrGeometrySvc::getReconLayerType(int layer) const
 {
     // Purpose: returns the converter type for a layer
@@ -708,11 +650,11 @@ convType TkrGeometrySvc::getReconLayerType(int layer) const
     // Inputs   layer
     // Outputs: layer type
     // Caveats:
-    
-    return getDigiLayerType(reverseLayerNumber(layer));
+
+    return getLayerType(reverseLayerNumber(layer));
 }
 
-convType TkrGeometrySvc::getDigiLayerType(int digiLayer) const
+convType TkrGeometrySvc::getLayerType(int digiLayer) const
 {
     // Purpose: returns the converter type for a layer
     // Method:  tests radlen for this layer
@@ -738,7 +680,7 @@ StatusCode TkrGeometrySvc::getCalInfo()
 {
     MsgStream log(msgSvc(), name());
 
-	double csiLength, csiWidth, csiHeight;
+    double csiLength, csiWidth, csiHeight;
     double cellHorPitch, cellVertPitch;
     int nCsiPerLayer, CALnLayer;
 
@@ -756,9 +698,9 @@ StatusCode TkrGeometrySvc::getCalInfo()
     int count;
 
     // top layer of the Cal
-	// Which id is legal depends on whether the cal geometry is plain or segvols.
-	// for the moment, I'll just check a few until I get a good one, and if I don't then
-	// I bail... this is a bit of a kludge... seems to work though
+    // Which id is legal depends on whether the cal geometry is plain or segvols.
+    // for the moment, I'll just check a few until I get a good one, and if I don't then
+    // I bail... this is a bit of a kludge... seems to work though
 
     // should check for x or y, and pick the highest
     // also some sensible action if there is no cal, like set it to lowest tkr plane - 1.
@@ -768,20 +710,20 @@ StatusCode TkrGeometrySvc::getCalInfo()
     topLayerId.append(0);  // CAL
     topLayerId.append(0);  // layer
     topLayerId.append(0);  // x view
- 
+
     StatusCode sc;
     HepTransform3D transfTop;
     for (count=0;count<3;++count) {
         topLayerId.append(0);
         if((sc = m_pDetSvc->getTransform3DByID(topLayerId,&transfTop)).isSuccess()) break;
     }
-	if(sc.isFailure()) {
-		log << MSG::ERROR << "Couldn't get Id for layer 0 of CAL" << endreq;
-		return sc;
-	}
+    if(sc.isFailure()) {
+        log << MSG::ERROR << "Couldn't get Id for layer 0 of CAL" << endreq;
+        return sc;
+    }
     Vector vecTop = transfTop.getTranslation();
     m_calZTop = vecTop.z()+ 0.5*csiHeight;
-    
+
     m_calZBot = m_calZTop - (CALnLayer-1)*cellVertPitch - csiHeight;
 
     // get the maximum horizontal dimension of the crystals in a layer
@@ -801,7 +743,7 @@ double TkrGeometrySvc::getLATLimit(int view, limitType type) const
     double limit = (-0.5*nTowers + towerNum)*m_towerPitch;
     // upper edge
     if (type==HIGH) { limit += m_towerPitch; }
-    
+
     return limit;
 }
 
@@ -822,60 +764,68 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
     HepTransform3D T;
     int tower;
 
-    int tray, botTop, layer, view, plane;
-    int layer0 = -1;
+    //move  thru the planes in order, find their z postions, and assign them to layers
+    int tray, botTop, layer, view;
+    int lastTray, lastFace, lastPlane;
+    int plane = 0;
 
     tower = m_testTower;
-    //for(tower=0;tower<m_numX*m_numY;++tower) {
-        idents::VolumeIdentifier vId, vId1, vId2, vId3, vIdTest;
-        vId.init(0,0);
-        vId.append(0);               // in Tower
-        idents::TowerId t(tower);  
-        vId.append(t.iy());          // yTower
-        vId.append(t.ix());          // xTower
-        // would be better to have this, but need to check if it will work
-        vIdTest = vId;
-        vId.append(1);             // tracker
-        for(tray=0; tray<NLAYERS+1; ++tray) {
-            vId1 = vId;
-            vId1.append(tray);
-            for(view=0;view<2;++view) {
+    idents::VolumeIdentifier vId, vId1, vId2, vIdTest;
+    vId.init(0,0);
+    vId.append(0);               // in Tower
+    idents::TowerId t(tower);  
+    vId.append(t.iy());          // yTower
+    vId.append(t.ix());          // xTower
+    // would be better to have this, but need to check if it will work
+    vIdTest = vId;
+    vId.append(1);             // tracker
+    for(tray=0; tray<NLAYERS+1; ++tray) {
+        vId1 = vId;
+        vId1.append(tray);
+        for(botTop=0;botTop<2;++botTop) { // sequential order: tray, botTop
+            for (view=0;view<2;++view) {
                 vId2 = vId1;
                 vId2.append(view);
-                for(botTop=0;botTop<2;++botTop) {
-                    if (tray==m_bottomTrayNumber && botTop==0) continue;
-                    if (tray==m_topTrayNumber    && botTop==1) continue;
-                    vId3 = vId2;
-                    vId3.append(botTop);
-                    vId3.append(0); vId3.append(0);
-                    sc = m_pDetSvc->getTransform3DByID(vId3,&T);
-                    if (sc.isSuccess()) {
-                        found = true;
-                        //std::cout << " Id of this element: " << vId3.name() << " exists " << std::endl;
-                        plane = trayToPlane(tray, botTop); // definition no!
-                        layer = trayToBiLayer(tray, botTop); // definition no!
-                        if (layer0!=layer) m_numLayers[ALL]++;
-                        m_planeToView[plane] = view;
-                        m_planeToLayer[plane] = layer;
-                        m_layerToPlane[layer][view] = plane;
-                        layer0 = layer;
-                    }
+                vId2.append(botTop);
+                vId2.append(0); vId2.append(0);
+                sc = m_pDetSvc->getTransform3DByID(vId2,&T);
+                if (sc.isSuccess()) {
+                    found = true;
+                    m_planeZ[plane] = (T.getTranslation()).z();
+                    m_planeToView[plane] = view;
+                    lastTray = tray;
+                    lastFace = botTop;
+                    lastPlane = plane;
+                    ++plane; // just count up from the bottom, numbering planes sequentially
                 }
             }
         }
-     //   if (found) {
-     //       m_testTower    = tower;
-     //       m_testTowerId  = vIdTest;
-     //       sc = StatusCode::SUCCESS;
-     //       break;
-     //   }       
-     //}
-        return StatusCode::SUCCESS;
+    }
+    m_topTrayNumber = ( (lastFace==0 && lastTray>0) ? lastTray : -1);
+    m_numPlanes     = plane; // it's one more than the last plane number!
+    
+    //Figure out the layers by finding the adjacent planes.
+    //  "Adjacent" means the distance is less than the layerSeparation
+    layer = 0;
+    double layerSeparation = 10.0;
+    for (plane=0;plane<=lastPlane;++plane) {
+       view = m_planeToView[plane];
+       m_planeToLayer[plane]       = layer;
+       m_layerToPlane[layer][view] = plane;
+       if (plane==lastPlane) break;
+       double thisZ = m_planeZ[plane];
+       if(fabs(thisZ-m_planeZ[plane+1])>layerSeparation) {
+            ++layer;
+        }
+    }
+    m_numLayers[ALL]  = ++layer;
+    return StatusCode::SUCCESS;
 }
 
 
 StatusCode TkrGeometrySvc::getTestTower() 
 {
+    // finds the test tower, and checks for bottom tray
     StatusCode sc = StatusCode::SUCCESS;
 
     bool found = false;
@@ -896,7 +846,7 @@ StatusCode TkrGeometrySvc::getTestTower()
         // would be better to have this, but need to check if it will work
         vIdTest = vId;
         vId.append(1);             // tracker
-        for(tray=0; tray<NLAYERS+1; ++tray) {
+        for(tray=0; tray<NLAYERS+1; ++tray) { // what does it mean if the 1st layer fails???
             vId1 = vId;
             vId1.append(tray);
             for(view=0;view<2;++view) {
@@ -920,6 +870,7 @@ StatusCode TkrGeometrySvc::getTestTower()
             m_testTower    = tower;
             m_testTowerId  = vIdTest;
             sc = StatusCode::SUCCESS;
+            m_bottomTrayNumber = ( (tray==0 && botTop==1) ? tray : -1);
             break;
         }       
     }

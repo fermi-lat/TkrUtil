@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.3 2004/05/10 23:58:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.4 2004/09/07 21:20:32 lsrea Exp $
 
 */
 
@@ -82,13 +82,11 @@ StatusCode TkrToTSvc::initialize ()
     // Call super-class
     Service::initialize ();
     
-    /*
     m_geoSvc = 0;
     if( service( "TkrGeometrySvc", m_geoSvc, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't retrieve TkrGeometrySvc" << endreq;
         return StatusCode::FAILURE;
     }
-    */
     
     // Bind all of the properties for this service
     if ( (status = setProperties()).isFailure() ) {
@@ -117,23 +115,22 @@ StatusCode TkrToTSvc::doInit()
     MsgStream log( msgSvc(), name() );
     StatusCode sc = StatusCode::SUCCESS;
 
-    // test of getting TkrGeometrySvc from inside TkrToTSvc... It works!
-    //int stripsPerLadder  = m_geoSvc->ladderNStrips();
-
     // can be removed when geometry is iterfaced here
-    const int NSTRIPS = 64;
-    const int NCHIPS  = 24;
+
+    const int nChips  = m_geoSvc->chipsPerLadder();
+    const int nStrips = m_geoSvc->ladderNStrips()/nChips;
+    const int numLayers = m_geoSvc->numLayers();
 
     int tower, layer, view, strip, chip;
 
     if(m_mode.substr(0,5)=="ideal") {
     // all gains and thresholds set to the same value, to reproduce the standard MC ToT
         for(tower=0;tower<NTOWERS;++tower) {
-            for (layer=0;layer<NLAYERS;++layer) {
+            for (layer=0;layer<numLayers;++layer) {
                 for (view=0;view<NVIEWS;++view) {
-                    for(chip=0;chip<NCHIPS;++chip) {
-                        for (strip=0;strip<NSTRIPS;++strip) {
-                            int theStrip = chip*NSTRIPS + strip;
+                    for(chip=0;chip<nChips;++chip) {
+                        for (strip=0;strip<nStrips;++strip) {
+                            int theStrip = chip*nStrips + strip;
                             m_ToTGain[tower][layer][view][theStrip] = 
                                 m_defaultGain;
                             m_ToTGain2[tower][layer][view][theStrip] = 
@@ -153,14 +150,14 @@ StatusCode TkrToTSvc::doInit()
         int mySeed = 123456789;
         HepRandom::setTheSeed(mySeed);
         for(tower=0;tower<NTOWERS;++tower) {
-            for (layer=0;layer<NLAYERS;++layer) {
+            for (layer=0;layer<numLayers;++layer) {
                 for (view=0;view<NVIEWS;++view) {
-                    for(chip=0;chip<NCHIPS;++chip) {
+                    for(chip=0;chip<nChips;++chip) {
                         // generate chip thresholds and gains
                         double chipGain = RandGauss::shoot(1.789, 0.3088);
                         double chipThresh = -0.8546 - 0.2142*chipGain + RandGauss::shoot(0.013, 0.167);
-                        for (strip=0;strip<NSTRIPS;++strip) {
-                            int theStrip = chip*NSTRIPS + strip;
+                        for (strip=0;strip<nStrips;++strip) {
+                            int theStrip = chip*nStrips + strip;
                             double test = RandFlat::shoot(432.);
                             double devGain;
                             if (test>320.) {

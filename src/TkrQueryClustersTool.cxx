@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.4 2004/09/18 18:38:42 usher Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.5 2004/10/01 19:40:58 usher Exp $
 
 // Include files
 
@@ -195,7 +195,7 @@ void TkrQueryClustersTool::initIdMap() const
 
 const Event::TkrClusterVec TkrQueryClustersTool::getClustersReverseLayer(int view, int reverseLayer) const
 {
-    int layer = m_pGeom->numLayers() - reverseLayer - 1;
+    int layer = m_pGeom->reverseLayerNumber(reverseLayer);
 
     return getClusters(view, layer);
 }
@@ -244,7 +244,7 @@ Point TkrQueryClustersTool::meanHit(int view, int layer) const
     
     if (!validLayer(layer)) return Pini;
 
-    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
+    const Event::TkrClusterVec clusters = getClusters(view, layer);
     Point Pini3(0.,0.,0.);
 
     for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
@@ -273,7 +273,7 @@ Point TkrQueryClustersTool::meanHitInside(int view, int layer, double inDistance
     Point P(0.,0.,0);
     if (!validLayer(layer)) return P;
 
-    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
+    const Event::TkrClusterVec clusters = getClusters(view, layer);
     int nhits = clusters.size();
     if (nhits == 0) return P;
     
@@ -329,7 +329,7 @@ Point TkrQueryClustersTool::nearestHitOutside(int view, int layer, double inDist
     
     if (!validLayer(layer)) return Pnear;
 
-    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
+    const Event::TkrClusterVec clusters = getClusters(view, layer);
     int nhits = clusters.size();
     if (nhits == 0) return Pnear;
     
@@ -402,7 +402,7 @@ int TkrQueryClustersTool::numberOfHitsNear( int layer, double dX, double dY,
 
     //Look for hits in the X view of desired layer
     int view = idents::TkrId::eMeasureX;
-    const Event::TkrClusterVec xList = getClustersReverseLayer(view, layer);
+    const Event::TkrClusterVec xList = getClusters(view, layer);
     int nHitsInPlane = xList.size();
     
     while(nHitsInPlane--)
@@ -415,7 +415,7 @@ int TkrQueryClustersTool::numberOfHitsNear( int layer, double dX, double dY,
     
     // Look for hits in the Y view of desired layer
     view = idents::TkrId::eMeasureY;
-    const Event::TkrClusterVec yList = getClustersReverseLayer(view, layer);
+    const Event::TkrClusterVec yList = getClusters(view, layer);
     nHitsInPlane = yList.size();
     
     while(nHitsInPlane--)
@@ -444,7 +444,7 @@ int TkrQueryClustersTool::numberOfUUHitsNear( int layer, double dX, double dY,
     if (!validLayer(layer)) return numHits;
 
     //Look for hits in the X view of desired layer
-    const Event::TkrClusterVec xList = getClustersReverseLayer(idents::TkrId::eMeasureX, layer);
+    const Event::TkrClusterVec xList = getClusters(idents::TkrId::eMeasureX, layer);
     int nHitsInPlane = xList.size();
     
     while(nHitsInPlane--)
@@ -458,7 +458,7 @@ int TkrQueryClustersTool::numberOfUUHitsNear( int layer, double dX, double dY,
     }
     
     // Look for hits in the Y view of desired layer
-    const Event::TkrClusterVec yList = getClustersReverseLayer(idents::TkrId::eMeasureY, layer);
+    const Event::TkrClusterVec yList = getClusters(idents::TkrId::eMeasureY, layer);
     nHitsInPlane = yList.size();
     
     while(nHitsInPlane--)
@@ -490,7 +490,7 @@ int TkrQueryClustersTool::numberOfHitsNear( int view, int layer,
     if (!validLayer(layer)) return numHits;
 
     // Look for hits in the desired view of the given layer
-    const Event::TkrClusterVec clusters = getClustersReverseLayer(view, layer);
+    const Event::TkrClusterVec clusters = getClusters(view, layer);
     
     for(Event::TkrClusterVecConItr clusIter = clusters.begin(); clusIter != clusters.end(); clusIter++)
     {
