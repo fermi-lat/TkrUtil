@@ -271,8 +271,13 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     
     HepVector3D dir = (exit-entry);
     double delz = dir.z();
-    
-    dir = (delz != 0) ? dir/delz : HepVector3D( 0., 0., 1.);
+	
+    // This doesn't work in some flavors of unix, so rewrite below
+	//dir = (delz != 0) ? dir/delz : HepVector3D( 0., 0., 1.);
+
+	HepVector3D tempVec = dir; // just being superstitious here
+	if (delz!=0) { dir = tempVec/delz;}
+	else         { dir = HepVector3D(0., 0., 1.);}    
     
     // calculation is done separately for entry and exit, because transformation depends
     //    in 2nd order (~ microns) on the coordinates. This can be speeded up if
