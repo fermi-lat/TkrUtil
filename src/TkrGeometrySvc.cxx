@@ -40,14 +40,11 @@ StatusCode TkrGeometrySvc::initialize()
     setProperties();
     MsgStream log(msgSvc(), name());
 
-	std::cout << "TkrGeometrySvc init called!!!" << std::endl;
-    
     double siWaferActiveSide;
 
     m_nviews = 2;
 
     if (service("GlastDetSvc", m_pDetSvc).isSuccess() &&
-        
         m_pDetSvc->getNumericConstByName("xNum", &m_numX).isSuccess() &&
         m_pDetSvc->getNumericConstByName("xNum", &m_numY).isSuccess() &&    
         m_pDetSvc->getNumericConstByName("nWaferAcross", &m_nWaferAcross).isSuccess() &&   
@@ -175,11 +172,14 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::INFO << "Couldn't set up TkrBadStripsSvc" << endreq;
         log << "Will assume it is not required"    << endreq;
     }
+    log << MSG::INFO << "TkrGeometrySvc successfully initialized" << endreq;
     return StatusCode::SUCCESS;
 }
 
 StatusCode TkrGeometrySvc::finalize()
 {
+    MsgStream log(msgSvc(), name());
+    log << MSG::INFO << "TkrGeometrySvc finalize called" << endreq;
     return StatusCode::SUCCESS;
 }
 
