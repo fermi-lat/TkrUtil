@@ -1,3 +1,11 @@
+/**
+@file TkrAlignmentSvc.cxx
+
+@brief handles Tkr alignment
+@author Leon Rochester
+
+$Header$
+*/
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/SvcFactory.h"
@@ -322,7 +330,9 @@ StatusCode TkrAlignmentSvc::readFromFile()
                 
                 *m_dataFile >> m_tower;
                 
-                if(m_tower>=m_pGeoSvc->numXTowers()*m_pGeoSvc->numYTowers()) {
+                int numTowers = m_pGeoSvc->numXTowers()*m_pGeoSvc->numYTowers();
+                
+                if(m_tower>=numTowers) {
                     return StatusCode::FAILURE;
                 }
                 if (m_dataFile->eof()) break;
@@ -334,12 +344,22 @@ StatusCode TkrAlignmentSvc::readFromFile()
                     0.001*d, 0.001*e, 0.001*f);
                 
                 if (m_towerConsts.isNull()) { continue; }
+
+                // this allows for setting *all* towers to the same value
+                int maxTower;
+                if (m_tower==-1) { 
+                    m_tower = 0;
+                    maxTower = numTowers;
+                } else {
+                    maxTower = m_tower+1;
+                }
                 
-                
-                if (fillTrayConsts().isFailure()) {
-                    log << MSG::ERROR << "fillTrayConsts failed!" << endreq;
-                    return StatusCode::FAILURE;
-                } 
+                for (m_tower;m_tower<maxTower;++m_tower) {               
+                    if (fillTrayConsts().isFailure()) {
+                        log << MSG::ERROR << "fillTrayConsts failed!" << endreq;
+                        return StatusCode::FAILURE;
+                    } 
+                }
             } else {
                 std::getline(*m_dataFile, junk);
             }

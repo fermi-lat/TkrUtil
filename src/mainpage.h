@@ -85,6 +85,23 @@
  * @param TkrAlignmentSvc.simFile
  * The name of the file containing the alignment constants to be used
  * during digitization. May be over-ridden by testMode, below.
+ * <br>
+ * The structure of an alignment file is as follows:
+ * <br>
+ @verbatim
+     //  comment  (all such lines are ignored)
+                  (as are all blank lines)
+     // one line for each tower with non-zero constants
+     // order is deltaX deltaY deltaZ rotX rotY rotZ
+     // deltas in microns, rots in mrads.
+     //
+     // tower -1 is special; it causes the constants following to
+     //    be applied to *all* towers
+
+     tower 6  50. -100. 25.  0.15  -0.05  0.75 
+
+ @endverbatim
+ *
  * @param TkrAlignmentSvc.recFile
  * Currently no alignment is done during reconstruction.
  * The name of the file containing the alignment constants to be used

@@ -1,6 +1,8 @@
 /** @file release.notes
-@verbatim
  @brief Package TkrUtil
+ */
+
+@verbatim
 
   v1r7p4   11-apr-03 LSR new Property: maximumDelta
   v1r7p3   10-apr-03 LSR make it 5mm; fix another bug... "tags are cheap"
@@ -19,4 +21,3 @@
 
  @endverbatim
 
- */

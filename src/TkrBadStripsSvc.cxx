@@ -1,3 +1,14 @@
+/** 
+ @file TkrBadStripsSvc.cxx
+
+ @brief Maintains lists of bad strips, and provides access methods 
+
+ First version 3-Jun-2001
+  @author Leon Rochester
+
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.3 2003/02/17 18:06:58 lsrea Exp $
+*/
+
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/SvcFactory.h"

@@ -1,3 +1,12 @@
+/** @file ITkrFailureModeSvcCalib.h
+@brief Abstract interface to TkrFailureModeSvc, used by TkrCalibAlg
+@author Leon Rochester
+
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2003/04/08 22:20:05 lsrea Exp $
+*/
+
+
+
 #ifndef ITkrFailureModeSvcCalib_H
 #define ITkrFailureModeSvcCalib_H 1
 

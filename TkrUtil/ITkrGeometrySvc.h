@@ -1,7 +1,7 @@
-/** @file ITkrGeometrySvc
-@brief Supplies useful geometry information for TKR digitization and reconstruction
+/** @file ITkrGeometrySvc.h
+ @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.3 2003/03/13 19:06:06 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.4 2003/04/07 21:48:10 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H

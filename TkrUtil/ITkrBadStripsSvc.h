@@ -1,3 +1,11 @@
+/** @file ITkrBadStripsSvc.h
+@brief Abstract interface to TkrBadStripsSvc (q.v.) 
+@author Leon Rochester
+
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.6 2003/04/08 22:20:05 lsrea Exp $
+*/
+
+
 #ifndef __ITKRBADSTRIPSSVC_H
 #define __ITKRBADSTRIPSSVC_H 1
 

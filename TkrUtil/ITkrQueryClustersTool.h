@@ -1,3 +1,11 @@
+/** @file ITkrQueryClustersTool.h
+* @brief Abstract interface for methods to query TkrClusters
+
+ @author Leon Rochester
+
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.4 2003/02/13 19:54:01 lsrea Exp $
+*/
+
 
 #ifndef _H_ITkrQueryClustersTool
 #define _H_ITkrQueryClustersTool
@@ -15,41 +23,38 @@ static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 1 , 
 
 /** @class ITkrQueryClustersTool
 * @brief Abstract interface for methods to query TkrClusters
-*
-* @author Leon Rochester
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.3 2003/02/01 15:53:21 lsrea Exp $
-*
-* Example of usage:
-*
-* @verbatim
-*  #include "GaudiKernel/IToolSvc.h"
-*  #include "GaudiKernel/AlgTool.h"
-*  #include "TkrUtil/ITkrQueryClustersTool.h"
-*
-*...
-*
-*  // private data member of Algorithm or Service
-*  IToolSvc* m_pToolSvc;
-*
-*  // in initialize
-*  m_pToolSvc = 0;
-*  sc = service("ToolSvc", m_pToolSvc, true);
-*  if (!sc.isSuccess ()){
-*      log << MSG::INFO << "Can't find ToolSvc, will quit now" << endreq;
-*      return StatusCode::FAILURE;
-*  }
-*
-*  // in execute
-*
-*  ITkrQueryClustersTool* pQuery;
-*  StatusCode sc = m_pToolSvc->retrieveTool("TkrMeritTool", pQuery);
-*      if( sc.isFailure() ) {
-*          log << MSG::ERROR << "Unable to find a TkrQueryClustersTool" << endreq;
-*      }
-*  ...
-*
-*  int nHits = pQuery->numberOfHitsNear(view, layer, inDistance, x0);
-* @endverbatim
+
+ Example of usage:
+
+ @verbatim
+  #include "GaudiKernel/IToolSvc.h"
+  #include "GaudiKernel/AlgTool.h"
+  #include "TkrUtil/ITkrQueryClustersTool.h"
+
+...
+
+  // private data member of Algorithm or Service
+  IToolSvc m_pToolSvc;
+
+  // in initialize
+  m_pToolSvc = 0;
+  sc = service("ToolSvc", m_pToolSvc, true);
+  if (!sc.isSuccess ()){
+      log << MSG::INFO << "Can't find ToolSvc, will quit now" << endreq;
+      return StatusCode::FAILURE;
+  }
+
+  // in execute
+
+  ITkrQueryClustersTool pQuery;
+  StatusCode sc = m_pToolSvc->retrieveTool("TkrMeritTool", pQuery);
+      if( sc.isFailure() ) {
+          log << MSG::ERROR << "Unable to find a TkrQueryClustersTool" << endreq;
+      }
+  ...
+
+  int nHits = pQuery->numberOfHitsNear(view, layer, inDistance, x0);
+ @endverbatim
 */
 
 class   ITkrQueryClustersTool : virtual public IAlgTool {
