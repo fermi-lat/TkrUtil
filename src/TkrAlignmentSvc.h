@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.12.2.1 2004/09/22 04:47:51 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.12.2.2 2004/09/23 03:39:32 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -217,7 +217,7 @@ private:
     /// fill the wafer constants
     StatusCode fillWaferConsts();
     /// do the transformation from ladder to wafer
-    void calculateWaferConsts(AlignmentConsts& thisWafer);
+    void calculateWaferConsts(AlignmentConsts& thisWafer) const;
    
     /// reads the alignment items from a file
     StatusCode readFromFile();
@@ -256,15 +256,15 @@ private:
     /// z of plane in tray, vs. tray number and botTop
     double m_faceZ[NLAYERS+1] [NVIEWS];
     
-    /// holds alignment consts for the towers
+    /// holds alignment consts for the towers during construction
     mutable AlignmentConsts m_towerConsts;
-    /// holds alignment consts for the trays
+    /// holds alignment consts for the trays during construction
     mutable AlignmentConsts m_trayConsts;
-    /// holds alignment consts for the planes
+    /// holds alignment consts for the planes during construction
     mutable AlignmentConsts m_faceConsts;
-    /// holds alignment consts for the ladders
+    /// holds alignment consts for the ladders during construction
     mutable AlignmentConsts m_ladderConsts;
-    /// hold alignment consts for the wafers
+    /// hold alignment consts for the wafers during construction
     mutable AlignmentConsts m_waferConsts;
     /// current element being constructed
     mutable int m_tower;

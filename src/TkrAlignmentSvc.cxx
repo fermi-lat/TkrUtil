@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.27.2.1 2004/09/22 04:47:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.27.2.2 2004/09/23 03:39:32 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -701,15 +701,10 @@ void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder) const
     double ladderWidth = (trayWidth - (nLadder-1)*ladderGap)/nLadder;
     double offset      = -0.5*trayWidth + 0.5*ladderWidth;
     offset += m_ladder*(ladderWidth + ladderGap);
-    double xPlane, yPlane;
 
-    if (view==0) {
-        xPlane = offset;
-        yPlane = 0.;
-    } else {
-        xPlane = 0.;
-        yPlane = offset;
-    }
+    double xPlane = offset;
+    double yPlane = 0.0;
+    if (view!=0) std::swap(xPlane, yPlane);
 
     double deltaX = thisLadder.getDeltaX() + m_faceConsts.getDeltaX()
         - m_faceConsts.getRotZ()*yPlane;
@@ -735,7 +730,10 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     while (itry--) {done[itry] = false;}
  
     int nWafers = m_pGeoSvc->nWaferAcross();
+    int layer, view;
+    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
 
+    int index;
     AlignmentItem item;
     while (getNextItem(WAFER,item)) {
         m_wafer = item.getNumber();
@@ -745,9 +743,15 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
                 return StatusCode::FAILURE;
         }
         AlignmentConsts thisWafer = item.getConsts();
+
         calculateWaferConsts(thisWafer);
+        // here are the final constants!
+        index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
+        if (index<0) continue;
+        if (m_mode=="sim") {m_simConsts[index] = m_waferConsts;} 
+        else               {m_recConsts[index] = m_waferConsts;}
         done[m_tray] = true;
-    }
+   }
 
     if (m_ladderConsts.isNull()) return sc;
 
@@ -757,14 +761,19 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     while (itry--) {
         if (!done[itry]) {
             m_wafer = itry;
+            AlignmentConsts thisWafer = item.getConsts();
             calculateWaferConsts(null);
+            // here are the final constants!
+            index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
+            if (index<0) continue;
+            if (m_mode=="sim") {m_simConsts[index] = m_waferConsts;} 
+            else               {m_recConsts[index] = m_waferConsts;}
         }
     }
     return sc;
 }
 
-
-void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
+void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer) const
 {
     // Purpose: merges the ladder and wafer constants
     // Inputs:  wafer constants
@@ -772,12 +781,7 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     // Dependencies: None
     // Caveats: None
     
-    int layer, view;
     int nWafer = m_pGeoSvc->nWaferAcross();
-
-    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
-    int index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
-    if (index<0) return;
 
     double trayWidth   = m_pGeoSvc->trayWidth();
     double waferGap    = m_pGeoSvc->ladderInnerGap();
@@ -786,15 +790,11 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     double offset      = -0.5*trayWidth1 + 0.5*waferWidth;
     offset += m_wafer*(waferWidth+waferGap);
 
-    double xWafer, yWafer;
-
-    if (view==0) {
-        xWafer = 0.;
-        yWafer = offset;
-    } else {
-        xWafer = offset; // you might think this should be negative, but think again!
-        yWafer = 0.;
-    }
+    double xWafer = 0.0;
+    double yWafer = offset;
+    int layer, view;
+    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
+    if (view==1) std::swap(xWafer, yWafer);
 
     double deltaX = thisWafer.getDeltaX() + m_ladderConsts.getDeltaX()
         - m_ladderConsts.getRotZ()*yWafer;
@@ -806,15 +806,10 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
     double rotY = thisWafer.getRotY() + m_ladderConsts.getRotY();
     double rotZ = thisWafer.getRotZ() + m_ladderConsts.getRotZ();
 
-    // here are the final constants!
-    if (m_mode=="sim") {
-        m_simConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
+    m_waferConsts = AlignmentConsts(deltaX, deltaY, deltaZ,
             rotX, rotY, rotZ);
-    } else {
-        m_recConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
-            rotX, rotY, rotZ);
-    }
-    return;
+
+     return;
 }
 
 int TkrAlignmentSvc::getIndex(int tower, int layer, 
