@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.6 2003/04/11 23:27:15 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.7 2003/05/02 02:04:32 lsrea Exp $
 */
 
 
@@ -118,6 +118,7 @@ StatusCode TkrBadStripsSvc::doInit()
 
 StatusCode TkrBadStripsSvc::finalize()
 {
+    delete m_visitor;
     return StatusCode::SUCCESS;
 }
 

@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.9 2003/03/01 02:13:29 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.10 2003/03/14 17:06:01 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -135,7 +135,11 @@ StatusCode TkrFailureModeSvc::update(CalibData::BadStrips* pDead, CalibData::Bad
 }
 
 
-StatusCode TkrFailureModeSvc::finalize () {return StatusCode::SUCCESS;}
+StatusCode TkrFailureModeSvc::finalize () 
+{
+    delete m_visitor;
+    return StatusCode::SUCCESS;
+}
 
 void TkrFailureModeSvc::processLayerList() {
     // Purpose and Method: process the jobOptions input lists of (tower,layer) pairs
