@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.19 2003/05/10 20:59:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.20 2003/12/03 19:12:26 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -21,9 +21,16 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.19 200
 
 #include "facilities/Util.h"
 
+#ifdef DEFECT_NO_STRINGSTREAM
+#include <strstream>
+#else
+#include <sstream>
+#endif
+
 #include <fstream>
 #include <algorithm>
 #include <string>
+#include <string.h>
 
 static const SvcFactory<TkrAlignmentSvc> s_factory;
 const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
@@ -60,7 +67,7 @@ Service(name, pSvcLocator)
 
 StatusCode TkrAlignmentSvc::initialize()
 {
-    // Purpose: reads in (or set) alignment constants
+    // Purpose: reads in alignment constants
     // Inputs:  None
     // Outputs: Status code (Success/Failure)
     
@@ -75,6 +82,9 @@ StatusCode TkrAlignmentSvc::initialize()
     m_recFile = "";
     m_testMode = 0;
     m_fileFlag = 0;
+
+    m_itemCol.clear();
+    m_pItem = m_itemCol.begin();
     
     setProperties();
 
@@ -177,8 +187,8 @@ StatusCode TkrAlignmentSvc::getGeometry()
         m_pGeoSvc->trayToLayer(tray,1,layer,view);
         zTop = m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view);
         m_trayZ[tray] = 0.5*(zBot+zTop);
-        m_planeZ[tray][0] = zBot - m_trayZ[tray];
-        m_planeZ[tray][1] = zTop - m_trayZ[tray];
+        m_faceZ[tray][0] = zBot - m_trayZ[tray];
+        m_faceZ[tray][1] = zTop - m_trayZ[tray];
     }
 
     double siThickness = m_pGeoSvc->siThickness();
@@ -188,8 +198,8 @@ StatusCode TkrAlignmentSvc::getGeometry()
     m_pGeoSvc->trayToLayer(0,1,layer,view);
     zTop = m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view); 
     m_trayZ[0] = zTop + 0.5*siThickness - 0.5*trayBotHeight;
-    m_planeZ[0][1] = 0.5*(trayBotHeight - siThickness);
-    m_planeZ[0][0] = - 0.5*trayBotHeight;
+    m_faceZ[0][1] = 0.5*(trayBotHeight - siThickness);
+    m_faceZ[0][0] = - 0.5*trayBotHeight;
 
     //top tray
     double trayTopHeight = visitor->getTrayTopHeight();
@@ -197,17 +207,17 @@ StatusCode TkrAlignmentSvc::getGeometry()
     m_pGeoSvc->trayToLayer(tray,0,layer, view);
     zBot = m_pGeoSvc->getReconLayerZ(m_pGeoSvc->reverseLayerNumber(layer), view);
     m_trayZ[tray] = zBot - 0.5*siThickness + 0.5*trayTopHeight;
-    m_planeZ[tray][0] = -0.5*(trayTopHeight - siThickness);
-    m_planeZ[tray][1] = 0.5*trayTopHeight;
+    m_faceZ[tray][0] = -0.5*(trayTopHeight - siThickness);
+    m_faceZ[tray][1] = 0.5*trayTopHeight;
     
     log << MSG::DEBUG ;
     if (log.isActive()) {
         for(tray = 0; tray<m_pGeoSvc->numLayers()+1; ++tray) {
             std::cout << "tray " << tray << " z: " << m_trayZ[tray] << " "
-                << m_planeZ[tray][0] << " " << m_planeZ[tray][1] << std::endl;
+                << m_faceZ[tray][0] << " " << m_faceZ[tray][1] << std::endl;
         }        
         std::cout << std::endl;
-          
+
         for (layer = 0; layer<m_pGeoSvc->numLayers(); ++layer ) {
             for (view = 0; view<2; ++view) {
                 std::cout << "rlayer/view z " << layer << " " << view << " "
@@ -216,6 +226,7 @@ StatusCode TkrAlignmentSvc::getGeometry()
             }
         }
     }
+
     log << endreq;
     
     // clean up
@@ -263,6 +274,26 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     
     readFromFile();
     theFile.close();
+
+    
+    log << MSG::DEBUG;
+    if (log.isActive()) {
+        m_pItem = m_itemCol.begin();
+        for (; m_pItem<m_itemCol.end(); ++m_pItem) {
+            AlignmentItem item = **m_pItem;
+            log << itemType[item.getType()] << " " << item.getNumber() << " "  
+                << item.getConsts().getDeltaX() << " " 
+                << item.getConsts().getDeltaY() << " " 
+                << item.getConsts().getDeltaZ() << " " 
+                << item.getConsts().getRotX() << " " 
+                << item.getConsts().getRotY() << " " 
+                << item.getConsts().getRotZ() << " " 
+                << endreq;
+        }
+    }
+    
+
+    processFile();
     
     log << MSG::DEBUG ;
     if (log.isActive()) {
@@ -327,9 +358,9 @@ StatusCode TkrAlignmentSvc::doTest()
 
 StatusCode TkrAlignmentSvc::readFromFile()
 {    
-    // Purpose:
-    // Inputs:  File name
-    // Outputs: None
+    // Purpose: fills the m_alignCol vector with info from the alignment input file
+    // Inputs:  
+    // Outputs: 
     // Dependencies: None
     // Caveats: None
     
@@ -337,148 +368,317 @@ StatusCode TkrAlignmentSvc::readFromFile()
 
     MsgStream log(msgSvc(), name());
     
-    std::string junk;
+    std::string mystring;
     std::string flag;
     
     while(!m_dataFile->eof()) {
-        *m_dataFile >> flag ;
-        if (m_dataFile->eof()) break;
+        getline(*m_dataFile, mystring);
+        // upper-case the string
+        mystring = std::string(_strupr(const_cast<char*>(mystring.c_str())));
 
-        if(flag== "//") { // comment line, just skip 
-            std::getline(*m_dataFile, junk);
+        #ifdef DEFECT_NO_STRINGSTREAM
+        std::istrstream mystream(mystring.c_str());
+        #else
+        std::istringstream mystream(mystring);
+        #endif
+
+        //count the tokens
+        int tokenCount = 0;
+        while(mystream>>mystring) {tokenCount++;}
+        if (tokenCount==0) continue;
+        mystream.clear();
+        mystream.seekg(0);
+
+        if(!(mystream>>flag)) break ;
+        
+
+        if(flag.substr(0,2)== "//") { // comment line, just skip 
         } else {
-            if (flag=="tower") {
-                
-                *m_dataFile >> m_tower;
-                
-                int numTowers = m_pGeoSvc->numXTowers()*m_pGeoSvc->numYTowers();
-                
-                if(m_tower>=numTowers) {
-                    return StatusCode::FAILURE;
+            int iflag;
+            int type = -1;
+            for (iflag=0; iflag<ntypes; ++iflag) {
+                if (flag==itemType[iflag]) {
+                    type = iflag;
+                    break;
                 }
-                if (m_dataFile->eof()) break;
-                
-                double a,b,c,d,e,f;       
-                *m_dataFile >> a >> b >> c >> d >> e >> f ;
-                
-                m_towerConsts = AlignmentConsts(0.001*a, 0.001*b, 0.001*c,
-                    0.001*d, 0.001*e, 0.001*f);
-                
-                if (m_towerConsts.isNull()) { continue; }
-
-                // this allows for setting *all* towers to the same value
-                int maxTower;
-                if (m_tower==-1) { 
-                    m_tower = 0;
-                    maxTower = numTowers;
-                } else {
-                    maxTower = m_tower+1;
-                }
-                
-                for (;m_tower<maxTower;++m_tower) {               
-                    if (fillTrayConsts().isFailure()) {
-                        log << MSG::ERROR << "fillTrayConsts failed!" << endreq;
-                        return StatusCode::FAILURE;
-                    } 
-                }
-            } else {
-                std::getline(*m_dataFile, junk);
             }
+            if (type==-1) {
+                std::cout << "Error in type " << flag << std::endl;
+                return StatusCode::FAILURE;
+            }
+
+            int number;
+            if (!(mystream>>number)) break;
+
+            AlignmentConsts consts;
+            if (tokenCount==8) {
+                double a,b,c,d,e,f;       
+                mystream >> a >> b >> c >> d >> e >> f ;
+                consts = AlignmentConsts(0.001*a, 0.001*b, 0.001*c,
+                    0.001*d, 0.001*e, 0.001*f);
+            } 
+
+            AlignmentItem* pItem = new AlignmentItem(iflag, number,consts); 
+            m_itemCol.push_back(pItem);
+            int size = m_itemCol.size();
         }
-    }       
+    }
+    return StatusCode::SUCCESS;
+}
+
+bool TkrAlignmentSvc::getNextItem(aType type, AlignmentItem& item) 
+{
+    // Purpose: checks on the next item in the alignCol
+    // Inputs:  requested type, item to be filled
+    // Outputs: true if the item matches the input type, returns item
+    // Dependencies: None
+    // Caveats: None
+
+    if (m_pItem==m_itemCol.end()) return false;
+    AlignmentItem* pItem = *m_pItem;
+    if (pItem->getType()!=type) return false;
+    ++m_pItem;
+    item = *pItem;
+    return true;
+}
+
+StatusCode TkrAlignmentSvc::processFile()
+{    
+    // Purpose: produces the basic alignment constants
+    // Inputs:  takes input from alignCol
+    // Outputs: fills m_simConsts and/or m_recConsts
+    // Dependencies: None
+    // Caveats: None
+    
+    StatusCode sc = StatusCode::SUCCESS;
+
+    MsgStream log(msgSvc(), name());
+
+    AlignmentItem item;
+    m_pItem = m_itemCol.begin();
+
+    // for each tower in the list, the chain of fillers is called:
+    // tower calls tray, tray calls face, etc.
+
+    // do only the ones that are in the input file
+    // the rest will automatically have null constants
+    while (getNextItem(TOWER,item)) {
+        m_tower = item.getNumber();
+        m_towerConsts = item.getConsts();
+        if (fillTrayConsts().isFailure()) {
+            log << MSG::ERROR << "fillTrayConsts failed!" << endreq;
+            return StatusCode::FAILURE;
+        } 
+    }
     return sc;
 }
 
 StatusCode TkrAlignmentSvc::fillTrayConsts()
 {
+    // Purpose: calculates the local tray constants and passes them to the faces
+    // Inputs:  takes input from alignCol
+    // Outputs: constants passed to the faces
+    // Dependencies: None
+    // Caveats: None
 
     StatusCode sc = StatusCode::SUCCESS;
-
     MsgStream log(msgSvc(), name());
+
+    // here we have to do all of them
+    // even if a tray is not in the list, the tower constants must be passed down.
+    bool done[19];
+    int nTrays = m_pGeoSvc->numLayers() + 1;
     
-    AlignmentConsts& towerConsts = m_towerConsts;
-
-    int nTray = m_pGeoSvc->numLayers()+1;
+    // keep track of which ones have been explicitly called
+    int itry;
+    for (itry=0; itry<nTrays; ++itry) { done[itry] = false; }
     
-    // could read this in here
-    AlignmentConsts thisTray(0., 0., 0., 0., 0., 0.);
+    AlignmentItem item;
+    // do the ones that are in the input file
+    while (getNextItem(TRAY,item)) {
+        m_tray = item.getNumber();
+        AlignmentConsts thisTray = item.getConsts();
+        calculateTrayConsts(thisTray);
+        if(fillFaceConsts().isFailure()) {return StatusCode::FAILURE;}
+        done[m_tray] = true;
+    }
 
-    int tray;
-
-    for (tray = 0; tray< nTray; ++tray) {
-        double deltaX = thisTray.getDeltaX() + towerConsts.getDeltaX()
-            + towerConsts.getRotY()*m_trayZ[tray];
-        double deltaY = thisTray.getDeltaY() + towerConsts.getDeltaY()
-            - towerConsts.getRotX()*m_trayZ[tray];
-        double deltaZ = thisTray.getDeltaZ() + towerConsts.getDeltaZ();
-        double rotX   = thisTray.getRotX()   + towerConsts.getRotX();
-        double rotY   = thisTray.getRotY()   + towerConsts.getRotY();
-        double rotZ   = thisTray.getRotZ()   + towerConsts.getRotZ();
-        m_tray = tray;
-        m_trayConsts = AlignmentConsts(deltaX, deltaY, deltaZ,
-            rotX, rotY, rotZ);
-        if(fillLadderConsts().isFailure()) {return StatusCode::FAILURE;}
+    // now do the rest, with null tray constants
+    AlignmentConsts null;
+    for (itry=0; itry<nTrays; ++itry) {
+        if (!done[itry]) {
+            m_tray = itry;
+            calculateTrayConsts(null);
+            if(fillFaceConsts().isFailure()) {return StatusCode::FAILURE;}
+        }
     }
     return sc;
 }
 
+void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray)
+{
+    // Purpose: merges the tower and tray constants
+    // Inputs:  tray constants
+    // Outputs: merged constants
+    // Dependencies: None
+    // Caveats: None
+  
+    double deltaX = thisTray.getDeltaX() + m_towerConsts.getDeltaX()
+        + m_towerConsts.getRotY()*m_trayZ[m_tray];
+    double deltaY = thisTray.getDeltaY() + m_towerConsts.getDeltaY()
+        - m_towerConsts.getRotX()*m_trayZ[m_tray];
+    double deltaZ = thisTray.getDeltaZ() + m_towerConsts.getDeltaZ();
+    double rotX   = thisTray.getRotX()   + m_towerConsts.getRotX();
+    double rotY   = thisTray.getRotY()   + m_towerConsts.getRotY();
+    double rotZ   = thisTray.getRotZ()   + m_towerConsts.getRotZ();
+    m_trayConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
+}
+
+StatusCode TkrAlignmentSvc::fillFaceConsts()
+{
+    // Purpose: calculates the local face constants and passes them to the ladders
+    // Inputs:  takes input from alignCol
+    // Outputs: constants passed to the ladders
+    // Dependencies: None
+    // Caveats: None
+
+    StatusCode sc = StatusCode::SUCCESS;
+    MsgStream log(msgSvc(), name());
+
+    // here we have to do all of them, because the tower consts are non-zero
+    bool done[2];
+    int nPlanes = 2;
+    
+    int itry;
+    for (itry=0; itry<nPlanes; ++itry) { done[itry] = false; }
+    
+    AlignmentItem item;
+    // do the ones that are in the input file
+    while (getNextItem(FACE,item)) {
+        m_face = item.getNumber();
+        AlignmentConsts thisFace = item.getConsts();
+        calculateFaceConsts(thisFace);
+        if(fillLadderConsts().isFailure()) {return StatusCode::FAILURE;}
+        done[m_face] = true;
+    }
+
+    // now do the rest
+    AlignmentConsts null;
+    for (itry=0; itry<nPlanes; ++itry) {
+        if (!done[itry]) {
+            m_face = itry;
+            calculateFaceConsts(null);
+            if(fillLadderConsts().isFailure()) {return StatusCode::FAILURE;}
+        }
+    }
+
+    return sc;
+}
+
+void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace)
+{
+    // Purpose: merges the tray and face constants
+    // Inputs:  face constants
+    // Outputs: merged constants
+    // Dependencies: None
+    // Caveats: None
+
+    StatusCode sc = StatusCode::SUCCESS;
+    MsgStream log(msgSvc(), name());
+
+    double zPlane = m_faceZ[m_tray][m_face];
+
+    double deltaX = thisFace.getDeltaX() + m_trayConsts.getDeltaX()
+        + m_trayConsts.getRotY()*zPlane;
+    double deltaY = thisFace.getDeltaY() + m_trayConsts.getDeltaY()
+        - m_trayConsts.getRotX()*zPlane;
+    double deltaZ = thisFace.getDeltaZ() + m_trayConsts.getDeltaZ();
+    double rotX   = thisFace.getRotX()   + m_trayConsts.getRotX();
+    double rotY   = thisFace.getRotY()   + m_trayConsts.getRotY();
+    double rotZ   = thisFace.getRotZ()   + m_trayConsts.getRotZ();
+
+    m_faceConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
+}
+
+
 StatusCode TkrAlignmentSvc::fillLadderConsts()
 {
+    // Purpose: calculates the local ladder constants and passes them to the wafers
+    // Inputs:  takes input from alignCol
+    // Outputs: constants passed to the wafers
+    // Dependencies: None
+    // Caveats: None
     
-    StatusCode sc = StatusCode::SUCCESS;
-    
+    StatusCode sc = StatusCode::SUCCESS;    
     MsgStream log(msgSvc(), name());
-    
-    AlignmentConsts& trayConsts = m_trayConsts;
-    
+
+    bool done[4];
+    int itry;
+    for (itry=0;itry<4;++itry) {done[itry] = false;}
+               
+    AlignmentItem item;
+    while (getNextItem(LADDER,item)) {
+        m_ladder = item.getNumber();
+        AlignmentConsts thisLadder = item.getConsts();
+        calculateLadderConsts(thisLadder);
+        if(fillWaferConsts().isFailure()) {return StatusCode::FAILURE;}
+        done[m_tray] = true;
+    }
+
+    // now do the rest
+    AlignmentConsts null;
+    int nLadders = m_pGeoSvc->nWaferAcross();
+
+    for (itry=0; itry<nLadders; ++itry) {
+        if (!done[itry]) {
+            m_ladder = itry;
+            calculateLadderConsts(null);
+            if(fillWaferConsts().isFailure()) {return StatusCode::FAILURE;}
+        }
+    }
+    return sc;
+}
+
+void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder)
+{
+    // Purpose: merges the tray and ladder constants
+    // Inputs:  ladder constants
+    // Outputs: merged constants
+    // Dependencies: None
+    // Caveats: None
+
+    int layer, view;
+    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
+
     int nPlane = m_pGeoSvc->numViews();
     int nLadder = m_pGeoSvc->nWaferAcross();
-    
-    // could read this in here
-    AlignmentConsts thisPlane(0., 0., 0., 0., 0., 0.);
-    
-    int plane, layer, view, ladder;
-    
-    double xPlane, yPlane;
     double trayWidth   = m_pGeoSvc->trayWidth();
     double ladderGap   = m_pGeoSvc->ladderGap();
     // why don't we ask TkrGeometrySvc to calculate this?
     double ladderWidth = (trayWidth - (nLadder-1)*ladderGap)/nLadder;
     double offset      = -0.5*trayWidth + 0.5*ladderWidth;
-    
-    for (plane=0; plane< nPlane; ++plane) {
-        m_pGeoSvc->trayToLayer(m_tray, plane, layer, view);
-        if (layer<0 || layer>=m_pGeoSvc->numLayers()) { continue;}
-        
-        double zPlane = m_planeZ[m_tray][plane];
-        for (ladder=0; ladder<nLadder; ++ladder) {
-            if (view==0) {
-                xPlane = offset + ladder*(ladderWidth + ladderGap);
-                yPlane = 0.;
-            } else {
-                xPlane = 0.;
-                yPlane = offset + ladder*(ladderWidth + ladderGap);
-            }
-            
-            double deltaX = thisPlane.getDeltaX() + trayConsts.getDeltaX()
-                + trayConsts.getRotY()*zPlane - trayConsts.getRotZ()*yPlane;
-            double deltaY = thisPlane.getDeltaY() + trayConsts.getDeltaY()
-                - trayConsts.getRotX()*zPlane + trayConsts.getRotZ()*xPlane;
-            double deltaZ = thisPlane.getDeltaZ() + trayConsts.getDeltaZ()
-                +trayConsts.getRotX()*yPlane - trayConsts.getRotY()*xPlane;
-            double rotX = thisPlane.getRotX() + trayConsts.getRotX();
-            double rotY = thisPlane.getRotY() + trayConsts.getRotY();
-            double rotZ = thisPlane.getRotZ() + trayConsts.getRotZ();
-            
-            m_ladder = ladder;
-            m_botTop = plane;
-            m_ladderConsts = AlignmentConsts(deltaX, deltaY, deltaZ,
-                rotX, rotY, rotZ);
-            
-            if(fillWaferConsts().isFailure()) { return StatusCode::FAILURE;}
-        }
+    offset += m_ladder*(ladderWidth + ladderGap);
+    double xPlane, yPlane;
+
+    if (view==0) {
+        xPlane = offset;
+        yPlane = 0.;
+    } else {
+        xPlane = 0.;
+        yPlane = offset;
     }
-    return sc;
+
+    double deltaX = thisLadder.getDeltaX() + m_faceConsts.getDeltaX()
+        - m_faceConsts.getRotZ()*yPlane;
+    double deltaY = thisLadder.getDeltaY() + m_faceConsts.getDeltaY()
+        + m_faceConsts.getRotZ()*xPlane;
+    double deltaZ = thisLadder.getDeltaZ() + m_faceConsts.getDeltaZ()
+        +m_faceConsts.getRotX()*yPlane - m_faceConsts.getRotY()*xPlane;
+    double rotX = thisLadder.getRotX() + m_faceConsts.getRotX();
+    double rotY = thisLadder.getRotY() + m_faceConsts.getRotY();
+    double rotZ = thisLadder.getRotZ() + m_faceConsts.getRotZ();
+
+    m_ladderConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
 }
 
 StatusCode TkrAlignmentSvc::fillWaferConsts()
@@ -487,15 +687,44 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     
     MsgStream log(msgSvc(), name());
     
-    AlignmentConsts& ladderConsts = m_ladderConsts;
+    bool done[4];
+    int itry;
+    for (itry=0;itry<4;++itry) {done[itry] = false;}
+        
+    AlignmentItem item;
+    while (getNextItem(WAFER,item)) {
+        m_wafer = item.getNumber();
+        AlignmentConsts thisWafer = item.getConsts();
+        calculateWaferConsts(thisWafer);
+        done[m_tray] = true;
+    }
 
-    int layer, view, wafer;
+    // now do the rest
+    AlignmentConsts null;
+    int nLadders = m_pGeoSvc->nWaferAcross();
+
+    for (itry=0; itry<nLadders; ++itry) {
+        if (!done[itry]) {
+            m_wafer = itry;
+            calculateWaferConsts(null);
+        }
+    }
+    return sc;
+}
+
+
+void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer)
+{
+    // Purpose: merges the ladder and wafer constants
+    // Inputs:  wafer constants
+    // Outputs: merged constants
+    // Dependencies: None
+    // Caveats: None
+    
+    int layer, view;
     int nWafer = m_pGeoSvc->nWaferAcross();
-    
-    // could read this in here
-    AlignmentConsts thisWafer(0., 0., 0., 0., 0., 0.);
-    
-    m_pGeoSvc->trayToLayer(m_tray, m_botTop, layer, view);
+
+    m_pGeoSvc->trayToLayer(m_tray, m_face, layer, view);
 
     double trayWidth   = m_pGeoSvc->trayWidth();
     double waferGap    = m_pGeoSvc->ladderInnerGap();
@@ -503,40 +732,39 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     double trayWidth1   = nWafer*waferWidth + (nWafer-1)*waferGap;
     //double laddergap   = m_pGeoSvc->ladderGap();
     double offset      = -0.5*trayWidth1 + 0.5*waferWidth;
+    offset += m_wafer*(waferWidth+waferGap);
 
     double xWafer, yWafer;
 
-    for (wafer=0; wafer<nWafer; ++wafer) { 
-        if (view==0) {
-            xWafer = 0.;
-            yWafer = offset + wafer*(waferWidth+waferGap);
-        } else {
-            xWafer = offset + wafer*(waferWidth+waferGap);
-            yWafer = 0.;
-        }
-        
-        double deltaX = thisWafer.getDeltaX() + ladderConsts.getDeltaX()
-             - ladderConsts.getRotZ()*yWafer;
-        double deltaY = thisWafer.getDeltaY() + ladderConsts.getDeltaY()
-            + ladderConsts.getRotZ()*xWafer;
-        double deltaZ = thisWafer.getDeltaZ() + ladderConsts.getDeltaZ()
-            +ladderConsts.getRotX()*yWafer - ladderConsts.getRotY()*xWafer;
-        double rotX = thisWafer.getRotX() + ladderConsts.getRotX();
-        double rotY = thisWafer.getRotY() + ladderConsts.getRotY();
-        double rotZ = thisWafer.getRotZ() + ladderConsts.getRotZ();
-
-        int index = getIndex(m_tower, layer, view, m_ladder, wafer);
-        if (m_mode=="sim") {
-            m_simConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
-                rotX, rotY, rotZ);
-        } else {
-            m_recConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
-                rotX, rotY, rotZ);
-        }
+    if (view==0) {
+        xWafer = 0.;
+        yWafer = offset;
+    } else {
+        xWafer = offset;
+        yWafer = 0.;
     }
-    return sc;
-}
 
+    double deltaX = thisWafer.getDeltaX() + m_ladderConsts.getDeltaX()
+        - m_ladderConsts.getRotZ()*yWafer;
+    double deltaY = thisWafer.getDeltaY() + m_ladderConsts.getDeltaY()
+        + m_ladderConsts.getRotZ()*xWafer;
+    double deltaZ = thisWafer.getDeltaZ() + m_ladderConsts.getDeltaZ()
+        +m_ladderConsts.getRotX()*yWafer - m_ladderConsts.getRotY()*xWafer;
+    double rotX = thisWafer.getRotX() + m_ladderConsts.getRotX();
+    double rotY = thisWafer.getRotY() + m_ladderConsts.getRotY();
+    double rotZ = thisWafer.getRotZ() + m_ladderConsts.getRotZ();
+
+    int index = getIndex(m_tower, layer, view, m_ladder, m_wafer);
+    // here are the final constants!
+    if (m_mode=="sim") {
+        m_simConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
+            rotX, rotY, rotZ);
+    } else {
+        m_recConsts[index] = AlignmentConsts(deltaX, deltaY, deltaZ,
+            rotX, rotY, rotZ);
+    }
+
+}
 int TkrAlignmentSvc::getIndex(int tower, int layer, 
                               int view, int ladder, int wafer) const
 {

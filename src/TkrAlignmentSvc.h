@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.5 2003/04/11 23:27:15 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.6 2003/05/08 04:25:18 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -23,6 +23,60 @@
 #include <vector>
 #include <iostream>
 
+
+namespace {
+    const int ntypes = 6;
+    const std::string itemType[ntypes] = {"TOWER", "TRAY", "FACE", "LADDER", "WAFER", "NONE"};
+    enum aType {TOWER, TRAY, FACE, LAYER, LADDER, WAFER, NONE};
+}
+
+/// A small class to define an alignment const item
+
+/** 
+  @class AlignmentItem
+  @brief holds an element type, an element number and an AlignmentConsts, read in from a file
+ */
+class AlignmentItem
+{
+public:
+
+    AlignmentItem (int type, int number=0, AlignmentConsts consts=AlignmentConsts()) :
+        m_number(number), m_consts(consts)
+    {     
+        switch (type) {
+            case 0: m_type = TOWER; break;
+            case 1: m_type = TRAY;  break;
+            case 2: m_type = FACE;  break;
+            case 3: m_type = LADDER; break;
+            case 4: m_type = WAFER;  break;
+            default: m_type = NONE;
+        }
+    }
+
+    AlignmentItem (aType type, int number=0, AlignmentConsts consts=AlignmentConsts()) :
+        m_type(type), m_number(number), m_consts(consts)
+    {}
+    AlignmentItem () :
+        m_type(TOWER), m_number(0), m_consts(AlignmentConsts())
+    {}
+    
+    ~AlignmentItem() {} 
+
+    /// return the type
+    aType getType()             { return m_type; }
+    /// return the index
+    int   getNumber()           { return m_number; }
+    /// return the constants
+    AlignmentConsts getConsts() { return m_consts; }
+private:
+    /// type, TOWER, TRAY, FACE etc.
+    aType m_type;
+    /// index of the type (i.e., which tray)
+    int   m_number;
+    /// aligment consts with respect to containing element
+    AlignmentConsts m_consts;
+    
+};
 
 #include "GlastSvc/GlastDetSvc/IGeometry.h"
 
@@ -118,7 +172,7 @@ public:
         return ITkrAlignmentSvc::interfaceID(); 
     }
     /// returns the service type
-    const IID& type() const;   
+    const IID& type() const;    
     
 private:
     
@@ -141,13 +195,28 @@ private:
     StatusCode doTest();
     /// fill the tray constants from the tower constants
     StatusCode fillTrayConsts();
-    ///
+    /// do the transformation from tower to tray
+    void calculateTrayConsts(AlignmentConsts& thisTray);
+    /// fill the face constants
+    StatusCode fillFaceConsts();
+    /// do the transformation from tray to face
+    void calculateFaceConsts(AlignmentConsts& thisPlane);
+    /// fill the ladder constants
     StatusCode fillLadderConsts();
-    ///
+    /// do the transformation from face to ladder
+   void calculateLadderConsts(AlignmentConsts& thisLadder);
+
+    /// fill the wafer constants
     StatusCode fillWaferConsts();
-    
-    /// reads bad strips from file file
+    /// do the transformation from ladder to wafer
+    void calculateWaferConsts(AlignmentConsts& thisWafer);
+   
+    /// reads the alignment items from a file
     StatusCode readFromFile();
+    /// generate the per-wafer alignment constants
+    StatusCode processFile();
+    /// does some logic on the next item in the read-in list
+    bool getNextItem(aType type, AlignmentItem& item);
     
     /// File name for sim constants
     std::string m_simFile;
@@ -163,12 +232,12 @@ private:
     /// dimension of arrays
     // the flight instrument only has (4 ladders)x(4 wafers) but to allow
     //   for possible conversion to BFEM/BTEM I've started with 5 each.
-    enum {NLAYERS = 18, NVIEWS = 2, NTOWERS = 16, NLADDERS= 5, NWAFERS = 5,
+    enum {NLAYERS = 18, NVIEWS = 2, NTOWERS = 16, NLADDERS= 4, NWAFERS = 4,
         NELEMENTS = NLAYERS*NVIEWS*NTOWERS*NLADDERS*NWAFERS};
     
-    /// array to hold simulation constants  [ max needed: 14400 = 16*18*2*5*5 ]   
+    /// array to hold simulation constants  [ max needed: 9216 = 16*18*2*4*4 ]   
     AlignmentConsts m_simConsts[NELEMENTS];
-    /// array to hold reconstruction constants  [ max needed: 14400 = 16*18*2*5*5 ]   
+    /// array to hold reconstruction constants  [ max needed: 9216 = 16*18*2*4*4 ]   
     AlignmentConsts m_recConsts[NELEMENTS];
     
     // the following consts are used to construct the wafer constants 
@@ -177,33 +246,42 @@ private:
     /// z of tray center in tower
     double m_trayZ[NLAYERS+1];
     /// z of plane in tray, vs. tray number and botTop
-    double m_planeZ[NLAYERS+1] [NVIEWS];
+    double m_faceZ[NLAYERS+1] [NVIEWS];
     
     /// holds alignment consts for the towers
     AlignmentConsts m_towerConsts;
     /// holds alignment consts for the trays
     AlignmentConsts m_trayConsts;
+    /// holds alignment consts for the planes
+    AlignmentConsts m_faceConsts;
     /// holds alignment consts for the ladders
     AlignmentConsts m_ladderConsts;
     /// hold alignment consts for the wafers
     AlignmentConsts m_waferConsts;
     
-    /// current elememt being constructed
+    /// current element being constructed
     std::string m_mode;
     std::ifstream* m_dataFile;
     int m_tower;
     int m_tray;
-    int m_botTop;
+    int m_face;
     int m_ladder;
     int m_wafer;
     
     ITkrGeometrySvc* m_pGeoSvc;
     IGlastDetSvc* m_pDetSvc;
+
+    typedef std::vector<AlignmentItem*> alignCol;
+    /// list of items read in
+    alignCol m_itemCol;
+    /// item being processed
+    alignCol::iterator m_pItem;
 };
 
 
-/*
+
 //! Serialize the object for writing
+
 inline StreamBuffer& AlignmentConsts::serialize( StreamBuffer& s ) const {
     s << m_deltaX
         << m_deltaY
@@ -225,7 +303,6 @@ inline StreamBuffer& AlignmentConsts::serialize( StreamBuffer& s )       {
     
     return s;
 }
-*/
 
 //! Fill the ASCII output stream
 

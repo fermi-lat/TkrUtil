@@ -1,9 +1,11 @@
 /** @file release.notes
  @brief Package TkrUtil
- */
 
 @verbatim
 
+  v1r12p2  11-Jun-04 LSR Added functionality to AlignmentSvc
+                         Can now specify constants for all elements down
+                         to the wafer.
   v1r12p1  31-May-04 LSR Add some functionality for incomplete LATs
   v1r12p0  10-May-04 LSR Fix fix bug in TkrGeometrySvc::trayHeight;
                          Add new parameters in TkrToTSvc
@@ -49,4 +51,5 @@
   v0r0     05-dec-02 LSR initial version
 
  @endverbatim
+*/
 
