@@ -639,8 +639,8 @@ void TkrAlignmentSvc::moveCluster(int tower, int layer, int view, int ladder,
     point = point - getDelta(view, point, dir, &alConsts1);
 }
 
-void TkrAlignmentSvc::moveReconHit(int tower, int layer, int view, int ladder,
-                                   HepPoint3D& point, HepVector3D dir) const
+void TkrAlignmentSvc::moveReconHit(int /*tower*/, int /*layer*/, int /*view*/, int /*ladder*/,
+                                   HepPoint3D& /*point*/, HepVector3D /*dir*/) const
 {
     //placeholder for now
 }
@@ -702,9 +702,9 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
 }
 
 
-IGeometry::VisitorRet TkrAlignmentGeomVisitor::pushShape(ShapeType s, const UintVector& idvec, 
-        std::string name, std::string material, const DoubleVector& params, 
-        VolumeType type)
+IGeometry::VisitorRet TkrAlignmentGeomVisitor::pushShape(ShapeType /* s */, const UintVector& idvec, 
+        std::string name, std::string /* material*/, const DoubleVector& params, 
+        VolumeType /*type*/)
 {
     if(name=="oneCAL") {
         return AbortSubtree;
