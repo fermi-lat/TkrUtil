@@ -9,6 +9,9 @@
 
   On main branch
   ------------------------------
+  v3r1p4   17-Jan-05 LSR new methods for TkrGeometrySvc:
+                             getConvLayerZ(layer)
+                             isTopPlaneInLayer(plane)
   v3r1p3   03-Jan-05 LSR fix splits file for TkrDigi
   v3r1p2   03-Jan-05 LSR convert to xmlBase
   v3r1p1   01-Jan-05 LSR fix bug in getLayerZ(); remove some reverseLayer() calls

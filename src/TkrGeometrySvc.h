@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.20 2004/12/26 23:27:14 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.21 2005/01/02 23:49:13 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -89,6 +89,18 @@ public:
     double getLayerZ     (const idents::TkrId& tkrId) const {
         return getLayerZ(getLayer(tkrId));
     }
+    /// z-position of converters
+    double getConvZ      (int layer) const {
+        if (getLayerType(layer)!=NOCONV) { 
+            return m_convZ[layer]; 
+        } else {
+            // this is mainly so that a non-crazy value is returned
+            //   in fact this will never be asked for if things are working correctly
+            //   (except maybe for reverse tracking?)
+            return std::max(getLayerZ(layer, 0), getLayerZ(layer,1));
+        }
+    }
+
     /// new stuff, based on plane and TkrId;
     int    getPlane (const idents::TkrId& tkrId) const {
         return 2*tkrId.getTray() + tkrId.getBotTop() - getBottomTrayFlag();
@@ -116,6 +128,9 @@ public:
     }
     int    getView  (const idents::TkrId& tkrId) const {
         return getView(getPlane(tkrId));
+    }
+    bool   isTopPlaneInLayer(int plane) const {
+        return m_isTopPlaneInLayer[plane];
     }
 
     /// return the rad length of the converter for each layer
@@ -269,6 +284,8 @@ private:
     /// radiation lengths of remainder of layer
     /// we count from the bottom of the converter to the top of the next lower converter
     double m_radLenRest[NLAYERS];
+    /// position of radiators
+    double m_convZ[NLAYERS];
     /// number of layers of each type
     int m_numLayers[NTYPES];
     /// average radlen of converter
@@ -278,6 +295,7 @@ private:
 
     int m_planeToView[NPLANES];
     int m_planeToLayer[NPLANES];
+    bool m_isTopPlaneInLayer[NPLANES];
     int m_layerToPlane[NLAYERS][NVIEWS];
 
     int m_topTrayNumber;

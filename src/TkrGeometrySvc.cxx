@@ -312,6 +312,7 @@ void TkrGeometrySvc::initializeArrays()
     for (plane=0; plane<NPLANES; ++plane) {
         m_planeToView[plane] = -1;
         m_planeToLayer[plane] = -1;
+        m_isTopPlaneInLayer[plane] = false;
     }
 
     for (layer=0;layer<NLAYERS;++layer) {
@@ -325,6 +326,7 @@ void TkrGeometrySvc::initializeArrays()
     for(i=0; i<NLAYERS; ++i) {
         m_radLenConv[i] = 0.;
         m_radLenRest[i] = 0.;
+        m_convZ[i]      = 0.;
     }
     for (ind=0; ind<NTYPES; ++ind) {
         m_numLayers[ind]     = 0;
@@ -559,6 +561,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             int layer = (item==2 || item==6 || item==0) ? tray-1 : tray;
             if (item==2) { // converter
                 m_radLenConv[layer] = radlen;
+                m_convZ[layer] = stepPoint.z();
             } else {
                 m_radLenRest[layer] += radlen;
             }
@@ -631,6 +634,7 @@ double TkrGeometrySvc::getLayerZ(int digiLayer, int view) const
         + m_planeZ[m_layerToPlane[digiLayer][1]]);
     }
 }
+
 
 double TkrGeometrySvc::getReconLayerZ(int layer, int view) const
 {
@@ -816,8 +820,12 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
        double thisZ = m_planeZ[plane];
        if(fabs(thisZ-m_planeZ[plane+1])>layerSeparation) {
             ++layer;
+            m_isTopPlaneInLayer[plane] = true;
         }
     }
+    // special handling for very top layer
+    m_isTopPlaneInLayer[lastPlane] = (m_planeToLayer[lastPlane]==m_planeToLayer[lastPlane-1]);
+
     m_numLayers[ALL]  = ++layer;
     return StatusCode::SUCCESS;
 }
