@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.3 2003/02/17 18:06:58 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.6 2003/04/11 23:27:15 lsrea Exp $
 */
 
 
@@ -216,9 +216,9 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
             // after each line is read in
             if (makestrips) std::sort(v->begin(), v->end());           
         }  
-        if (!v->empty()) {m_empty = false;}
-        return;
+        if (!v->empty()) {m_empty = false;}       
     }
+    return;
 }
 
 int TkrBadStripsSvc::getIndex(int tower, int layer, 
