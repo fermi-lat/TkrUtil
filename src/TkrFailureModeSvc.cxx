@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.13 2004/08/19 08:17:32 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.14 2004/08/24 23:45:45 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -70,6 +70,8 @@ StatusCode TkrFailureModeSvc::initialize ()
     MsgStream log( msgSvc(), name() );
 
     StatusCode  sc = StatusCode::SUCCESS;
+
+    Service::initialize();
 
     sc = service("TkrGeometrySvc", m_pGeoSvc, true);
     if ( !sc.isSuccess() ) {
