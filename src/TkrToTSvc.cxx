@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.8 2005/01/03 23:22:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.9 2005/01/25 20:03:55 lsrea Exp $
 
 */
 
@@ -26,6 +26,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.8 2005/01/03
 static SvcFactory<TkrToTSvc> a_factory;
 const ISvcFactory& TkrToTSvcFactory = a_factory; 
 
+using namespace idents;
+
 TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc) 
 : Service(name,svc)
 {
@@ -36,7 +38,7 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     // Outputs: None
     // Dependencies: None
     // Restrictions and Caveats:  None
-    
+
     // declare the properties
 
     declareProperty("ToTFile",          m_ToTFile          = ""  );
@@ -76,26 +78,26 @@ StatusCode TkrToTSvc::initialize ()
     // Outputs: None
     // Dependencies: None
     // Restrictions and Caveats:  None
-    
+
     StatusCode  status = StatusCode::SUCCESS;
 
     // Open the message log
     MsgStream log( msgSvc(), name() );
-      
+
     // Call super-class
     Service::initialize ();
-    
+
     m_tkrGeom = 0;
     if( service( "TkrGeometrySvc", m_tkrGeom, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't retrieve TkrGeometrySvc" << endreq;
         return StatusCode::FAILURE;
     }
-    
+
     // Bind all of the properties for this service
     if ( (status = setProperties()).isFailure() ) {
         log << MSG::ERROR << "Failed to set properties" << endreq;
     }
-        
+
     if (m_ToTFile!="") {
         int ret =  facilities::Util::expandEnvVar(&m_ToTFile);
         if (ret>=0) {
@@ -108,7 +110,7 @@ StatusCode TkrToTSvc::initialize ()
     }
 
     status = doInit();
-    
+
     return status;
 }
 
@@ -128,7 +130,7 @@ StatusCode TkrToTSvc::doInit()
     int tower, layer, view, strip, chip;
 
     if(m_mode.substr(0,5)=="ideal") {
-    // all gains and thresholds set to the same value, to reproduce the standard MC ToT
+        // all gains and thresholds set to the same value, to reproduce the standard MC ToT
         for(tower=0;tower<NTOWERS;++tower) {
             for (layer=0;layer<numLayers;++layer) {
                 for (view=0;view<NVIEWS;++view) {
@@ -149,7 +151,7 @@ StatusCode TkrToTSvc::doInit()
                     }
                 }
             }
-    }
+        }
     } else if (m_mode=="randomized") {
         // thresholds and gains set randomly to reproduce EM1 values
         // but each tower is the same, to make testing a bit simpler
@@ -157,22 +159,22 @@ StatusCode TkrToTSvc::doInit()
         int mySeed = 123456789;
         HepRandom::setTheSeed(mySeed);
         //for(tower=0;tower<NTOWERS;++tower) {
-            for (layer=0;layer<numLayers;++layer) {
-                for (view=0;view<NVIEWS;++view) {
-                    for(chip=0;chip<nChips;++chip) {
-                        // generate chip thresholds and gains
-                        double chipGain = RandGauss::shoot(1.789, 0.3088);
-                        double chipThresh = -0.8546 - 0.2142*chipGain + RandGauss::shoot(0.013, 0.167);
-                        for (strip=0;strip<nStrips;++strip) {
-                            int theStrip = chip*nStrips + strip;
-                            double test = RandFlat::shoot(432.);
-                            double devGain;
-                            if (test>320.) {
-                                devGain = RandGauss::shoot(0.188, 0.399);
-                            } else {
-                                devGain = RandGauss::shoot(-0.107, 0.262);
-                            }
-                            double devThresh = -0.541*devGain + RandGauss::shoot(0, 0.262);
+        for (layer=0;layer<numLayers;++layer) {
+            for (view=0;view<NVIEWS;++view) {
+                for(chip=0;chip<nChips;++chip) {
+                    // generate chip thresholds and gains
+                    double chipGain = RandGauss::shoot(1.789, 0.3088);
+                    double chipThresh = -0.8546 - 0.2142*chipGain + RandGauss::shoot(0.013, 0.167);
+                    for (strip=0;strip<nStrips;++strip) {
+                        int theStrip = chip*nStrips + strip;
+                        double test = RandFlat::shoot(432.);
+                        double devGain;
+                        if (test>320.) {
+                            devGain = RandGauss::shoot(0.188, 0.399);
+                        } else {
+                            devGain = RandGauss::shoot(-0.107, 0.262);
+                        }
+                        double devThresh = -0.541*devGain + RandGauss::shoot(0, 0.262);
 
                         for(tower=0; tower<NTOWERS;++tower) {
                             m_ToTGain[tower][layer][view][theStrip] = 
@@ -201,11 +203,106 @@ StatusCode TkrToTSvc::doInit()
     return sc;
 }
 
+double TkrToTSvc::getGain(int tower, int layer, int view, int strip) const
+{
+    if (!valid(tower, layer, view, strip)) { return -1.0; }
+    if (m_pToT) {
+        int tray, face;
+        m_tkrGeom->layerToTray(layer, view, tray, face);
+        TowerId towerId = TowerId(tower);
+        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
+        return  pInfo->getSlope();
+    } else {
+        return (double) m_ToTGain[tower][layer][view][strip];
+    }
+}
+double TkrToTSvc::getGain2(int tower, int layer, int view, int strip) const 
+{
+    if (!valid(tower, layer, view, strip)) { return -1.0; }
+    if (m_pToT) {
+        int tray, face;
+        m_tkrGeom->layerToTray(layer, view, tray, face);
+        TowerId towerId = TowerId(tower);
+        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
+        return  pInfo->getQuad();
+    } else {
+        return (double) m_ToTGain2[tower][layer][view][strip];
+    }
+}
+double TkrToTSvc::getThreshold(int tower, int layer, int view, int strip) const 
+{
+    if (!valid(tower, layer, view, strip)) { return -1.0; }
+    if (m_pToT) {
+        int tray, face;
+        m_tkrGeom->layerToTray(layer, view, tray, face);
+        TowerId towerId = TowerId(tower);
+        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
+        return  pInfo->getIntercept();
+    } else {
+        return (double) m_ToTThreshold[tower][layer][view][strip];
+    }
+}
+double TkrToTSvc::getQuality(int tower, int layer, int view, int strip) const 
+{
+    if (!valid(tower, layer, view, strip)) { return -1.0; }
+    if (m_pToT) {
+        int tray, face;
+        m_tkrGeom->layerToTray(layer, view, tray, face);
+        TowerId towerId = TowerId(tower);
+        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
+        return  pInfo->getChi2();
+    } else {
+        return (double) m_ToTQuality[tower][layer][view][strip];
+    }
+}
+
+int TkrToTSvc::getRawToT(double eDep, int tower, int layer, int view, int strip) const
+{
+    if (!valid(tower, layer, view, strip)) { return 0.0; }
+    double gain, gain2, threshold;
+    if (m_pToT) {
+        int tray, face;
+        m_tkrGeom->layerToTray(layer, view, tray, face);
+        TowerId towerId = TowerId(tower);
+        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
+        gain = pInfo->getSlope();
+        gain2 = pInfo->getQuad();
+        threshold = pInfo->getIntercept();
+    } else {
+        gain      = m_ToTGain[tower][layer][view][strip];
+        gain2     = m_ToTGain2[tower][layer][view][strip];
+        threshold = m_ToTThreshold[tower][layer][view][strip];
+    }
+    double charge    = eDep/m_mevPerMip*m_fCPerMip; // in fCs
+    double dToT =  m_countsPerMicrosecond*(threshold + charge*(gain + charge*gain2)) ;
+    int iToT = static_cast<int> ( std::max( 0., dToT));
+    return std::min(iToT, m_maxToT);
+}
+
 double TkrToTSvc::getCharge(double ToT, int tower, int layer, int view, int strip) const
 {
-    double gain      = m_ToTGain[tower][layer][view][strip];
-    double gain2     = m_ToTGain2[tower][layer][view][strip];
-    double threshold = m_ToTThreshold[tower][layer][view][strip];
+    if (!valid(tower, layer, view, strip)) { return 0.0; }
+    double gain, gain2, threshold;
+    if (m_pToT) {
+        int tray, face;
+        m_tkrGeom->layerToTray(layer, view, tray, face);
+        TowerId towerId = TowerId(tower);
+        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
+        gain = pInfo->getSlope();
+        gain2 = pInfo->getQuad();
+        threshold = pInfo->getIntercept();
+    } else {
+        gain      = m_ToTGain[tower][layer][view][strip];
+        gain2     = m_ToTGain2[tower][layer][view][strip];
+        threshold = m_ToTThreshold[tower][layer][view][strip];
+    }
+
     double charge;
     // constants are for: ToT = threshold + charge*(gain + charge*gain2))
     // here is the inverse:
@@ -234,7 +331,7 @@ double TkrToTSvc::getMipsFromCharge(double charge, int tower, int layer, int vie
 }
 
 StatusCode TkrToTSvc::finalize() {
-    
+
     MsgStream log(msgSvc(), name());
     return StatusCode::SUCCESS;
 }

@@ -9,6 +9,8 @@
 
   On main branch
   ------------------------------
+  v3r2     10-Feb-05 LSR ToTSvc now can read charge-inj files; also refactor
+                         fix unix warnings
   v3r1p9   07-Feb-05 LSR redo for new TkrCluster; generalize geometry a bit
   v3r1p8   04-Feb-05 LSR Fix for no CAL; calculate bottom of TKR
   v3r1p7   31-Jan-05 LSR Cosmetic, but might as well keep up

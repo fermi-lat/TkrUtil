@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.9 2005/01/25 23:13:14 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.10 2005/01/30 07:12:29 lsrea Exp $
 
 // Include files
 
@@ -487,7 +487,7 @@ int TkrQueryClustersTool::numberOfUUHitsNear( int layer, double dX, double dY,
     return getNumNearHitsInLayer(layer, dX, dY, x0, dir, checkFlag);
 }
 
-int TkrQueryClustersTool::numberOfHitsNear( int view, int layer, double inDistance, 
+int TkrQueryClustersTool::numberOfHitsNear( int /*view*/, int layer, double inDistance, 
                                            const Point& x0, const Vector dir) const
 {
     // Purpose and Method: counts the number of hits within a distance 

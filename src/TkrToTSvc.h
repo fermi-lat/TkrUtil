@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.6 2004/12/16 23:28:30 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.7 2004/12/26 23:27:14 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -45,38 +45,11 @@ public:
     /// return the service type
     const IID& type() const;
 
-    double getGain(int tower, int layer, int view, int strip) const 
-        {
-        if (valid(tower, layer, view, strip)) {
-            return (double) m_ToTGain[tower][layer][view][strip];
-        }else {
-            return -1.;
-        }
-    }
-    double getGain2(int tower, int layer, int view, int strip) const 
-        {
-        if (valid(tower, layer, view, strip)) {
-            return (double) m_ToTGain2[tower][layer][view][strip];
-        }else {
-            return -1.;
-        }
-    }
-    double getThreshold(int tower, int layer, int view, int strip) const 
-        {
-        if (valid(tower, layer, view, strip)) {
-            return (double) m_ToTThreshold[tower][layer][view][strip];
-        }else {
-            return -1.;
-        }
-    }
-    double getQuality(int tower, int layer, int view, int strip) const 
-    {
-        if (valid(tower, layer, view, strip)) {
-            return (double) m_ToTQuality[tower][layer][view][strip];
-        }else {
-            return -1.;
-        }
-    }
+    double getGain(int tower, int layer, int view, int strip) const;
+    double getGain2(int tower, int layer, int view, int strip) const; 
+    double getThreshold(int tower, int layer, int view, int strip) const; 
+    double getQuality(int tower, int layer, int view, int strip) const; 
+
 
     double getMuonFactor(int tower, int layer, int view, int strip) const 
         {
@@ -94,6 +67,11 @@ public:
     double getCharge(double ToT, int tower, int layer, int view, int strip) const;
     double getMipsFromToT(double ToT, int tower, int layer, int view, int strip) const;
     double getMipsFromCharge(double charge, int tower, int layer, int view, int strip) const;
+    int    getRawToT(double eDep, int tower, int layer, int view, int strip) const;
+
+        /// update the pointer
+    void update(CalibData::TkrTotCol* pToT) { m_pToT = pToT; }
+
 
 private:
     /// internal init method
@@ -139,6 +117,8 @@ private:
     float m_ToTMuonFactor [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
     /// pointer to geometry service
     ITkrGeometrySvc* m_tkrGeom;
+    ///
+    CalibData::TkrTotCol* m_pToT;
 };
 
 

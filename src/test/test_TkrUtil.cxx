@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.3 2004/08/24 23:45:45 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.4 2004/10/01 19:40:58 usher Exp $
 
 // Include files
 // Gaudi system includes
@@ -46,7 +46,7 @@ private:
 
 static const AlgFactory<test_TkrUtil>  Factory;
 const IAlgFactory& test_TkrUtilFactory = Factory;
-
+h
 //------------------------------------------------------------------------
 //! ctor
 
@@ -99,7 +99,7 @@ StatusCode test_TkrUtil::execute()
 
     Event::McParticle* mcPart = new Event::McParticle();
 
-    Event::McParticle::StdHepId hepId = mcPart->particleProperty();
+    //Event::McParticle::StdHepId hepId = mcPart->particleProperty();
 
     Event::McEventStructure* mcEvent = new Event::McEventStructure();
 

@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.5 2004/08/19 11:28:13 kuss Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.6 2004/09/07 21:20:32 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -13,10 +13,12 @@
 #include "CalibData/CalibModel.h"
 #include "CalibData/Tkr/BadStrips.h"
 #include "CalibData/Tkr/TkrSplitsCalib.h"
+#include "CalibData/Tkr/TkrTot.h"
 
 #include "TkrUtil/ITkrBadStripsSvcCalib.h"
 #include "TkrUtil/ITkrFailureModeSvcCalib.h"
 #include "TkrUtil/ITkrSplitsSvc.h"
+#include "TkrUtil/ITkrToTSvc.h"
 
 #include <string>
 
@@ -53,6 +55,8 @@ private:
     ITkrFailureModeSvcCalib* m_pTkrFailureModeSvc;
     /// pointer to splits service
     ITkrSplitsSvc*           m_pTkrSplitsSvc;
+    /// pointer to splits service
+    ITkrToTSvc*              m_pTkrToTSvc;
     /// serial number of the hot strips calibration
     int m_serHot;
     /// serial number of the dead strips calibration
@@ -96,7 +100,7 @@ TkrCalibAlg::TkrCalibAlg(const std::string&  name,
     declareProperty("deadStripsCalibFlavor", m_deadStripsFlavor = "");
     declareProperty("hotStripsCalibFlavor",  m_hotStripsFlavor  = "");
     declareProperty("splitsCalibFlavor",     m_splitsFlavor     = "");
-    declareProperty("chargInjectionCalibFlavor",  m_injectionFlavor  = "");
+    declareProperty("chargeInjectionCalibFlavor",  m_injectionFlavor  = "");
     declareProperty("muonCalibFlavor",       m_muonFlavor       = "");
 }
 
@@ -147,10 +151,18 @@ StatusCode TkrCalibAlg::initialize()
         return sc;
     }
         
-     sc = service("TkrSplitsSvc", m_pTkrSplitsSvc, true);
+    sc = service("TkrSplitsSvc", m_pTkrSplitsSvc, true);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
             << "Could not get TkrSplitsSvc" 
+            << endreq;
+        return sc;
+    }
+
+    sc = service("TkrToTSvc", m_pTkrToTSvc, true);
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+            << "Could not get TkrToTSvc" 
             << endreq;
         return sc;
     }
@@ -262,13 +274,11 @@ StatusCode TkrCalibAlg::execute( ) {
         m_pCalibDataSvc->retrieveObject(fullSplitsPath, pObject);
         CalibData::TkrSplitsCalib* pSplits = 0;
         pSplits = dynamic_cast<CalibData::TkrSplitsCalib*> (pObject);
-        //SmartDataPtr<CalibData::Splits> pSplits(m_pCalibDataSvc, fullSplitsPath);
         if (!pSplits) {
             log << MSG::ERROR 
                 << "Failed access to splits via smart ptr" << endreq;
             return StatusCode::FAILURE;
         }
-
         m_pCalibDataSvc->updateObject(pObject);
         pSplits = dynamic_cast<CalibData::TkrSplitsCalib*> (pObject);
         if (!pSplits) {
@@ -290,6 +300,42 @@ StatusCode TkrCalibAlg::execute( ) {
 
            // last thing, pass pointer to TkrSplitsSvc
            m_pTkrSplitsSvc->update(pSplits);
+        }
+    }
+
+    // now charge injection
+    if(m_injectionFlavor!="ideal" && m_injectionFlavor!="") {
+
+        std::string fullToTPath = CalibData::TKR_TOTSignal + "/" + m_injectionFlavor;
+        DataObject* pObject;
+        m_pCalibDataSvc->retrieveObject(fullToTPath, pObject);
+        CalibData::TkrTotCol* pToT = 0;
+        pToT = dynamic_cast<CalibData::TkrTotCol*> (pObject);
+        if (!pToT) {
+            log << MSG::ERROR 
+                << "Failed access to charge-injection via smart ptr" << endreq;
+            return StatusCode::FAILURE;
+        }
+        m_pCalibDataSvc->updateObject(pObject);
+        pToT = dynamic_cast<CalibData::TkrTotCol*> (pObject);
+        if (!pToT) {
+            log << MSG::ERROR 
+                << "Update of ToT charge-injection constants failed" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        int newSerNo = pToT->getSerNo();
+        if (newSerNo!=m_serInjection) {
+            log << MSG::INFO << "charge-injection serial number changed..." 
+                << endreq;
+            m_serInjection = newSerNo;
+            log << MSG::INFO << "Retrieved with path " << fullToTPath << endreq
+                << "Serial #" <<  pToT->getSerNo() << endreq; 
+            log << MSG::INFO << "Vstart: " <<  (pToT->validSince()).hours()
+                << "  Vend: " << (pToT->validTill()).hours() << endreq;
+
+           // last thing, pass pointer to TkrSplitsSvc
+           m_pTkrToTSvc->update(pToT);
         }
     }
 

@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.4 2004/12/16 23:28:30 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.5 2004/12/26 23:27:13 lsrea Exp $
 */
 
 #ifndef ITkrToTSvc_H
@@ -11,6 +11,10 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.4 2004/12
 // Include files
 #include "GaudiKernel/IInterface.h"
 #include "idents/VolumeIdentifier.h"
+
+#include "CalibData/CalibModel.h"
+#include "CalibData/Tkr/TkrTot.h"
+
 
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
@@ -41,8 +45,13 @@ public:
     virtual int    getMaxToT() const = 0;
     
     virtual double getCharge(double ToT, int tower, int layer, int view, int strip) const = 0;
+    virtual int    getRawToT(double eDep, int tower, int layer, int view, int strip) const = 0;
     virtual double getMipsFromToT(double ToT, int tower, int layer, int view, int strip) const = 0;
     virtual double getMipsFromCharge(double charge, int tower, int layer, int view, int strip) const = 0;
+
+        /// update to latest pointer when calibration changes
+    virtual void update(CalibData::TkrTotCol* pToT) = 0;
+
 };
 
 #endif // ITkrToTSvc_H
