@@ -1,0 +1,96 @@
+<?xml version="1.0" ?>
+<!-- windows test version -->
+
+<!DOCTYPE ifile SYSTEM "$(XMLROOT)/xmldata/ifile.dtd" >
+
+<ifile cvs_Header="$Header: /home/cvs/SLAC/calibGenTKR/src/test/win_options.xml,v 1.3 2004/03/01 20:24:43 lsrea Exp $"
+       cvs_Revision="$Revision: 1.3 $" >
+
+  <!-- each section contains the splits for a tower -->
+  <!-- the splits are listed in plane sequence, starting from the "bottom"
+         of the tracker. The value gives the last C0 (low end) chip. -->
+
+  <section name="Tower0">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower1">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower2">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower3">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower4">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower5">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower6">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower7">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower8">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower9">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower10">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower11">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower12">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower13">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower14">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+  <section name="Tower15">  
+    <item name="splits" value= 
+      "{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,    11, 11, 11, 11, 11, 11}" /> 
+  </section>
+</ifile>
+
+
+

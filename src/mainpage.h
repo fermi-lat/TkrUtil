@@ -50,6 +50,12 @@
  * of (tower, plane) elements, each with its own list of badstrips (dead or hot); 
  * and/or from the TkrBadStrips calibration data in the TCDS. 
  *
+ * @section TkrSplitsSvc TkrSplitsSvc
+ * TkrSplitsSvc maintains a list of splits for the low and high controllers for each
+ * plane in the detector. The default split is after chip 11, or strip 767. 
+ * An xml file containing non-standard values may be specified 
+ * in the jobOptions. Eventually this will be part of the calibration system (?)
+ *
  * @section TkrGeometrySvc TkrGeometrySvc
  * TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
  * with TKR geometry.
@@ -81,6 +87,10 @@
  * @param TkrBadStripsSvc.badStripsFile
  * The name of the file containing
  * a list of bad (dead and hot) strips (default: null). 
+ *
+ * @param TkrSplitsSvc.splitsFile
+ * The name of the xml file containing a list of splits. See
+ * /src/test/splits.xml in this package for the format of the file.
  *
  * @param TkrAlignmentSvc.simFile
  * The name of the file containing the alignment constants to be used

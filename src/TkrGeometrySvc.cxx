@@ -172,8 +172,16 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::INFO << "Couldn't set up TkrBadStripsSvc" << endreq;
         log << "Will assume it is not required"    << endreq;
     }
+
+    m_tkrSplits = 0;
+    if( service( "TkrSplitsSvc", m_tkrSplits, true).isFailure() ) {
+        log << MSG::ERROR << "Couldn't set up TkrSplitsSvc" << endreq;
+        return StatusCode::FAILURE;
+    }
+
     log << MSG::INFO << "TkrGeometrySvc successfully initialized" << endreq;
     return StatusCode::SUCCESS;
+
 }
 
 StatusCode TkrGeometrySvc::finalize()

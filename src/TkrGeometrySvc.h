@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.8 2003/05/08 04:25:18 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.9 2003/07/18 22:27:19 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -22,13 +22,13 @@
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 #include "idents/VolumeIdentifier.h"
 
-enum { NVIEWS=2, NLAYERS=18, NTOWERS=16};
 
 class TkrGeometrySvc : public Service,
         virtual public ITkrGeometrySvc
 {
 public:
-
+    enum { NVIEWS=2, NLAYERS=18, NTOWERS=16};
+    
     TkrGeometrySvc(const std::string& name, ISvcLocator* pSvcLocator); 
     virtual ~TkrGeometrySvc() {}
     
@@ -105,11 +105,13 @@ public:
     IPropagator* getG4PropagationTool()  const {return m_G4PropTool;}
 
     /// Provide access to the failure mode service
-    ITkrFailureModeSvc* getTkrFailureModeSvc()   const  { return m_tkrFail;}
+    ITkrFailureModeSvc* getTkrFailureModeSvc() const { return m_tkrFail;}
     /// Provide access to the bad strips service
-    ITkrBadStripsSvc*  getTkrBadStripsSvc() const { return m_badStrips;}
+    ITkrBadStripsSvc*   getTkrBadStripsSvc()   const { return m_badStrips;}
     /// Provide access to the alignment service
-    ITkrAlignmentSvc*   getTkrAlignmentSvc()  const { return m_tkrAlign;}   
+    ITkrAlignmentSvc*   getTkrAlignmentSvc()   const { return m_tkrAlign;}
+    /// Provide access to splits service
+    ITkrSplitsSvc*      getTkrSplitsSvc()      const { return m_tkrSplits;}
 
     /// calculate the tray number, botTop from layer, view
     void layerToTray (int layer, int view, int& tray, int& botTop) const;
@@ -118,8 +120,7 @@ public:
     /// calculate layer (digi format) and view from plane
     void planeToLayer (int plane, int& layer, int& view) const;
     
-
-    
+ 
     StatusCode queryInterface(const IID& riid, void** ppvUnknown);
 
     static const InterfaceID& interfaceID() {
@@ -217,9 +218,11 @@ private:
     /// pointer to the failure mode service
     ITkrFailureModeSvc* m_tkrFail;
     /// pointer to alignment service
-    ITkrAlignmentSvc* m_tkrAlign;
+    ITkrAlignmentSvc*   m_tkrAlign;
     /// pointer to bad strips service
-    ITkrBadStripsSvc* m_badStrips;
+    ITkrBadStripsSvc*   m_badStrips;
+    /// pointer to splits service
+    ITkrSplitsSvc*      m_tkrSplits;
 
 };
 

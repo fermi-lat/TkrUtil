@@ -52,7 +52,7 @@ public:
     TkrFailureModeSvc(const std::string& name, ISvcLocator* pSvcLocator); 
 
     StatusCode initialize();
-    StatusCode execute();
+    //StatusCode execute();
     StatusCode finalize();
 
     /// get the list of enabled failure mode conditions
