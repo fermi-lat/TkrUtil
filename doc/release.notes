@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r3p4   22-Mar-05 LSR Fix default flavors for TkrCalibAlg
   v3r3p3   22-Mar-05 LSR little bug in geometry... only current effect is on GltType
   v3r3p2   01-Mar-05 LSR bug that killed test_TkrRecon
   v3r3p1   01-Mar-05 LSR another little bug, who would've thunk it?

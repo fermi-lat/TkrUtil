@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.7 2005/02/11 07:12:54 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.8 2005/03/01 00:57:46 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -96,12 +96,12 @@ TkrCalibAlg::TkrCalibAlg(const std::string&  name,
                          m_serHot(-1), m_serDead(-1)
 {
     declareProperty("calibFlavor",           m_flavor           = "ideal");
-    declareProperty("deadStripsCalibFlavor", m_deadStripsFlavor = "");
-    declareProperty("deadStripsCalibFlavor", m_deadStripsFlavor = "");
-    declareProperty("hotStripsCalibFlavor",  m_hotStripsFlavor  = "");
-    declareProperty("splitsCalibFlavor",     m_splitsFlavor     = "");
-    declareProperty("chargeInjectionCalibFlavor",  m_injectionFlavor  = "");
-    declareProperty("muonCalibFlavor",       m_muonFlavor       = "");
+    declareProperty("deadStripsCalibFlavor", m_deadStripsFlavor = "notSet");
+    declareProperty("hotStripsCalibFlavor",  m_hotStripsFlavor  = "notSet");
+    declareProperty("splitsCalibFlavor",     m_splitsFlavor     = "notSet");
+    declareProperty("chargeInjectionCalibFlavor",  
+                                             m_injectionFlavor  = "notSet");
+    declareProperty("muonCalibFlavor",       m_muonFlavor       = "notSet");
 }
 
 StatusCode TkrCalibAlg::initialize() 
@@ -173,11 +173,11 @@ StatusCode TkrCalibAlg::initialize()
     // go through the individual flavors... 
     // set them equal to the overall flavor unless they've been set
 
-    if (m_deadStripsFlavor=="") m_deadStripsFlavor = m_flavor;
-    if (m_hotStripsFlavor=="")  m_hotStripsFlavor  = m_flavor;
-    if (m_splitsFlavor=="")     m_splitsFlavor     = m_flavor;
-    if (m_injectionFlavor=="")  m_injectionFlavor  = m_flavor;
-    if (m_muonFlavor=="")       m_muonFlavor       = m_flavor;
+    if (m_deadStripsFlavor=="notSet") m_deadStripsFlavor = m_flavor;
+    if (m_hotStripsFlavor=="notSet")  m_hotStripsFlavor  = m_flavor;
+    if (m_splitsFlavor=="notSet")     m_splitsFlavor     = m_flavor;
+    if (m_injectionFlavor=="notSet")  m_injectionFlavor  = m_flavor;
+    if (m_muonFlavor=="notSet")       m_muonFlavor       = m_flavor;
 
     return StatusCode::SUCCESS;   
 }
