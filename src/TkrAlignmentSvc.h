@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.9 2004/06/14 15:37:26 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.10 2004/06/14 18:39:24 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -306,6 +306,20 @@ inline StreamBuffer& AlignmentConsts::serialize( StreamBuffer& s )       {
 
 //! Fill the ASCII output stream
 
+std::ostream& operator<<(std::ostream &s, AlignmentConsts consts) {
+        s << "AlignmentConsts: "
+            << "delta(" 
+        << consts.getDeltaX() << ", "
+        << consts.getDeltaY() << ", "
+        << consts.getDeltaZ() << ") "
+        << " rot("
+        << consts.getRotX() << ", "
+        << consts.getRotY() << ", "
+        << consts.getRotZ() << ")" ; 
+    return s;
+}
+
+/*
 inline std::ostream& AlignmentConsts::fillStream( std::ostream& s ) const {
     s << "class AlignmentConsts: "
         << "delta(X,Y,Z) (" 
@@ -319,6 +333,7 @@ inline std::ostream& AlignmentConsts::fillStream( std::ostream& s ) const {
         << std::endl;
     return s;
 }
+*/
 
 #endif // TKRALIGNMENTSVC_H
 

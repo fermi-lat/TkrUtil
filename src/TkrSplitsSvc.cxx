@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.1 2004/03/10 18:35:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.2 2004/03/12 05:49:22 lsrea Exp $
 
 */
 
@@ -106,7 +106,7 @@ StatusCode TkrSplitsSvc::doInit()
     StatusCode sc = StatusCode::SUCCESS;
 
     // test of getting TkrGeometrySvc from inside TkrSplitsSvc... It works!
-    int stripsPerLadder  = m_geoSvc->ladderNStrips();
+    //int stripsPerLadder  = m_geoSvc->ladderNStrips();
 
     // can be removed when geometry is iterfaced here
     const int NSTRIPS = 64;

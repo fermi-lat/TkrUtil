@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.24 2004/06/14 15:37:26 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.25 2004/06/14 18:39:24 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -297,34 +297,36 @@ if (readFromFile().isFailure()) {
     }
     
     log << MSG::DEBUG ;
-    bool doOutput = log.isActive();
-    log << "Debug output for alignment consts follows:" << endreq;
-    if (doOutput) {
+    if (log.isActive()) {
+        log << "Debug output for alignment consts follows:" << endreq;
         for (int tower = 0; tower < NTOWERS; ++tower) {
             bool first = true;
             for (int layer=0; layer<NLAYERS; ++layer) {
                 int index = getIndex(tower, layer, 1, 0, 0);
                 if (m_mode=="sim") {
                     if ( !m_simConsts[index].isNull() ) {
-                        if (first) std::cout << m_mode <<" consts for tower " << tower 
-                            << ", view 1, ladder 0, wafer 0" << std::endl;
+                        if (first) log << m_mode <<" consts for tower " << tower 
+                            << ", view 1, ladder 0, wafer 0" << endreq;
                         first = false;
-                        std::cout << "layer " << layer << " ";
-                        m_simConsts[index].fillStream(std::cout);
+                        log << "layer " << layer << " ";
+                        //m_simConsts[index].fillStream(std::cout);
+                        log.stream() << m_simConsts[index];
+                        log << endreq;
                     }
                 }   else  {             
                     if ( !m_recConsts[index].isNull() ) {
-                        if (first) std::cout << m_mode <<" consts for tower " << tower 
-                            << ", view 1, ladder 0, wafer 0" << std::endl;
+                        if (first) log << m_mode <<" consts for tower " << tower 
+                            << ", view 1, ladder 0, wafer 0" << endreq;
                         first = false;
-                        std::cout << "layer " << layer << " ";
-                        m_recConsts[index].fillStream(std::cout);
+                        log << "layer " << layer << " ";
+                        //m_recConsts[index].fillStream(std::cout);
+                        log.stream() << m_recConsts[index];
+                        log << endreq;
                     }
                 }
             }
         }
     }
-   
     return sc;
 }
 

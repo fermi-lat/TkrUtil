@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.10 2004/02/13 06:20:35 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.11 2004/06/12 05:03:46 lsrea Exp $
 */
 
 
@@ -64,7 +64,8 @@ public:
         && m_rotX==0. &&m_rotY==0. && m_rotZ==0.);} 
 
     //! Fill the ASCII output stream
-    std::ostream& fillStream( std::ostream& s ) const;  
+    //std::ostream& fillStream( std::ostream& s ) const;  
+    friend std::ostream& operator<<( std::ostream& s , AlignmentConsts consts);  
         
     //! Serialize the object for reading
     StreamBuffer& serialize( StreamBuffer& s );
