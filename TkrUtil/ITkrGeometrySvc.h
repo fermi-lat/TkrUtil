@@ -3,6 +3,8 @@
 
 #include "GaudiKernel/IInterface.h"
 
+#include "GlastSvc/Reco/IKalmanParticle.h"
+
 #include "CLHEP/Geometry/Point3D.h"
 
 #include <string>
@@ -14,7 +16,7 @@
  * 
  * @author Tracy Usher
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/TkrRecon/ITkrGeometrySvc.h,v 1.14 2002/10/17 00:37:25 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.1 2003/01/10 19:35:43 lsrea Exp $
  */
 
 static const InterfaceID IID_ITkrGeometrySvc(905, 1 , 0); 
@@ -64,6 +66,9 @@ public:
     virtual double getReconLayerZ(int layer, int view) = 0;
     /// Return average z position for a layer
     virtual double getReconLayerZ(int layer) = 0;
+
+    /// Provide access to the propagator
+    virtual IKalmanParticle* getPropagator() = 0;
 };
 
 #endif

@@ -3,6 +3,9 @@
 #include "GaudiKernel/SvcFactory.h"
 #include "src/TkrGeometrySvc.h"
 
+#include "GlastSvc/Reco/IPropagatorSvc.h"
+#include "GlastSvc/Reco/IPropagatorTool.h"
+
 #include "idents/TowerId.h"
 
 #include <iostream>
@@ -118,6 +121,16 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::ERROR << "Failed to fill layerZ"<< endreq;
         return sc;
     }
+
+    // Get propagator from the service
+    IPropagatorSvc* propagatorSvc = 0;
+    sc = service("GlastPropagatorSvc", propagatorSvc, true);
+    if (sc.isFailure()) {
+        log << MSG::ERROR << "GlastPropagatorSvc is required for this algorithm." << endreq;
+        return sc;
+    }
+    m_KalParticle = propagatorSvc->getPropagator();
+
     return sc;
 }
 
