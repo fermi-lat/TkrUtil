@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.21 2004/06/12 05:03:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.22 2004/06/12 15:04:44 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -21,16 +21,18 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.21 200
 
 #include "facilities/Util.h"
 
-#ifdef DEFECT_NO_STRINGSTREAM
-#include <strstream>
-#else
+//#ifdef DEFECT_NO_STRINGSTREAM
+//#include <strstream>
+//#else
 #include <sstream>
-#endif
+//#endif
 
 #include <fstream>
 #include <algorithm>
 #include <string>
+//do I really need these?
 #include <string.h>
+#include <cctype>
 
 static const SvcFactory<TkrAlignmentSvc> s_factory;
 const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
@@ -72,8 +74,6 @@ StatusCode TkrAlignmentSvc::initialize()
     // Outputs: Status code (Success/Failure)
     
     MsgStream log(msgSvc(), name());
-    // log.setLevel(MSG::DEBUG);
-
     StatusCode sc = StatusCode::SUCCESS;
     
     Service::initialize();
@@ -139,7 +139,6 @@ StatusCode TkrAlignmentSvc::initialize()
     }
     m_fileFlag = m_fileFlag|(1<<SIM_SHIFT);
 
-
     m_mode = "rec";
     if(getData(m_recFile).isFailure()) {
         log << MSG::ERROR << "Reconstruction Alignment constants not read" << endreq;
@@ -160,7 +159,6 @@ StatusCode TkrAlignmentSvc::getGeometry()
     using namespace idents;
 
     MsgStream log(msgSvc(), name());
-
     StatusCode sc = StatusCode::SUCCESS;
     
     // Get the z for each tray
@@ -226,7 +224,6 @@ StatusCode TkrAlignmentSvc::getGeometry()
             }
         }
     }
-
     log << endreq;
     
     // clean up
@@ -238,7 +235,6 @@ StatusCode TkrAlignmentSvc::getGeometry()
 StatusCode TkrAlignmentSvc::getData(std::string fileName)
 {
     MsgStream log(msgSvc(), name());
-    
     StatusCode sc = StatusCode::SUCCESS;
     
     if( fileName == "") return sc;
@@ -274,7 +270,6 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     
     readFromFile();
     theFile.close();
-
     
     log << MSG::DEBUG;
     if (log.isActive()) {
@@ -292,7 +287,6 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
         }
     }
     
-
     processFile();
     
     log << MSG::DEBUG ;
@@ -329,7 +323,6 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
 StatusCode TkrAlignmentSvc::doTest()
 {
     StatusCode sc = StatusCode::SUCCESS;
-
     MsgStream log(msgSvc(), name());
 
     log << MSG::INFO << "Test mode " << m_testMode << 
@@ -365,34 +358,35 @@ StatusCode TkrAlignmentSvc::readFromFile()
     // Caveats: None
     
     StatusCode sc = StatusCode::SUCCESS;
-
     MsgStream log(msgSvc(), name());
     
     std::string mystring;
     std::string flag;
     
     while(!m_dataFile->eof()) {
+        mystring = "";
         getline(*m_dataFile, mystring);
         // upper-case the string
-        // kill for now, problem with linux compatibility
-        //mystring = std::string(strupr(const_cast<char*>(mystring.c_str())));
+        unsigned int i;
+        for (i=0;i<mystring.size();++i) {mystring[i] = toupper(mystring[i]);}
 
-        #ifdef DEFECT_NO_STRINGSTREAM
-        std::istrstream mystream(mystring.c_str());
-        #else
+        // this stuff apparently no longer needed
+        //#ifdef DEFECT_NO_STRINGSTREAM
+        //std::istrstream mystream(mystring.c_str());
+        //#else
         std::istringstream mystream(mystring);
-        #endif
+        //#endif
 
         //count the tokens
         int tokenCount = 0;
         while(mystream>>mystring) {tokenCount++;}
         if (tokenCount==0) continue;
-        mystream.clear();
-        mystream.seekg(0);
+        // now read back the stream
+        mystream.clear();  // to reset the eof flag
+        mystream.seekg(0); // to get the pointer back to the beginning
 
         if(!(mystream>>flag)) break ;
         
-
         if(flag.substr(0,2)== "//") { // comment line, just skip 
         } else {
             int iflag;
@@ -411,7 +405,7 @@ StatusCode TkrAlignmentSvc::readFromFile()
             int number;
             if (!(mystream>>number)) break;
 
-            AlignmentConsts consts;
+            AlignmentConsts consts; // created as null
             if (tokenCount==8) {
                 double a,b,c,d,e,f;       
                 mystream >> a >> b >> c >> d >> e >> f ;
@@ -421,7 +415,6 @@ StatusCode TkrAlignmentSvc::readFromFile()
 
             AlignmentItem* pItem = new AlignmentItem(iflag, number,consts); 
             m_itemCol.push_back(pItem);
-            //int size = m_itemCol.size();
         }
     }
     return sc;
@@ -431,7 +424,7 @@ bool TkrAlignmentSvc::getNextItem(aType type, AlignmentItem& item)
 {
     // Purpose: checks on the next item in the alignCol
     // Inputs:  requested type, item to be filled
-    // Outputs: true if the item matches the input type, returns item
+    // Outputs: true if the item matches the input type, and if so returns item
     // Dependencies: None
     // Caveats: None
 
@@ -452,7 +445,6 @@ StatusCode TkrAlignmentSvc::processFile()
     // Caveats: None
     
     StatusCode sc = StatusCode::SUCCESS;
-
     MsgStream log(msgSvc(), name());
 
     AlignmentItem item;
@@ -487,12 +479,11 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
 
     // here we have to do all of them
     // even if a tray is not in the list, the tower constants must be passed down.
-    bool done[19];
-    int nTrays = m_pGeoSvc->numLayers() + 1;
     
     // keep track of which ones have been explicitly called
+    bool done[NLAYERS+1]; // one more tray than layers
     int itry;
-    for (itry=0; itry<nTrays; ++itry) { done[itry] = false; }
+    for (itry=0; itry<NLAYERS+1; ++itry) { done[itry] = false; }
     
     AlignmentItem item;
     // do the ones that are in the input file
@@ -505,6 +496,7 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     }
 
     // now do the rest, with null tray constants
+    int nTrays = m_pGeoSvc->numLayers() + 1;
     AlignmentConsts null;
     for (itry=0; itry<nTrays; ++itry) {
         if (!done[itry]) {
@@ -532,6 +524,7 @@ void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray)
     double rotX   = thisTray.getRotX()   + m_towerConsts.getRotX();
     double rotY   = thisTray.getRotY()   + m_towerConsts.getRotY();
     double rotZ   = thisTray.getRotZ()   + m_towerConsts.getRotZ();
+
     m_trayConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
 }
 
@@ -547,11 +540,10 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
     MsgStream log(msgSvc(), name());
 
     // here we have to do all of them, because the tower consts are non-zero
-    bool done[2];
-    int nPlanes = 2;
     
+    bool done[2];
     int itry;
-    for (itry=0; itry<nPlanes; ++itry) { done[itry] = false; }
+    for (itry=0; itry<2; ++itry) { done[itry] = false; }
     
     AlignmentItem item;
     // do the ones that are in the input file
@@ -564,6 +556,7 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
     }
 
     // now do the rest
+    int nPlanes = 2;
     AlignmentConsts null;
     for (itry=0; itry<nPlanes; ++itry) {
         if (!done[itry]) {
@@ -583,9 +576,6 @@ void TkrAlignmentSvc::calculateFaceConsts( AlignmentConsts& thisFace)
     // Outputs: merged constants
     // Dependencies: None
     // Caveats: None
-
-    //StatusCode sc = StatusCode::SUCCESS;
-    MsgStream log(msgSvc(), name());
 
     double zPlane = m_faceZ[m_tray][m_face];
 
@@ -613,9 +603,9 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     StatusCode sc = StatusCode::SUCCESS;    
     MsgStream log(msgSvc(), name());
 
-    bool done[4];
+    bool done[NLADDERS];
     int itry;
-    for (itry=0;itry<4;++itry) {done[itry] = false;}
+    for (itry=0;itry<NLADDERS;++itry) {done[itry] = false;}
                
     AlignmentItem item;
     while (getNextItem(LADDER,item)) {
@@ -629,7 +619,6 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     // now do the rest
     AlignmentConsts null;
     int nLadders = m_pGeoSvc->nWaferAcross();
-
     for (itry=0; itry<nLadders; ++itry) {
         if (!done[itry]) {
             m_ladder = itry;
@@ -684,12 +673,11 @@ void TkrAlignmentSvc::calculateLadderConsts(AlignmentConsts& thisLadder)
 StatusCode TkrAlignmentSvc::fillWaferConsts()
 {   
     StatusCode sc = StatusCode::SUCCESS;
-    
     MsgStream log(msgSvc(), name());
     
-    bool done[4];
+    bool done[NWAFERS];
     int itry;
-    for (itry=0;itry<4;++itry) {done[itry] = false;}
+    for (itry=0;itry<NWAFERS;++itry) {done[itry] = false;}
         
     AlignmentItem item;
     while (getNextItem(WAFER,item)) {
@@ -702,7 +690,6 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     // now do the rest
     AlignmentConsts null;
     int nLadders = m_pGeoSvc->nWaferAcross();
-
     for (itry=0; itry<nLadders; ++itry) {
         if (!done[itry]) {
             m_wafer = itry;
