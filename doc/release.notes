@@ -3,6 +3,7 @@
 
 @verbatim
 
+  v2r0p2gr3  23-Sep-04 TU  Convert to new branch naming convention, tag first "patch"
   v2r0p2gr1  17-Sep-04 LSR Fix calls to Service::intialize()
   v2r0p2gr0  17-Sep-04 TU  Creating branch for patching GlastRelease v4r5
   v2r0p2   11-Sep-04 LSR Remove TkrMeritTool, remove extraneous random output
