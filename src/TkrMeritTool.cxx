@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/GaudiAlg/TkrMeritTool.cxx,v 1.5 2003/01/10 19:43:24 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMeritTool.cxx,v 1.1 2003/01/16 23:46:11 lsrea Exp $
 
 // Include files
 
@@ -296,7 +296,7 @@ double TkrMeritTool::radLen(int layer) const {
 }
 
 StatusCode TkrMeritTool::doExtraHits(const Event::TkrVertex& vertex,
-                               const Event::TkrClusterCol& clusters,
+                               const Event::TkrClusterCol& /* clusters */,
                                double energy)
 {    
     // Hardwired constants for this method

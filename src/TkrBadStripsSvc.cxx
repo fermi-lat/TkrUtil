@@ -326,8 +326,9 @@ const IID&  TkrBadStripsSvc::type () const {
 }
 
 
-CalibData::eVisitorRet BadVisitor::badTower(unsigned int row, unsigned int col,
-                                            int badness) {
+CalibData::eVisitorRet BadVisitor::badTower(unsigned int /* row */, 
+                                            unsigned int /* col */,
+                                            int /* badness */) {
     return CalibData::CONT;    
 }
 
@@ -350,7 +351,7 @@ CalibData::eVisitorRet BadVisitor::badPlane(unsigned int row,
     *m_log << endreq;
     
     if (!allBad) { 
-        int i;
+        unsigned int i;
         int tower = idents::TowerId(row, col).id();
         int layer = top ? tray : tray-1;
         int view  = layer%2 ? 1-top : top;

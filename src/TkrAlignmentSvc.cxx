@@ -322,7 +322,7 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
     
     double pointX = point.x(); 
     double pointY = point.y(); 
-    double pointZ = point.z();
+    //double pointZ = point.z(); not yet used
     
     double deltaX = alConsts->getDeltaX();
     double deltaY = alConsts->getDeltaY();

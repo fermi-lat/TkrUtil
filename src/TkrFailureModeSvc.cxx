@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.7 2003/02/07 23:33:08 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.8 2003/02/17 18:06:58 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -156,7 +156,6 @@ void TkrFailureModeSvc::processLayerList() {
     std::vector<std::string>::const_iterator it;
     std::vector<std::string>::const_iterator itend = theLayers.end( );
     for (it = theLayers.begin(); it != itend; it++) {
-        int len      = (*it).size();
         int delimPos = (*it).find_first_of('_');
         int tower    = atoi((*it).substr(0, delimPos).c_str());
 
@@ -210,7 +209,6 @@ void TkrFailureModeSvc::processTowerList() {
 }
 
 bool TkrFailureModeSvc::towerFailed(int tower) const {
-    bool found = false;
     // Search to see if this event id is among the list of ids we want to pause on
     std::vector<int>::const_iterator loc = std::find(m_towerList.begin(), m_towerList.end(), tower);                
     return (loc != m_towerList.end());

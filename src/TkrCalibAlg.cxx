@@ -1,5 +1,5 @@
 
-//$Header:$
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.1 2003/02/17 18:06:58 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -92,8 +92,6 @@ StatusCode TkrCalibAlg::initialize()
             << endreq;
         return sc;
     }
-
-    unsigned long foo = 0;
     
     sc = service("TkrBadStripsSvc", m_pTkrBadStripsSvc, true);
     if ( !sc.isSuccess()) {
