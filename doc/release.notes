@@ -4,6 +4,7 @@
 
 @verbatim
 
+  v1r9p6   27-jun-03 LSR geometry now works in z-offset GLAST (check for hardwired consts!)
   v1r9p6   10-may-03 LSR Fixes for EM incomplete IDs and different element names
                          (Is there any reason to rename botTray to emBotTray?)
   v1r9p5   09_may_03 LSR Found another sign in the alignment code (I think)
