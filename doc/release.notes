@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r2p2   14-Feb-05 LSR fix a (probably) harmless uninitialized pointer
   v3r2p1   11-Feb-05 LSR Remove random character introduced into test program
                             and old bug in TkrGeometrySvc
   v3r2     10-Feb-05 LSR ToTSvc now can read charge-inj files; also refactor

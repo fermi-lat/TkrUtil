@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.9 2005/01/25 20:03:55 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.10 2005/02/11 07:12:54 lsrea Exp $
 
 */
 
@@ -86,6 +86,11 @@ StatusCode TkrToTSvc::initialize ()
 
     // Call super-class
     Service::initialize ();
+
+    // set the calibration pointer to zero
+    // if it becomes non-zero, that means that calib info has
+    // been requested and found
+    m_pToT = 0;
 
     m_tkrGeom = 0;
     if( service( "TkrGeometrySvc", m_tkrGeom, true).isFailure() ) {
