@@ -298,8 +298,9 @@ StatusCode TkrAlignmentSvc::readFromFile()
     
     while(!m_dataFile->eof()) {
         *m_dataFile >> flag ;
-        if(flag == "//") { // comment line, just skip 
+        if(flag== "//") { // comment line, just skip 
             std::getline(*m_dataFile, junk);
+            if (!m_dataFile->eof()) break;
             continue;
         } else {
             if (flag=="tower") {
@@ -574,7 +575,21 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     
     HepVector3D deltaEntry = getDelta(view, entry, dir, alConsts);
     HepVector3D deltaExit  = getDelta(view, exit,  dir, alConsts);
-    
+
+    // for now, limit delta to 3 mm
+    // later fix transformation for special cases
+
+    double mag;
+    HepVector3D dirDelta;
+
+    mag = std::min(3.0, deltaEntry.mag());
+    dirDelta = deltaEntry.unit();
+    deltaEntry = mag*dirDelta;
+
+    mag = std::min(3.0, deltaExit.mag());
+    dirDelta = deltaExit.unit();
+    deltaExit = mag*dirDelta;
+
     entry = entry + deltaEntry;
     exit  = exit  + deltaExit;
     
