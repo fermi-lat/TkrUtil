@@ -949,6 +949,13 @@ bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower
                              double& xActiveDist, double& yActiveDist, 
                              double& xGap, double& yGap) const
 {
+    // input: view, Point
+    // returns: inTower, iXTower, iYTower, xActiveDist, yActiveDist,
+    //          xGap, yGap
+
+    // If inTower, x/yActiveDist is distance from activeWafer edge
+    // else, it's distance from entire active silicon plane
+
     double twrPitch = towerPitch();
     int numX = numXTowers();
     int numY = numYTowers();
@@ -975,8 +982,8 @@ bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower
     // probably no point in constraining hit in this plane
     xGap = xSiGap + 2*deadGap;
     yGap = ySiGap + 2*deadGap;
-    xActiveDist = fabs(xTower) - nWafer*xPitch + xGap; 
-    yActiveDist = fabs(yTower) - nWafer*yPitch + yGap;
+    xActiveDist = 0.5*(nWafer*xPitch + xGap) - fabs(xTower); 
+    yActiveDist = 0.5*(nWafer*yPitch + yGap) - fabs(yTower);
     if (xActiveDist>0 && yActiveDist>0) { // test for "inside active Tower"
         // look for internal gaps
         double xWafer, yWafer;
@@ -985,8 +992,8 @@ bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower
         yWafer = truncateCoord(yTower, yPitch, nWafer, iYWafer);
 
         double activeWaferSide = siActiveWaferSide();
-        xActiveDist = activeWaferSide - fabs(xWafer);
-        yActiveDist = activeWaferSide - fabs(yWafer);
+        xActiveDist = 0.5*activeWaferSide - fabs(xWafer);
+        yActiveDist = 0.5*activeWaferSide - fabs(yWafer);
     } else {
         // towerGap is big, so no point in keeping 2 versions
         double towerGap    = twrPitch - nWafer*xPitch + xGap;
