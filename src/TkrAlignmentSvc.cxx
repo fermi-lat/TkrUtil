@@ -37,7 +37,8 @@ StatusCode TkrAlignmentSvc::initialize()
     // Outputs: Status code (Success/Failure)
     
     MsgStream log(msgSvc(), name());
-    log.setLevel(MSG::DEBUG);
+    // log.setLevel(MSG::DEBUG);
+
     StatusCode sc = StatusCode::SUCCESS;
     
     Service::initialize();
@@ -89,7 +90,11 @@ StatusCode TkrAlignmentSvc::initialize()
                 log << MSG::ERROR << "  Simulation Alignment file not found: check jobOptions." << endreq;
                 return StatusCode::FAILURE;
             }
-            log << MSG::DEBUG << "simulation alignment constants:" << endreq;
+            log << MSG::DEBUG;
+            if (log.isActive() ) {
+                log << "simulation alignment constants:";
+            }
+            log << endreq;
             readFromFile(&simFile, m_simConsts);
             simFile.close();
             m_fileFlag = m_fileFlag|(1<<SIM_SHIFT);
@@ -104,7 +109,11 @@ StatusCode TkrAlignmentSvc::initialize()
                 log << MSG::ERROR << "  Simulation Alignment file not found: check jobOptions." << endreq;
                 return StatusCode::FAILURE;
             }
-            log << MSG::DEBUG << "reconstruction alignment constants:" << endreq;
+            log << MSG::DEBUG;
+            if (log.isActive() ) {
+                log << "reconstruction alignment constants:";
+            }
+            log << endreq;
             readFromFile(&recFile, m_recConsts);
             recFile.close();
             m_fileFlag = m_fileFlag|(1<<REC_SHIFT);

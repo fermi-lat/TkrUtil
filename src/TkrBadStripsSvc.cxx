@@ -32,7 +32,7 @@ StatusCode TkrBadStripsSvc::initialize()
     // Outputs: Status code (Success/Failure)
     
     MsgStream log(msgSvc(), name());
-    log.setLevel(MSG::DEBUG);
+    //log.setLevel(MSG::DEBUG);
     StatusCode sc = StatusCode::SUCCESS;
     
     Service::initialize();

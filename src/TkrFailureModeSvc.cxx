@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.3 2003/01/15 00:32:31 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.4 2003/01/21 20:58:24 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -92,7 +92,11 @@ void TkrFailureModeSvc::processLayerList() {
 
     m_failureModes = m_failureModes || 1 << LAYER;
 
-    log << MSG::DEBUG << "Layers to kill " << endreq;
+    log << MSG::DEBUG;
+    if (log.isActive() ) {
+        log << "Layers to kill ";
+    }
+    log << endreq;
 
     std::vector<std::string>::const_iterator it;
     std::vector<std::string>::const_iterator itend = theLayers.end( );
@@ -109,7 +113,11 @@ void TkrFailureModeSvc::processLayerList() {
         int view      = atoi(remainder.substr(delimPos1+1, len1-delimPos1-1).c_str());
         int plane     = 2*layer + view;
         
-        log << MSG::DEBUG << "Tower " << tower << " Layer " << layer << " View " << view << endreq;
+        log << MSG::DEBUG;
+        if (log.isActive() ) {
+            log << "Tower " << tower << " Layer " << layer << " View " << view;
+        }
+        log << endreq;
         std::vector<int>& curList = m_layerList[tower];
         curList.push_back(plane);                
     }
@@ -125,7 +133,11 @@ void TkrFailureModeSvc::processTowerList() {
 
     if (theTowers.empty()) return;
 
-    log << MSG::DEBUG << "Towers to kill: " << endreq;
+    log << MSG::DEBUG;
+    if (log.isActive () ) {
+        log << "Towers to kill: ";
+    }
+    log << endreq;
 
     m_failureModes = m_failureModes || 1 << TOWER;
 
@@ -133,7 +145,11 @@ void TkrFailureModeSvc::processTowerList() {
     std::vector<std::string>::const_iterator itend = theTowers.end( );
     for (it = theTowers.begin(); it != itend; it++) {
         int tower = atoi((*it).c_str());
-        log << MSG::DEBUG << "Tower " << tower << endreq;
+        log << MSG::DEBUG;
+        if (log.isActive() ) {
+            log << "Tower " << tower;
+        }
+        log << endreq;
         m_towerList.push_back(tower);
     }
 }
