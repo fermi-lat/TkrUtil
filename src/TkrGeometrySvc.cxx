@@ -730,7 +730,12 @@ StatusCode TkrGeometrySvc::getCalInfo()
     // also some sensible action if there is no cal, like set it to lowest tkr plane - 1.
 
     idents::VolumeIdentifier topLayerId;
-    topLayerId.append(m_testTowerId);
+    topLayerId.init(0,0);
+    topLayerId.append(0);               // in Tower
+    idents::TowerId t(m_testTower);  
+    topLayerId.append(t.iy());          // yTower
+    topLayerId.append(t.ix());          // xTower
+
     topLayerId.append(0);  // CAL
     topLayerId.append(0);  // layer
     topLayerId.append(0);  // x view
