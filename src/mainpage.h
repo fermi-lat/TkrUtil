@@ -86,6 +86,7 @@
  * The name of the file containing the alignment constants to be used
  * during digitization. May be over-ridden by testMode, below.
  * @param TkrAlignmentSvc.recFile
+ * Currently no alignment is done during reconstruction.
  * The name of the file containing the alignment constants to be used
  * during reconstruction. May be over-ridden by testMode, below.
  * @param TkrAlignmentSvc.testMode
@@ -96,6 +97,10 @@
  * testMode bit 0:   shift all wafers in simulation by a fixed (dX, dY)
  * <br>
  * testMode bit 1:   shift all wafers in reconstruction by a fixed (dX, dY)
+ * <br>
+ * @param TkrAlignment.maximumDelta
+ * Limits the maximum correction. Possibly needed to protect against bad things
+ * happening during digitization. (default = 5 mm)
  *
  * <hr>
  * @section notes release.notes

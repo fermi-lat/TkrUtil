@@ -31,6 +31,7 @@ Service(name, pSvcLocator)
     declareProperty("simFile", m_simFile="");
     declareProperty("recFile", m_recFile="");
     declareProperty("testMode", m_testMode=0);
+    declareProperty("maximumDelta", m_maxDelta=5.0);
     
     return;
 }
@@ -594,20 +595,17 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
     HepVector3D deltaEntry = getDelta(view, entry, dir, alConsts);
     HepVector3D deltaExit  = getDelta(view, exit,  dir, alConsts);
 
-    // for now, limit delta to 5 mm
+    // for now, limit delta to 5 mm (modifiable in jobOptions
     // later fix transformation for special cases
 
     double mag;
     HepVector3D dirDelta;
 
-    double maxDelta = 5.0;
-
-
-    mag = std::min(maxDelta, deltaEntry.mag());
+    mag = std::min(m_maxDelta, deltaEntry.mag());
     dirDelta = deltaEntry.unit();
     deltaEntry = mag*dirDelta;
 
-    mag = std::min(maxDelta, deltaExit.mag());
+    mag = std::min(m_maxDelta, deltaExit.mag());
     dirDelta = deltaExit.unit();
     deltaExit = mag*dirDelta;
 
