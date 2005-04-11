@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.10 2005/01/03 23:22:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.11 2005/01/25 23:13:14 lsrea Exp $
 
 */
 
@@ -50,6 +50,7 @@ TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc)
     // declare the properties
 
     declareProperty("splitsFile", m_splitsFile="");
+    declareProperty("defaultMaxStrips", m_defaultMaxStrips=64);
 }
 
 StatusCode  TkrSplitsSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -161,6 +162,12 @@ int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
 
         return pSplit->getHigh()*NSTRIPS - 1;
     }
+}
+
+int TkrSplitsSvc::getMaxStrips(int tower, int layer, int view, int end) const
+{
+    // for now, just return m_defaultStrips... we need something to handle contouring
+    return m_defaultMaxStrips;
 }
 
 void TkrSplitsSvc::update(CalibData::TkrSplitsCalib* pSplits)

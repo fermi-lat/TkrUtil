@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.8 2005/03/01 00:57:46 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.9 2005/03/23 08:37:49 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -14,6 +14,7 @@
 #include "CalibData/Tkr/BadStrips.h"
 #include "CalibData/Tkr/TkrSplitsCalib.h"
 #include "CalibData/Tkr/TkrTot.h"
+#include "CalibData/Tkr/TkrScale.h"
 
 #include "TkrUtil/ITkrBadStripsSvcCalib.h"
 #include "TkrUtil/ITkrFailureModeSvcCalib.h"
@@ -341,6 +342,40 @@ StatusCode TkrCalibAlg::execute( ) {
     // now muon calibration
     if(m_muonFlavor!="ideal" && m_muonFlavor!="") {
         // muon code here!
+
+        std::string fullToTPath = CalibData::TKR_ChargeScale + "/" + m_muonFlavor;
+        DataObject* pObject;
+        m_pCalibDataSvc->retrieveObject(fullToTPath, pObject);
+        CalibData::TkrScaleCol* pScale = 0;
+        pScale = dynamic_cast<CalibData::TkrScaleCol*> (pObject);
+        if (!pScale) {
+            log << MSG::ERROR 
+                << "Failed access to muon scale via smart ptr" << endreq;
+            return StatusCode::FAILURE;
+        }
+        m_pCalibDataSvc->updateObject(pObject);
+        pScale = dynamic_cast<CalibData::TkrScaleCol*> (pObject);
+        if (!pScale) {
+            log << MSG::ERROR 
+                << "Update of ToT muon scale constants failed" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        int newSerNo = pScale->getSerNo();
+        if (newSerNo!=m_serInjection) {
+            log << MSG::INFO << "muon scale serial number changed..." 
+                << endreq;
+            m_serInjection = newSerNo;
+            log << MSG::INFO << "Retrieved with path " << fullToTPath << endreq
+                << "Serial #" <<  pScale->getSerNo() << endreq; 
+            log << MSG::INFO << "Vstart: " <<  (pScale->validSince()).hours()
+                << "  Vend: " << (pScale->validTill()).hours() << endreq;
+
+           // last thing, pass pointer to TkrSplitsSvc
+           m_pTkrToTSvc->update(pScale);
+        }
+ 
+
     }
 
     return StatusCode::SUCCESS;

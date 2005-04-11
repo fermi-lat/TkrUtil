@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.7 2004/12/26 23:27:14 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.8 2005/02/11 07:12:54 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -28,7 +28,7 @@ class TkrToTSvc : public Service, virtual public ITkrToTSvc  {
 
 public:
 
-    enum {NTOWERS=16, NLAYERS=18, NVIEWS=2, NSTRIPS=1536};
+    //enum {NTOWERS=16, NLAYERS=18, NVIEWS=2, NSTRIPS=1536};
 
     TkrToTSvc(const std::string& name, ISvcLocator* pSvcLocator); 
 
@@ -46,32 +46,27 @@ public:
     const IID& type() const;
 
     double getGain(int tower, int layer, int view, int strip) const;
-    double getGain2(int tower, int layer, int view, int strip) const; 
+    double getQuad(int tower, int layer, int view, int strip) const; 
     double getThreshold(int tower, int layer, int view, int strip) const; 
     double getQuality(int tower, int layer, int view, int strip) const; 
 
-
-    double getMuonFactor(int tower, int layer, int view, int strip) const 
-        {
-        if (valid(tower, layer, view, strip)) {
-            return (double) m_ToTQuality[tower][layer][view][strip];
-        }else {
-            return -1.;
-        }
-    }
+    double getMuonScale(int tower, int layer, int view, int strip) const;
     double getCountsPerMicrosecond() const { return m_countsPerMicrosecond;}
     double getMevPerMip() const { return m_mevPerMip; }
     double getFCPerMip() const { return m_fCPerMip; }
     int    getMaxToT() const { return m_maxToT; }
 
-    double getCharge(double ToT, int tower, int layer, int view, int strip) const;
-    double getMipsFromToT(double ToT, int tower, int layer, int view, int strip) const;
-    double getMipsFromCharge(double charge, int tower, int layer, int view, int strip) const;
+    double getCharge(double rawToT, int tower, int layer, int view, int strip) const;
+    //double getCharge(double rawToT, idents::TkrId hitId, int strip) const;
+    double getMipsFromToT(double rawToT, int tower, int layer, int view, int strip) const;
+    double getMipsFromCharge(double charge) const;
     int    getRawToT(double eDep, int tower, int layer, int view, int strip) const;
+    //int    getRawToT(double eDep, idents::TkrId hitId, int strip) const;
 
-        /// update the pointer
+    /// update the pointer
     void update(CalibData::TkrTotCol* pToT) { m_pToT = pToT; }
-
+    /// update the other pointer!
+    void update(CalibData::TkrScaleCol* pScale) {m_pScale = pScale; }
 
 private:
     /// internal init method
@@ -80,45 +75,41 @@ private:
     /// check index
     bool valid(int tower, int layer, int view, int strip) const
     {
-        return (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
-            && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS);
+        //return (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
+        //    && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS);
+        return true;
     }
 
     /// mode: currently "default" or "EM"
     std::string m_mode;
-    /// name of file containing splits
-    std::string m_ToTFile;
     /// default Gain
     double m_defaultGain;
     /// default quadratic term;
-    double m_defaultGain2;
+    double m_defaultQuad;
     /// default Threshold
     double m_defaultThreshold;
     /// default quality factor
     double m_defaultQuality;
     /// default muon correction factor
-    double m_defaultMuonFactor;
+    double m_defaultMuonScale;
     /// ToT counts per microsecond
     double m_countsPerMicrosecond;
     /// Energy deposited by a mini particle traversing a silicon plane
     double m_mevPerMip;
     /// Charge deposited by a mini particle traversing a silicon plane
     double m_fCPerMip;
-    /// array of gains, in microseconds/fC
     int    m_maxToT;
-    float m_ToTGain      [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
-    /// array of quadratic terms, in microseconds/fC**2
-    float m_ToTGain2     [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
-    /// array of Thresholds, in microseconds = extrapolation to zero charge
-    float m_ToTThreshold [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
-    /// array of quality factors
-    float m_ToTQuality   [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
-    /// array of Muon correction normalizations, should be order(1)
-    float m_ToTMuonFactor [NTOWERS][NLAYERS][NVIEWS][NSTRIPS];
+
     /// pointer to geometry service
     ITkrGeometrySvc* m_tkrGeom;
-    ///
+    /// pointer to ToT consts
     CalibData::TkrTotCol* m_pToT;
+    /// pointer to muonScale consts
+    CalibData::TkrScaleCol* m_pScale;
+    /// flag for using one tower for all the consts
+    bool m_useSingleTowerConsts;
+    /// tower to duplicate
+    int m_baseTower;
 };
 
 

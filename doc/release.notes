@@ -9,6 +9,10 @@
 
   On main branch
   ------------------------------
+  v3r3p5   11-Apr-05 LSR TkrToTSvc: add muon scale database processing
+                                    make flight-like default constants
+                                    remove "random" internally-generated option
+                         TkrSpitsSvc: add defaultMaxStrips here (for now)
   v3r3p4   23-Mar-05 LSR Fix default flavors for TkrCalibAlg
   v3r3p3   22-Mar-05 LSR little bug in geometry... only current effect is on GltType
   v3r3p2   01-Mar-05 LSR bug that killed test_TkrRecon

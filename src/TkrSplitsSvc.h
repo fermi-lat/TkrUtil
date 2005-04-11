@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.5 2004/08/24 23:45:45 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.6 2004/10/12 19:04:55 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
@@ -54,6 +54,9 @@ public:
     /// update the pointer
     void update(CalibData::TkrSplitsCalib* pSplits);
 
+    /// get max hits
+    int getMaxStrips(int tower, int layer, int view, int end) const;
+
 private:
     /// internal init method
     StatusCode doInit();
@@ -69,6 +72,8 @@ private:
     std::string m_splitsFile;
     /// array containing splits, for use as a quick test
     int m_splits[NTOWERS][NLAYERS][NVIEWS];
+    /// default maxStrips
+    int m_defaultMaxStrips;
 };
 
 #endif // TkrSplitsSvc_H
