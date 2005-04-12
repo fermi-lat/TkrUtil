@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.11 2005/02/15 00:37:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.12 2005/04/11 22:52:02 lsrea Exp $
 
 */
 
@@ -95,10 +95,11 @@ StatusCode TkrToTSvc::initialize ()
     // Call super-class
     Service::initialize ();
 
-    // set the calibration pointer to zero
-    // if it becomes non-zero, that means that calib info has
+    // set the calibration pointers to zero
+    // if they become non-zero, that means that calib info has
     // been requested and found
-    m_pToT = 0;
+    m_pToT   = 0;
+    m_pScale = 0;
 
     m_tkrGeom = 0;
     if( service( "TkrGeometrySvc", m_tkrGeom, true).isFailure() ) {
@@ -208,24 +209,15 @@ int TkrToTSvc::getRawToT(double eDep, int tower, int layer, int view, int strip)
 {
     if(m_useSingleTowerConsts) tower = m_baseTower;
     if (!valid(tower, layer, view, strip)) { return 0.0; }
+
+    int tray, face;
+    m_tkrGeom->layerToTray(layer, view, tray, face);
+    TowerId towerId = TowerId(tower);
+    TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+
     double gain, quad, threshold, muonScale;
-    if (m_pToT) {
-        int tray, face;
-        m_tkrGeom->layerToTray(layer, view, tray, face);
-        TowerId towerId = TowerId(tower);
-        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
-        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
-        gain = pInfo->getSlope();
-        quad = pInfo->getQuad();
-        threshold = pInfo->getIntercept();
-        CalibData::TkrScaleObj pInfo1 = m_pScale->getStripInfo(id, strip);
-        muonScale = static_cast<double>(pInfo1.getScale());
-    } else {
-        gain      = m_defaultGain;
-        quad      = m_defaultQuad;
-        threshold = m_defaultThreshold;
-        muonScale = m_defaultMuonScale;
-    }
+    getConsts(id, strip, threshold, gain, quad, muonScale);
+
     double charge    = eDep/m_mevPerMip*m_fCPerMip; // in fCs
   
     // consts are for ToT -> charge
@@ -249,24 +241,15 @@ double TkrToTSvc::getCharge(double rawToT, int tower, int layer, int view, int s
 {
     if(m_useSingleTowerConsts) tower = m_baseTower;
     if (!valid(tower, layer, view, strip)) { return 0.0; }
+
+    int tray, face;
+    m_tkrGeom->layerToTray(layer, view, tray, face);
+    TowerId towerId = TowerId(tower);
+    TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+
     double gain, quad, threshold, muonScale;
-    if (m_pToT) {
-        int tray, face;
-        m_tkrGeom->layerToTray(layer, view, tray, face);
-        TowerId towerId = TowerId(tower);
-        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
-        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
-        gain = pInfo->getSlope();
-        quad = pInfo->getQuad();
-        threshold = pInfo->getIntercept();
-        CalibData::TkrScaleObj pInfo1 = m_pScale->getStripInfo(id, strip);
-        muonScale = static_cast<double>(pInfo1.getScale());
-    } else {
-        gain      = m_defaultGain;
-        quad     = m_defaultQuad;
-        threshold = m_defaultThreshold;
-        muonScale = m_defaultMuonScale;
-    }
+    getConsts(id, strip, threshold, gain, quad, muonScale);
+
     double time = rawToT/m_countsPerMicrosecond;
     double charge = muonScale*(threshold + time*(gain + time*quad));
   
@@ -282,6 +265,30 @@ double TkrToTSvc::getMipsFromToT(double rawToT,
 double TkrToTSvc::getMipsFromCharge(double charge) const
 {
     return charge/getFCPerMip();
+}
+
+void TkrToTSvc::getConsts(idents::TkrId id, int strip, 
+                          double& threshold, double& gain,
+                          double& quad, double& muonScale) const 
+{
+    if (m_pToT) {
+        const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
+        gain = pInfo->getSlope();
+        quad = pInfo->getQuad();
+        threshold = pInfo->getIntercept();
+    } else {
+        gain      = m_defaultGain;
+        quad      = m_defaultQuad;
+        threshold = m_defaultThreshold;
+    }
+    if(m_pScale) {
+        CalibData::TkrScaleObj pInfo1 = m_pScale->getStripInfo(id, strip);
+        muonScale = static_cast<double>(pInfo1.getScale());
+    } else {
+        muonScale = m_defaultMuonScale;
+    }
+    
+    return;
 }
 
 StatusCode TkrToTSvc::finalize() {

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.8 2005/02/11 07:12:54 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.9 2005/04/11 22:52:02 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -79,6 +79,9 @@ private:
         //    && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS);
         return true;
     }
+
+    void getConsts(idents::TkrId id, int strip, 
+        double& threshold, double& gain, double& quad, double& muonScale) const;
 
     /// mode: currently "default" or "EM"
     std::string m_mode;
