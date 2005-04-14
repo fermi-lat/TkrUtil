@@ -9,6 +9,8 @@
 
   On main branch
   ------------------------------
+  v3r3p7   13-Apr-05 LSR TkrToTSvc: fixed little bug that caused unnecessary updates
+                                      (sometimes!)
   v3r3p6   12-Apr-05 LSR TkrToTSvc: separate tests on charg-inj and muon-scale pointers
   v3r3p5   11-Apr-05 LSR TkrToTSvc: add muon scale database processing
                                     make flight-like default constants
