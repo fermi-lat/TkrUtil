@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.10 2005/04/11 22:52:02 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.11 2005/04/14 05:06:00 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -194,8 +194,6 @@ StatusCode TkrCalibAlg::execute( ) {
     
     MsgStream log(msgSvc(), name());
     
-    bool updateStripsNow = false;
-
     // check the dead channels
 
     //    SmartDataPtr<CalibData::BadStrips> pDead(m_pCalibDataSvc, "");
@@ -221,13 +219,15 @@ StatusCode TkrCalibAlg::execute( ) {
             log << MSG::INFO << "deadStrips serial number changed..." 
                 << endreq;
             m_serDead = newSerNo;
-            updateStripsNow = true;
             log << MSG::INFO << "Retrieved with path " << fullDeadPath << endreq
                 << "Serial #" <<  pDead->getSerNo() << endreq; 
             log << MSG::INFO << "Vstart: " <<  (pDead->validSince()).hours()
                 << "  Vend: " << (pDead->validTill()).hours() << endreq;
             log << MSG::INFO << "Bad type: " << pDead->getBadType() 
                 << " has " << pDead->getBadTowerCount() << " bad towers " << endreq;				
+            log << MSG::INFO <<" about to update constants" << endreq;
+            m_pTkrBadStripsSvc->update(pDead, 0);
+            m_pTkrFailureModeSvc->update(pDead, 0);
         }
     }
 
@@ -256,21 +256,16 @@ StatusCode TkrCalibAlg::execute( ) {
             log << MSG::INFO << "hotStrips serial number changed..." 
                 << endreq;
             m_serHot = newSerNo;
-            updateStripsNow = true;
             log << MSG::INFO << "Retrieved with path " << fullHotPath << endreq
                 << "Serial #" <<  pHot->getSerNo() << endreq; 
             log << MSG::INFO << "Vstart: " <<  (pHot->validSince()).hours()
                 << "  Vend: " << (pHot->validTill()).hours() << endreq;
             log << MSG::INFO << "Bad type: " << pHot->getBadType() 
                 << " has " << pHot->getBadTowerCount() << " bad towers " << endreq;
+            log << MSG::INFO <<" about to update constants" << endreq;
+            m_pTkrBadStripsSvc->update(0, pHot);
+            m_pTkrFailureModeSvc->update(0, pHot);
         }
-    }
-
-    // just update dead and Hot, no harm if one of them hasn't changed
-    if (updateStripsNow) {
-        log << MSG::INFO <<" about to update constants" << endreq;
-        m_pTkrBadStripsSvc->update(pDead, pHot);
-        m_pTkrFailureModeSvc->update(pDead, pHot);
     }
 
     // now the splits
@@ -299,7 +294,6 @@ StatusCode TkrCalibAlg::execute( ) {
             log << MSG::INFO << "splits serial number changed..." 
                 << endreq;
             m_serSplits = newSerNo;
-            updateStripsNow = true;
             log << MSG::INFO << "Retrieved with path " << fullSplitsPath << endreq
                 << "Serial #" <<  pSplits->getSerNo() << endreq; 
             log << MSG::INFO << "Vstart: " <<  (pSplits->validSince()).hours()
@@ -380,8 +374,6 @@ StatusCode TkrCalibAlg::execute( ) {
            // last thing, pass pointer to TkrSplitsSvc
            m_pTkrToTSvc->update(pScale);
         }
- 
-
     }
 
     return StatusCode::SUCCESS;

@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.18 2005/03/01 00:57:46 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.19 2005/03/01 18:29:21 lsrea Exp $
 */
 
 
@@ -465,7 +465,7 @@ CalibData::eVisitorRet BadVisitor::badPlane(unsigned int row,
     
     if (!allBad) { 
         unsigned int i;
-        int tower = idents::TowerId(row, col).id();
+        int tower = idents::TowerId(col, row).id();
         //int layer = top ? tray : tray-1;
         //int view  = layer%2 ? 1-top : top;
         int layer, view;

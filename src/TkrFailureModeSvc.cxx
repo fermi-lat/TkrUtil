@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.16 2004/10/12 19:04:55 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.17 2005/03/01 00:57:46 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -304,7 +304,7 @@ CalibData::eVisitorRet BadVisitorFM::badTower(unsigned int row, unsigned int col
     }
     *m_log << endreq;
 
-    int tower = idents::TowerId(row, col).id();
+    int tower = idents::TowerId(col, row).id();
     std::vector<int>& towerList = m_pFailureMode->getTowers();
     std::vector<int>::iterator p = std::find(towerList.begin(), towerList.end(), tower);
     if (p==towerList.end()) { towerList.push_back(tower); }
@@ -332,20 +332,10 @@ CalibData::eVisitorRet BadVisitorFM::badPlane(unsigned int row,
 
     if (allBad) {
 
-        int tower = idents::TowerId(row, col).id();
-        //int layer = top ? tray : tray-1;
-        //int view  = layer%2 ? 1-top : top;
-        //int plane = 2*layer + view;
-
-        //layer = (plane+10)/2 - 5; // homemade "floor"
-        //view = ((layer%2==0) ? botTop : (1 - botTop));
+        int tower = idents::TowerId(col, row).id();
 
         int layer, view;
         m_tkrGeom->trayToLayer(tray, top, layer, view);
-
-        // last remnant of hardwired stuff... need to think about this a bit
-        //    but it's effectively a definition
-        //int plane = 2*tray + top - 1;
         int plane = m_tkrGeom->trayToPlane(tray, top);
 
         std::vector<int>& curList = m_pFailureMode->getLayers(tower);
@@ -357,7 +347,6 @@ CalibData::eVisitorRet BadVisitorFM::badPlane(unsigned int row,
                 break;
             }
         }
-        //std::vector<int>::iterator p = std::find(curList.begin(), curList.end(), plane);
         if (!found) {curList.push_back(plane);}       
     }
 

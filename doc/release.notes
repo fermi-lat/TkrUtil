@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r3p8   20-Apr-05 LSR Sort out row and col in TkrStripSvc visitor
   v3r3p7   13-Apr-05 LSR TkrToTSvc: fixed little bug that caused unnecessary updates
                                       (sometimes!)
   v3r3p6   12-Apr-05 LSR TkrToTSvc: separate tests on charg-inj and muon-scale pointers
