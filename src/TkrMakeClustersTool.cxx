@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header$
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.1 2005/03/01 01:01:53 lsrea Exp $
 */
 
 // Include files
@@ -217,8 +217,11 @@ StatusCode TkrMakeClustersTool::makeClusters(
 
                     // code to generate 1st order corrected ToT
                     int end;
-                    int rawToT;
-                    float ToT = calculateMips(pDigi, strip0, stripf, rawToT, end);
+                    int rawToT = 0;
+                    float ToT = 0.0;
+                    if(m_type!=ITkrBadStripsSvc::BADCLUSTERS) {
+                        ToT = calculateMips(pDigi, strip0, stripf, rawToT, end);
+                    }
                     unsigned int status = defaultStatus | 
                         ((end<<Event::TkrCluster::shiftEND)&Event::TkrCluster::maskEND);
 
