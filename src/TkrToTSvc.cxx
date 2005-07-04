@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.12 2005/04/11 22:52:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.13 2005/04/12 23:02:37 lsrea Exp $
 
 */
 
@@ -45,20 +45,33 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     // previous behavior of the ToT
     //declareProperty("defaultThreshold", m_defaultThreshold = -2.92);       // original
     //declareProperty("defaultGain",      m_defaultGain      = 2.50267833 ); // original
-    //declareProperty("defaultQuad",      m_defaultQuad     = 0.0);         // original
+    //declareProperty("defaultQuad",      m_defaultQuad     = 0.0);          // original
     //declareProperty("defaultThreshold", m_defaultThreshold = 1.16675);   // new formulas
     //declareProperty("defaultGain",      m_defaultGain      = 0.399572 ); // new formulas
-    //declareProperty("defaultQuad",      m_defaultQuad     = 0.0);       // new formulas
+    //declareProperty("defaultQuad",      m_defaultQuad     = 0.0);        // new formulas
 
-    declareProperty("defaultThreshold", m_defaultThreshold = 1.3);   // realistic
-    declareProperty("defaultGain",      m_defaultGain      = 0.5 );  // realistic
-    declareProperty("defaultQuad",      m_defaultQuad     = 0.004); // realistic
+    //declareProperty("defaultThreshold", m_defaultThreshold = 1.3);   // more realistic
+    //declareProperty("defaultGain",      m_defaultGain      = 0.5 );  // more realistic
+    //declareProperty("defaultQuad",      m_defaultQuad     = 0.004);  // more realistic
+    //declareProperty("defaultQuality",   m_defaultQuality   = 0.0);
+    //declareProperty("mevPerMip"       , m_mevPerMip        = 0.155);
+    //declareProperty("fCPerMip"        , m_fCPerMip         = 4.667);
+
+    // values adjusted 03-Jul-05, based on average for Tracker A and B
+    declareProperty("defaultThreshold", m_defaultThreshold = 1.177);   
+    declareProperty("defaultGain",      m_defaultGain      = 0.589); 
+    declareProperty("defaultQuad",      m_defaultQuad     = 0.00490);
     declareProperty("defaultQuality",   m_defaultQuality   = 0.0);
+    // use the MPV, not the mean, to agree with Hiro's calibration
+    declareProperty("mevPerMip"       , m_mevPerMip        = 0.113);
+    // wallet card says 4.667, but Hiro uses 5.0, so fix this to agree
+    // otherwise the ToT's come out wrong!
+    declareProperty("fCPerMip"        , m_fCPerMip         = 5.0);
+
+
     declareProperty("defaultMuonScale", m_defaultMuonScale = 1.0);
     declareProperty("mode"            , m_mode             = "ideal");
     declareProperty("countsPerMicrosecond", m_countsPerMicrosecond = 5.0);
-    declareProperty("mevPerMip"       , m_mevPerMip        = 0.155);
-    declareProperty("fCPerMip"        , m_fCPerMip         = 4.667);
     declareProperty("maxToT"          , m_maxToT           = 250);
     declareProperty("useSingleTowerConsts" , m_useSingleTowerConsts  = false);
     declareProperty("baseTower"       , m_baseTower        = 0);
