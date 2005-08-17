@@ -9,7 +9,7 @@
 
   On main branch
   ------------------------------
-  v3r5p2   16-Aug-05 LSR TkrSplitsSvc now handles hit truncation consts
+  v3r5p3   16-Aug-05 LSR TkrSplitsSvc now handles hit truncation consts
                          TkrToTSvc, ToTGeometrySvc -- minor updates
   v3r4p1   04-Jul-05 LSR New set of default ToT params, to better match data
   v3r4p0   23-Jun-05  TU Include new TkrEnergyTool for total event energy 
