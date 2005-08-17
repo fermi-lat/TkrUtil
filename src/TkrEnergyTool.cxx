@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Track/TkrEnergyTool.cxx,v 1.30 2005/06/21 23:29:34 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.1 2005/06/22 21:40:59 usher Exp $
  */
 
 #include "GaudiKernel/AlgTool.h"
@@ -164,7 +164,7 @@ double TkrEnergyTool::getTotalEnergy(const Event::TkrTrack* track, double CalEne
 
     // need to loop over layers, because track can end before the end of the tracker
     int layer = topLayer+1; // so the "while" works
-    double sprdMax = m_tkrGeom->trayWidth()/2.;
+    //double sprdMax = m_tkrGeom->trayWidth()/2.;
 
     while(layer--) 
 

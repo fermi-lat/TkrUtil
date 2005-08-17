@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.14 2005/07/04 17:34:10 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.15 2005/08/17 00:41:30 lsrea Exp $
 
 */
 
@@ -221,7 +221,7 @@ double TkrToTSvc::getMuonScale(int tower, int layer, int view, int strip) const
 int TkrToTSvc::getRawToT(double eDep, int tower, int layer, int view, int strip) const
 {
     if(m_useSingleTowerConsts) tower = m_baseTower;
-    if (!valid(tower, layer, view, strip)) { return 0.0; }
+    if (!valid(tower, layer, view, strip)) { return 0; }
 
     int tray, face;
     m_tkrGeom->layerToTray(layer, view, tray, face);

@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.19 2005/03/01 18:29:21 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.20 2005/04/20 21:35:39 lsrea Exp $
 */
 
 
@@ -118,7 +118,7 @@ StatusCode TkrBadStripsSvc::doInit()
         Event::TkrClusterCol* pClusters = new Event::TkrClusterCol(0);
         Event::TkrIdClusterMap* pMap = new Event::TkrIdClusterMap;
         setBadClusterCol(pClusters);
-        int size = pMap->size();
+        //int size = pMap->size();
         setBadIdClusterMap(pMap);
 
     
@@ -208,7 +208,7 @@ StatusCode TkrBadStripsSvc::generateBadClusters()
         }
 
         setBadClusterCol(pClusters);
-        int size = pMap->size();
+        //int size = pMap->size();
         setBadIdClusterMap(pMap);
     }
 

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.13 2005/03/01 00:57:46 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.14 2005/03/01 17:49:57 lsrea Exp $
 
 // Include files
 
@@ -292,7 +292,7 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
 
         const Event::TkrClusterVec newClus = (*idClusMap)[newId];
 
-        int size = clusVec.size();
+        //int size = clusVec.size();
         clusVec.insert(clusVec.end(),newClus.begin(),newClus.end());
     }
 

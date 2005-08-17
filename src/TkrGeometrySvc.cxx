@@ -794,7 +794,7 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
     int tray, face, layer, view;
     int lastTray, lastFace, lastPlane;
     int plane = 0;
-    idents::VolumeIdentifier vId, vId1, vId2;
+    idents::VolumeIdentifier vId1, vId2;
 
     //move  thru the planes in order, find their z postions, and assign them to layers
     int bigNum = 100;
