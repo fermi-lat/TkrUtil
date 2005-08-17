@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.13 2005/08/17 00:41:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.14 2005/08/17 18:38:49 lsrea Exp $
 
 */
 
@@ -120,6 +120,18 @@ StatusCode TkrSplitsSvc::initialize ()
             return StatusCode::FAILURE;
         }
     }
+
+    if (m_maxStripsFile!="") {
+        int ret =  facilities::Util::expandEnvVar(&m_maxStripsFile);
+        if (ret>=0) {
+            log << MSG::INFO << "Input file for read controller buffer sizes: " 
+                << m_maxStripsFile << endreq;
+        } else {
+            log << MSG::ERROR << "Input filename " << m_maxStripsFile << " not resolved" << endreq;
+            return StatusCode::FAILURE;
+        }
+    }
+
     sc = doInit();
 
     return sc;

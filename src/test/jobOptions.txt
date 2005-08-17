@@ -43,6 +43,7 @@ TkrAlignmentSvc.simFile = "$(TKRUTILROOT)/src/test/Tower6_rotX_deltaX.txt";
 TkrAlignmentSvc.recFile = "$(TKRUTILROOT)/src/test/Tower6_rotY_deltaY.txt";
 
 TkrSplitsSvc.splitsFile = "$(TKRUTILROOT)/src/test/splits.xml";
+TkrSplitsSvc.maxStripsFile = "$(TKRUTILROOT)/src/test/defaultMaxStrips.xml";
 
 ApplicationMgr.DLLs += {"G4Propagator", "G4Generator"};
 
