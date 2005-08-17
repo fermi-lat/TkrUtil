@@ -57,6 +57,8 @@
   There's also a back-door to set the splits through an input xml file. This is for 
   quick development use and is not guarranteed to be maintained. If a file is
   specified, it overrides the database calibration.
+
+  This service also handles ReadController and CableController truncation. See parameters, below.
  
   @section TkrToTSvc TkrToTSvc
   TkrToTSvc maintains the ToT thresholds and gains for each strip in the detector. The default
@@ -75,7 +77,7 @@
   the geometry use the other services as well.
  
   @section TkrQueryClustersTool TkrQueryClustersTool
-  TkrQueryClustersTool allows algorithms to access certain quantities based on,
+  TkrQueryClustersTool allows algorithms to access certain quantities based on TkrClusterCol,
   but not immediately available in the TDS.
  
  @section jobOptions jobOptions
@@ -106,19 +108,40 @@
  *
   @param TkrSplitsSvc.splitsFile
   The name of the xml file containing the splits specification -- not guaranteed to be maintained
+  @param TkrSplitsSvc.cableBufferSize
+  The size of the cable controller buffer (Default is 128.)
+  @param TkrSplitsSvc.defaultMaxStrips
+  The size of the read controller buffer, if all are the same (Default is 64.)
+  @param TkrSplitsSvc.maxStripsFile
+  The name of a file containing the sizes of each individual read controller buffer. This information
+  will end up either in the calibrations database or the conditions database. An example of the current
+  implementation is src/test/maxStrips.xml.
  *
   @param TkrToTSvc.ToTFile
   The name of the file containing the thresholds and gains. Currently
   has no effect.
-  @param TkrToTSvc.mode
-  Current values are "EM" (to generate EM-like constants) and "ideal" (gives
-  the default uniform constants below.
   @param TkrToTSvc.defaultThreshold
   For ideal mode, all thresholds are set to this value 
-  (default = -2.92 microsec/fC).
+  (default = 1.177 fC).
  
   @param TkrToTSvc.defaultGain
-  For ideal mode, all gains are set to this value (default = 2.50267833 microsec/fC)
+  For ideal mode, all gains are set to this value (default = 0.589 fC/microsecond)
+  @param TkrToTSvc.defaultQuad
+  For ideal mode, all quad terms are set to this value (default = 0.00490 (fC/microsecond)**2)
+  @param TkrToTSvc.defaultMuonScale
+  Scaling derived from calibration with cosmic muons (default = 1.0)
+  @param TkrToTSvc.mevPerMip
+  Most probable energy deposit for a vertical Mip (default = 0.113 MeV)
+  @param TkrToTSvc.fCPerMip
+  charge measured for most probable energy deposit (somewhat arbitrary, set to 5.0 fC)
+  @param TkrToTSvc.countsPerMicrosecond
+  internal clock ticks per microsecond (default = 5.0)
+  @param TkrToTSvc.maxToT
+  Maximum ToT value allowed
+  @param TkrToTSvc.useSingleTowerConstants
+  use a single set of ToT constants for all the towers (For tests, default = false)
+  @param TkrToTSvc.baseTower
+  If useSingleTowerConstants is true, the tower of the constants to be used
   *
   @param TkrAlignmentSvc.simFile
   The name of the file containing the alignment constants to be used

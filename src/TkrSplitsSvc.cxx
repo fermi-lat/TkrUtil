@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.11 2005/01/25 23:13:14 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.12 2005/04/11 22:52:02 lsrea Exp $
 
 */
 
@@ -46,11 +46,13 @@ TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc)
     // Outputs: None
     // Dependencies: None
     // Restrictions and Caveats:  None
-    
+
     // declare the properties
 
-    declareProperty("splitsFile", m_splitsFile="");
+    declareProperty("splitsFile",       m_splitsFile="");
     declareProperty("defaultMaxStrips", m_defaultMaxStrips=64);
+    declareProperty("maxStripsFile",    m_maxStripsFile="");
+    declareProperty("cableBufferSize",  m_cableBuffer=128);
 }
 
 StatusCode  TkrSplitsSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -75,7 +77,7 @@ StatusCode TkrSplitsSvc::initialize ()
     // Outputs: None
     // Dependencies: None
     // Restrictions and Caveats:  None
-    
+
     StatusCode  sc = StatusCode::SUCCESS;
 
     Service::initialize();
@@ -84,7 +86,7 @@ StatusCode TkrSplitsSvc::initialize ()
     MsgStream log( msgSvc(), name() );
 
     Service::initialize();
-      
+
     m_tkrGeom = 0;
     if( service( "TkrGeometrySvc", m_tkrGeom, true).isFailure() ) {
         log << MSG::ERROR << "Couldn't retrieve TkrGeometrySvc" << endreq;
@@ -104,7 +106,7 @@ StatusCode TkrSplitsSvc::initialize ()
     if ( (sc = setProperties()).isFailure() ) {
         log << MSG::ERROR << "Failed to set properties" << endreq;
     }
-        
+
     m_pSplits = 0;
 
     // back door for quick testing... this overrides the database access.
@@ -119,34 +121,33 @@ StatusCode TkrSplitsSvc::initialize ()
         }
     }
     sc = doInit();
-    
+
     return sc;
 }
- 
+
 int TkrSplitsSvc::getSplitPoint(int tower, int layer, int view) const 
 {
     return getLastC0Strip(tower, layer, view);
 }
 
-int TkrSplitsSvc::getEnd(int tower, int layer, 
-                         int view, int strip) const 
+int TkrSplitsSvc::getEnd(int tower, int layer, int view, int strip) const 
 {
     return ( (strip<=getLastC0Strip(tower, layer, view) ? 0 : 1) );
 }
-        
+
 int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
 {
     // 
     MsgStream log( msgSvc(), name() );
 
+    int tray, face;
+    m_tkrGeom->layerToTray(layer, view, tray, face);
     if (m_splitsFile!="") {
-        return m_splits[tower][layer][view];
+        return m_splits[tower][tray][face];
     } else if (!m_pSplits) {
         return defaultSplit;
     } else {
-        int tray, botTop;
-        m_tkrGeom->layerToTray(layer, view, tray, botTop);
-        bool isTop = (botTop==1);
+        bool isTop = (face==1);
         idents::TowerId twr(tower);
         int towerX = twr.ix();
         int towerY = twr.iy();
@@ -156,10 +157,9 @@ int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
         //int highChip = pSplit->getHigh();
         /*
         log << MSG::INFO 
-            << "Tower " << tower << " Tray " << tray << " botTop " << botTop 
-            << "High chip = " << highChip << endreq;
+        << "Tower " << tower << " Tray " << tray << " botTop " << botTop 
+        << "High chip = " << highChip << endreq;
         */
-
         return pSplit->getHigh()*NSTRIPS - 1;
     }
 }
@@ -167,7 +167,13 @@ int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
 int TkrSplitsSvc::getMaxStrips(int tower, int layer, int view, int end) const
 {
     // for now, just return m_defaultStrips... we need something to handle contouring
-    return m_defaultMaxStrips;
+    if(m_maxStripsFile=="") {
+        return m_defaultMaxStrips;
+    } else {
+        int tray, face;
+        m_tkrGeom->layerToTray(layer, view, tray, face);
+        return m_maxStrips[tower][tray][face][end];
+    }
 }
 
 void TkrSplitsSvc::update(CalibData::TkrSplitsCalib* pSplits)
@@ -187,15 +193,15 @@ StatusCode TkrSplitsSvc::doInit()
 
     // Keep this for a while
 
-    int tower, layer, view;
+    int tower, tray, face;
     for(tower=0;tower<NTOWERS;++tower) {
-        for (layer=0;layer<NLAYERS;++layer) {
-            for (view=0;view<NVIEWS;++view) {
-                m_splits[tower][layer][view] = defaultSplit;
+        for (tray=0;tray<NTRAYS;++tray) {
+            for (face=0;face<NFACES;++face) {
+                m_splits[tower][face][face] = defaultSplit;
             }
         }
     }
-   
+
     if (m_splitsFile!="") {
         xmlBase::IFile myFile(m_splitsFile.c_str());
 
@@ -205,27 +211,70 @@ StatusCode TkrSplitsSvc::doInit()
             if(myFile.contains(buffer,"splits")) {
                 std::vector<int> splits = myFile.getIntVector(buffer, "splits");
                 int size = splits.size();
-                if(size!=NLAYERS*NVIEWS) {
+                if(size!=NPLANES) {
                     log << MSG::ERROR << buffer << ": splits vector size: " << splits.size()                      
                         << ", should be " << NLAYERS*NVIEWS << endreq;
                     return StatusCode::FAILURE;
                 }
                 int plane;
-                for (plane=0; plane<NLAYERS*NVIEWS; ++plane) {
-                    m_tkrGeom->planeToLayer(plane, layer, view);
-
+                for (plane=0; plane<NPLANES; ++plane) {
+                    tray = m_tkrGeom->planeToTray(plane);
+                    face = m_tkrGeom->planeToBotTop(plane);
                     int split = splits[plane];
                     if(split<-1 || split>(NCHIPS-1)) {
                         log << MSG::ERROR << buffer << ": invalid split value " 
                             << split << endreq;
                         return StatusCode::FAILURE;
                     }
-                    m_splits[tower][layer][view] = (split+1)*NSTRIPS -1;
+                    m_splits[tower][tray][face] = (split+1)*NSTRIPS -1;
                 }
             }
         }
     }
-    
+
+    int end;
+    for(tower=0;tower<NTOWERS;++tower) {
+        for (tray=0;tray<NTRAYS;++tray) {
+            for (face=0;face<NFACES;++face) {
+                for (end=0; end<2; ++end) {
+                    m_maxStrips[tower][face][face][end] = m_defaultMaxStrips;
+                }
+            }
+        }
+    }
+
+    if (m_maxStripsFile!="") {
+        xmlBase::IFile myFile(m_maxStripsFile.c_str());
+
+        char buffer[8];
+        for (tower=0;tower<NTOWERS;++tower) {
+            sprintf(buffer,"Tower%d",tower);
+            if(myFile.contains(buffer,"maxStrips")) {
+                std::vector<int> maxStrips = myFile.getIntVector(buffer, "maxStrips");
+                int size = maxStrips.size();
+                if(size!=NPLANES*2) {
+                    log << MSG::ERROR << buffer << ": maxStrips vector size: " << maxStrips.size()                      
+                        << ", should be " << NLAYERS*NVIEWS << endreq;
+                    return StatusCode::FAILURE;
+                }
+                int plane, end;
+                for (plane=0; plane<NPLANES; ++plane) {
+                    for (end=0; end<2; ++end) {
+                        tray = m_tkrGeom->planeToTray(plane);
+                        face = m_tkrGeom->planeToBotTop(plane);
+                        int maxStr = maxStrips[2*plane+end];
+                        if(maxStr<0 || maxStr>64) {
+                            log << MSG::ERROR << buffer << ": invalid maxStrips value " 
+                                << maxStr << endreq;
+                            return StatusCode::FAILURE;
+                        }
+                        m_maxStrips[tower][tray][face][end] = maxStr;
+                    }
+                }
+            }
+        }
+    }
+
     return sc;
 }
 

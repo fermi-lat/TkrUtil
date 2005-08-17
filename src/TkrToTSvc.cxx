@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.13 2005/04/12 23:02:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.14 2005/07/04 17:34:10 lsrea Exp $
 
 */
 
@@ -70,7 +70,7 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
 
 
     declareProperty("defaultMuonScale", m_defaultMuonScale = 1.0);
-    declareProperty("mode"            , m_mode             = "ideal");
+    //declareProperty("mode"            , m_mode             = "ideal");
     declareProperty("countsPerMicrosecond", m_countsPerMicrosecond = 5.0);
     declareProperty("maxToT"          , m_maxToT           = 250);
     declareProperty("useSingleTowerConsts" , m_useSingleTowerConsts  = false);

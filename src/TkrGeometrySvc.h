@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.23 2005/02/05 02:11:22 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.24 2005/03/01 00:57:46 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -215,6 +215,12 @@ public:
     int trayToBiLayer(int tray, int botTop) const {
         return tray + botTop - getBottomTrayFlag() ;
     }
+    /*
+    void planeToTray(int plane, int& tray, int& face) const {
+        tray = planeToTray(plane);
+        face = planeToBotTop(plane);
+    }
+    */
     int planeToTray(int plane) const {
         return (plane+getBottomTrayFlag())/2;
     }

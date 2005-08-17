@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.22 2005/02/05 02:13:21 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.23 2005/03/01 00:57:45 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -29,7 +29,7 @@
  * @author Tracy Usher
  */
 
-static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 12 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 12 , 1); 
 
 namespace {
     enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
@@ -183,6 +183,7 @@ public:
     virtual double getConvZ(int layer) const = 0;
     virtual bool isTopPlaneInLayer(int plane) const = 0;
     virtual double gettkrZBot() const = 0;
+    //virtual void planeToTray(int plane, int& tray, int& face) const = 0;
 };
 
 #endif

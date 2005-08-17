@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.3 2004/08/18 00:46:36 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.4 2005/04/11 22:52:01 lsrea Exp $
 */
 
 #ifndef ITkrSplitsSvc_H
@@ -13,11 +13,12 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.3 2004
 
 #include "CalibData/CalibModel.h"
 #include "CalibData/Tkr/TkrSplitsCalib.h"
+#include "Event/Digi/TkrDigi.h"
 
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
 
-static const InterfaceID IID_ITkrSplitsSvc("ITkrSplitsSvc", 1 , 0);
+static const InterfaceID IID_ITkrSplitsSvc("ITkrSplitsSvc", 1 , 1);
 
 /** @class ITkrSplitsSvc
 * @brief Interface class for TkrSplitsSvc
@@ -25,6 +26,13 @@ static const InterfaceID IID_ITkrSplitsSvc("ITkrSplitsSvc", 1 , 0);
 * Author:  L. Rochester
 *
 */
+
+namespace {
+    // this codes the correspondence between physical space and cable space
+    enum {NRANGE=2, NVIEW=2, NEND=2};
+    const int cableIndex[NRANGE][NVIEW][NEND] = {3,2,0,1,6,7,5,4};
+    }
+
 
 class ITkrSplitsSvc : virtual public IInterface {
 
@@ -42,6 +50,9 @@ public:
     /// max number of hits
     virtual int  getMaxStrips(int tower, int layer, int view, int end=0)
         const = 0;
+    virtual int  getCableBufferSize() const = 0;
+    /// cable number for a given plane and end
+    virtual int getCableIndex(int bilayer, int view, int end) const = 0;
 
 };
 
