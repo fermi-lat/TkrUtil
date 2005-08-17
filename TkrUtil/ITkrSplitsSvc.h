@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.4 2005/04/11 22:52:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.5 2005/08/17 00:41:30 lsrea Exp $
 */
 
 #ifndef ITkrSplitsSvc_H
@@ -30,9 +30,11 @@ static const InterfaceID IID_ITkrSplitsSvc("ITkrSplitsSvc", 1 , 1);
 namespace {
     // this codes the correspondence between physical space and cable space
     enum {NRANGE=2, NVIEW=2, NEND=2};
-    const int cableIndex[NRANGE][NVIEW][NEND] = {3,2,0,1,6,7,5,4};
-    }
+    //const int cableIndex[NRANGE][NVIEW][NEND] = {3,2,0,1,6,7,5,4};
+    const int cableIndex[NRANGE][NVIEW][NEND] = {{{3,2},{0,1}},{{6,7},{5,4}}};
 
+
+}
 
 class ITkrSplitsSvc : virtual public IInterface {
 

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.12 2005/04/11 22:52:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.13 2005/08/17 00:41:30 lsrea Exp $
 
 */
 
@@ -211,22 +211,22 @@ StatusCode TkrSplitsSvc::doInit()
             if(myFile.contains(buffer,"splits")) {
                 std::vector<int> splits = myFile.getIntVector(buffer, "splits");
                 int size = splits.size();
-                if(size!=NPLANES) {
+                if(size!=NTRAYS*NFACES) {
                     log << MSG::ERROR << buffer << ": splits vector size: " << splits.size()                      
                         << ", should be " << NLAYERS*NVIEWS << endreq;
                     return StatusCode::FAILURE;
                 }
-                int plane;
-                for (plane=0; plane<NPLANES; ++plane) {
-                    tray = m_tkrGeom->planeToTray(plane);
-                    face = m_tkrGeom->planeToBotTop(plane);
-                    int split = splits[plane];
+                int index = 0;
+                for (tray=0; tray<NTRAYS; ++tray) {
+                    for (face=0; face<NFACES; ++face,++index) {
+                    int split = splits[index];
                     if(split<-1 || split>(NCHIPS-1)) {
                         log << MSG::ERROR << buffer << ": invalid split value " 
                             << split << endreq;
                         return StatusCode::FAILURE;
                     }
                     m_splits[tower][tray][face] = (split+1)*NSTRIPS -1;
+                }
                 }
             }
         }

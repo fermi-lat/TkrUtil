@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r5p5   17-Aug-05 LSR Fix TkrSplitsSvc, and test program
   v3r5p4   16-Aug-05 LSR TkrSplitsSvc now handles hit truncation consts
                          TkrToTSvc, ToTGeometrySvc -- minor updates
   v3r4p1   04-Jul-05 LSR New set of default ToT params, to better match data
