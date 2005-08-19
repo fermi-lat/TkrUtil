@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.13 2004/10/01 19:40:58 usher Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.14 2004/10/12 19:04:55 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -96,7 +96,7 @@ public:
     /// Standard interface to the detModel
     virtual IGeometry::VisitorRet pushShape(ShapeType s, const UintVector& id, 
         std::string name, std::string material, const DoubleVector& params, 
-        VolumeType type);
+        VolumeType type, SenseType sense);
     
     /// called to signal end of nesting 
     virtual void popShape();

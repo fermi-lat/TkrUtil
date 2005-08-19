@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.32 2005/01/02 23:49:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.33 2005/01/03 23:22:44 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -1116,7 +1116,7 @@ void TkrAlignmentSvc::applyDelta(double pointX, double pointY,
 
 IGeometry::VisitorRet TkrAlignmentGeomVisitor::pushShape(ShapeType /* s */, const UintVector& idvec, 
         std::string name, std::string /* material*/, const DoubleVector& params, 
-        VolumeType /*type*/)
+          VolumeType /*type*/, SenseType /*sense*/)
 {
     bool debug = false;
  
