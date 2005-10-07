@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.15 2005/08/17 00:57:37 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.16 2005/10/07 22:45:12 lsrea Exp $
 
 // Include files
 
@@ -160,7 +160,7 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
     //   the active area of one tower will be matched with hits in another tower along
     //   the unmeasured direction.
 
-    declareProperty("TowerFactor",              m_towerFactor = 0.55 );
+    declareProperty("towerFactor",              m_towerFactor = 0.55 );
 
 
     //m_pClus     = 0;

@@ -7,6 +7,20 @@
   @section description Description
  
   This package provides TKR utilities for common use, both inside and outside of TkrRecon.  
+
+  @section TkrAlignmentSvc
+  TkrAlignmentSvc provides alignment constants for simulation and reconstruction. The constants
+  are read in when filenames are supplied. (See below.)
+ 
+  @section TkrBadStripsSvc TkrBadStripsSvc
+  TkrBadStripsSvc creates a list of individual strips failures in the Tkr, and utilities
+  to search the lists to allow digi and recon algorithms to deal with hits based
+  on those lists.
+ 
+  As is the case for TkrFailureMode Svc (q.v.), it takes its input from two sources: 
+  an ASCII list 
+  of (tower, plane) elements, each with its own list of badstrips (dead or hot); 
+  and/or from the TkrBadStrips calibration data in the TCDS. 
  
   @section TkrCalibAlg TkrCalibAlg
   TkrCalibAlg is called once per event, before any tracker code is executed. It 
@@ -39,16 +53,20 @@
  
   It provides a method to see if a TKR plane is contained in the lists.
  
-  @section TkrBadStripsSvc TkrBadStripsSvc
-  TkrBadStripsSvc creates a list of individual strips failures in the Tkr, and utilities
-  to search the lists to allow digi and recon algorithms to deal with hits based
-  on those lists.
+  @section TkrGeometrySvc TkrGeometrySvc
+  TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
+  with TKR geometry.
  
-  As is the case for TkrFailureMode Svc (q.v.), it takes its input from two sources: 
-  an ASCII list 
-  of (tower, plane) elements, each with its own list of badstrips (dead or hot); 
-  and/or from the TkrBadStrips calibration data in the TCDS. 
+  In addition, it stores pointers for TkrFailureModeSvc, TkrAlignmentSvc, and
+  TkrBadStripsSvc, TkrSplitsSvc, TkrToTSvc, and GlastPropagatorSvc, which simplifies a lot of code, 
+  since many modules that use
+  the geometry use the other services as well.
  
+  @section TkrQueryClustersTool TkrQueryClustersTool
+
+  TkrQueryClustersTool allows algorithms to access certain quantities based on TkrClusterCol,
+  but not immediately available in the TDS. 
+
   @section TkrSplitsSvc TkrSplitsSvc
   TkrSplitsSvc maintains a list of splits for the low and high controllers for each
   plane in the detector. The default split is after chip 11, or strip 767. 
@@ -67,21 +85,25 @@
   similar to the those measured in the Engineering module. In this case, the default values
   are ignored. Will eventually be part of the calibration database
  
-  @section TkrGeometrySvc TkrGeometrySvc
-  TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
-  with TKR geometry.
- 
-  In addition, it stores pointers for TkrFailureModeSvc, TkrAlignmentSvc, and
-  TkrBadStripsSvc, TkrSplitsSvc, TkrToTSvc, and GlastPropagatorSvc, which simplifies a lot of code, 
-  since many modules that use
-  the geometry use the other services as well.
- 
-  @section TkrQueryClustersTool TkrQueryClustersTool
-  TkrQueryClustersTool allows algorithms to access certain quantities based on TkrClusterCol,
-  but not immediately available in the TDS.
- 
  @section jobOptions jobOptions
- *
+  *
+  @param TkrAlignmentSvc.simFile
+  The name of the file containing the alignment constants to be used
+  during digitization. Alignments of all elements down to the wafer may be specified. (See below.)
+ 
+  @param TkrAlignmentSvc.recFile
+  The name of the file containing the alignment constants to be used
+  during reconstruction.  Format is the same as that of the simFile.
+  @param TkrAlignment.maximumDelta
+  Limits the maximum correction (default = 5 mm).  Possibly needed to protect against bad things
+  happening during digitization, not to mention towers crashing together!
+  
+  *
+  @param TkrBadStripsSvc.badStripsFile
+  The name of the file containing
+  a list of bad (dead and hot) strips (default: null). These will be merged with bad strips
+  coming from the calibration database.
+  *
   @param TkrCalibAlg.calibFlavor
   Sets the overall flavor of calibration requested. Defaults to "ideal", which does nothing.
   @param TkrCalibAlg.deadStripsCalibFlavor
@@ -100,12 +122,10 @@
   @param TkrFailureModeSvc.layerList
   Provide a list of strings of the form "tower_layer_view" indicating 
   planes that will be made dead.
- *
-  @param TkrBadStripsSvc.badStripsFile
-  The name of the file containing
-  a list of bad (dead and hot) strips (default: null). These will be merged with bad strips
-  coming from the calibration database.
- *
+  *
+  @param TkrQueryClustersTool.towerFactor
+  factor to multiply tower pitch to get test distance for the unmeasured direction
+  *
   @param TkrSplitsSvc.splitsFile
   The name of the xml file containing the splits specification -- not guaranteed to be maintained
   @param TkrSplitsSvc.cableBufferSize
@@ -142,12 +162,9 @@
   use a single set of ToT constants for all the towers (For tests, default = false)
   @param TkrToTSvc.baseTower
   If useSingleTowerConstants is true, the tower of the constants to be used
-  *
-  @param TkrAlignmentSvc.simFile
-  The name of the file containing the alignment constants to be used
-  during digitization. Alignments of all elements down to the wafer may be specified.
-
-  <br>
+  
+  <hr>
+  @section files Structure of Input Files
   The structure of an alignment file is as follows:
   <br>
  @verbatim
@@ -184,18 +201,8 @@
      LADDER 3    0.   5.   0.    0.   0.    0.
 
  @endverbatim
- 
-  @param TkrAlignmentSvc.recFile
-  Currently no alignment is done during reconstruction. (But it will be soon!)
-  The name of the file containing the alignment constants to be used
-  during reconstruction. May be over-ridden by testMode, below. Format is the same
-  as that of the simFile, except that we expect to generate constants only for the towers.
-  @param TkrAlignment.maximumDelta
-  Limits the maximum correction (default = 5 mm).  Possibly needed to protect against bad things
-  happening during digitization, not to mention towers crashing together!
-  
- 
-  <hr>
+
+
   @section notes release.notes
   release.notes
   <hr>
