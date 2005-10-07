@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.14 2005/03/01 17:49:57 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.15 2005/08/17 00:57:37 lsrea Exp $
 
 // Include files
 
@@ -18,15 +18,6 @@
 #include <vector>
 #include <map>
 #include "geometry/Point.h"  
-
-namespace 
-{
-    // fraction of towerPitch within which to accept a hit.  At 0.55, only points within
-    // a couple of mm of the edge of an adjacent tower will be accepted, so this number
-    // is probably too small.
-
-    const double _towerFactor = 0.55;
-}
 
 typedef std::pair<int,int>         TkrViewLayerPair;
 typedef std::vector<idents::TkrId> TkrIdVector;
@@ -135,6 +126,8 @@ private:
     ITkrBadStripsSvc* m_pBadStrips;
     /// save test distance
     double m_testDistance;
+    /// factor used to generate test distance from tower pitch
+    double m_towerFactor;
     /// current pointer
     mutable Event::TkrIdClusterMap* m_idClusMap; 
     /// same for bad clusters
@@ -157,7 +150,18 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
                            : AlgTool( type, name, parent )
 {    
     // Declare additional interface
-    declareInterface<ITkrQueryClustersTool>(this); 
+    declareInterface<ITkrQueryClustersTool>(this);
+
+    //Declare the control parameters for TkrQueryClustersTool. Defaults appear here
+
+    // This is the fraction of the tower pitch *in the unmeasured direction* to look
+    //   for more clusters. Remember that the unmeasured cluster coordinate is set to
+    //   be the center of its tower. "0.55" means that essentially no trial center in
+    //   the active area of one tower will be matched with hits in another tower along
+    //   the unmeasured direction.
+
+    declareProperty("TowerFactor",              m_towerFactor = 0.55 );
+
 
     //m_pClus     = 0;
     m_idClusMap = 0;
@@ -170,7 +174,10 @@ StatusCode TkrQueryClustersTool::initialize()
     StatusCode sc = StatusCode::SUCCESS;
 
     MsgStream log(msgSvc(), name());
-    
+
+    //Set the properties
+    setProperties();
+
     if( serviceLocator() ) {
         sc = serviceLocator()->service( "TkrGeometrySvc", m_tkrGeom, true );
         if(sc.isFailure()) {
@@ -183,7 +190,7 @@ StatusCode TkrQueryClustersTool::initialize()
         m_nullVec = new Event::TkrClusterVec;
 
         // test distance (in unmeasured view)
-        m_testDistance = _towerFactor*m_tkrGeom->towerPitch();
+        m_testDistance = m_towerFactor*m_tkrGeom->towerPitch();
 
         sc = serviceLocator()->service( "EventDataSvc", m_pEventSvc, true );
         if(sc.isFailure()){

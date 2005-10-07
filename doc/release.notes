@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v5r5p7   07-Oct-05 LSR Make towerFactor a Property for TkrQueryClustersTool
   v5r5p6   19-Aug-05 jrb Changes for compatibility with modified IGeometry interface
   v3r5p5   17-Aug-05 LSR Fix TkrSplitsSvc, and test program
   v3r5p4   16-Aug-05 LSR TkrSplitsSvc now handles hit truncation consts
