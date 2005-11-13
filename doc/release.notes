@@ -9,7 +9,7 @@
 
   On main branch
   ------------------------------
-  v3r5p9   12-Oct-05 LSR Fix implementation of numberOfHitsNear(view, layer, ...)
+  v3r5p9   12-Nov-05 LSR Fix implementation of numberOfHitsNear(view, layer, ...)
                            (Has not been called before.)
   v3r5p8   07-Oct-05 LSR Make towerFactor a Property for TkrQueryClustersTool
   v3r5p6   19-Aug-05 jrb Changes for compatibility with modified IGeometry interface
