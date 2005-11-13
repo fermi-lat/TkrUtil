@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.13 2004/12/26 23:27:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.14 2005/01/30 07:12:28 lsrea Exp $
 */
 
 
@@ -18,7 +18,7 @@
 
 
 // Declaration of the interface ID ( interface id, major version, minor version) 
-static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 3 , 0); 
+static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 3 , 1); 
 
 /** @class ITkrQueryClustersTool
 * @brief Abstract interface for methods to query TkrClusters
