@@ -25,6 +25,10 @@ TkrGeometrySvc::TkrGeometrySvc(const std::string& name,
                                ISvcLocator* pSvcLocator) :
 Service(name, pSvcLocator)
 {   
+
+    declareProperty("siResolutionFactor", m_siResolutionFactor = 1.0/sqrt(12.));
+    declareProperty("layerSeparation", m_layerSeparation = 8.0);
+
     return; 
 }
 
@@ -55,11 +59,7 @@ StatusCode TkrGeometrySvc::initialize()
     } else { 
         log << MSG::INFO << "ToolSvc not found" << endreq;
         return sc; 
-    }   
-
-    // fill up the m_volId tower arrays, used for providing volId prefixes
-    // these are the Id's for the 15 towers, with just the first 3 fields
-    initializeArrays();
+    } 
 
     // this can be early, no magic in here!
     makeTowerIds();
@@ -74,9 +74,21 @@ StatusCode TkrGeometrySvc::initialize()
     }
 
     // find the planes, associate them with layers, check for "top Tray"
+    // this also initializes and fills some of the arrays
+
     sc = getVolumeInfo();
     if( sc.isFailure()) {
         log << MSG::ERROR << "Failed to find correct volumes for tracker"<< endreq;
+        return sc;
+    }
+
+    // fill up the m_volId tower arrays, used for providing volId prefixes
+    // these are the Id's for the 15 towers, with just the first 3 fields
+    initializeArrays();
+
+    sc = fillPropagatorInfo(); 
+    if( sc.isFailure()) {
+        log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
         return sc;
     }
 
@@ -88,19 +100,13 @@ StatusCode TkrGeometrySvc::initialize()
 
     sc  = getTowerLimits();
 
-    if( (sc = getTowerLimits()).isFailure()) {
+    if( sc.isFailure()) {
         // for now, just fail; might be more clever later
         log << MSG::ERROR << "Failed to find any tower... check geometry!"<< endreq;
         return sc;
     }
 
     getTowerType();
-
-    sc = fillPropagatorInfo(); 
-    if( sc.isFailure()) {
-        log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
-        return sc;
-    }
 
     // the minimum "trayHeight" (actually tray pitch)
     // uses planeZ info, so must follow call to fillPlaneZ()
@@ -179,7 +185,7 @@ HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view,
 
     idents::VolumeIdentifier volId;
     volId.append(m_volId_tower[tower]);
-    volId.append(m_volId_layer[layer][view]);
+    volId.append(m_volId_layer[view][layer]);
     return m_pDetSvc->getStripPosition(volId, stripId);
 }
 
@@ -202,7 +208,7 @@ void TkrGeometrySvc::layerToTray(int layer, int view,
     // Purpose: calculate tray and face from layer and view.
     // Method:  use knowledge of the structure of the Tracker
 
-    int plane = m_layerToPlane[layer][view];
+    int plane = m_layerToPlane[view][layer];
     if (plane==-1) {
         tray = -1;
         face = -1;
@@ -280,7 +286,7 @@ StatusCode TkrGeometrySvc::getConsts()
         m_pDetSvc->getNumericConstByName("SiThick",      &m_siThickness).isSuccess() &&
         m_pDetSvc->getNumericConstByName("SiWaferSide",  &m_siWaferSide).isSuccess() &&
         m_pDetSvc->getNumericConstByName("SiWaferActiveSide", 
-                                      &siWaferActiveSide).isSuccess() &&
+        &siWaferActiveSide).isSuccess() &&
         m_pDetSvc->getNumericConstByName("stripPerWafer", &m_ladderNStrips).isSuccess() &&
         m_pDetSvc->getNumericConstByName("ladderGap",    &m_ladderGap).isSuccess() &&
         m_pDetSvc->getNumericConstByName("ssdGap",       &m_ladderInnerGap).isSuccess() &&
@@ -297,7 +303,9 @@ StatusCode TkrGeometrySvc::getConsts()
     m_trayWidth = m_nWaferAcross*m_siWaferSide +(m_nWaferAcross-1)*m_ladderGap;
     m_siDeadDistance = 0.5*(m_siWaferSide - siWaferActiveSide);
     m_siStripPitch = siWaferActiveSide/m_ladderNStrips;
-    m_siResolution = m_siStripPitch/sqrt(12.);
+    m_siResolution = m_siStripPitch*m_siResolutionFactor;
+
+    m_numTowers = m_numX*m_numY;
 
     return sc;
 }
@@ -306,38 +314,27 @@ void TkrGeometrySvc::initializeArrays()
 {
     MsgStream log(msgSvc(), name());
 
-    int layer, view, plane;
-    for (plane=0; plane<NPLANES; ++plane) {
-        m_planeToView[plane] = -1;
-        m_planeToLayer[plane] = -1;
-        m_isTopPlaneInLayer[plane] = false;
-    }
+    int nLayers = numLayers();
 
-    for (layer=0;layer<NLAYERS;++layer) {
-        for (view=0;view<NVIEWS;++view) {
-            m_layerToPlane[layer][view] = -1; 
-        }
-    }
+    //Towers
+    m_towerType.resize(m_numTowers, -1);
 
-    int i, ind;
+    //Layers
+    m_radLenConv.resize(nLayers, 0.0);
+    m_radLenRest.resize(nLayers, 0.0);
+    idents::VolumeIdentifier volId;
+    volId.init(0,0);
+    m_volId_layer[0].resize(nLayers, volId);
+    m_volId_layer[1].resize(nLayers, volId);
+    m_convZ.resize(nLayers, 0.0);
 
-    for(i=0; i<NLAYERS; ++i) {
-        m_radLenConv[i] = 0.;
-        m_radLenRest[i] = 0.;
-        m_convZ[i]      = 0.;
-    }
+    //Types
+    int ind;
     for (ind=0; ind<NTYPES; ++ind) {
         m_numLayers[ind]     = 0;
         m_aveRadLenConv[ind] = 0.;
         m_aveRadLenRest[ind] = 0.;
     }
-    for (ind=0; ind<m_numX*m_numY; ++ind) {
-        m_towerType[ind] = -1;
-    }
-
-    // and for now...
-    m_bottomTrayNumber = 0;
-    m_topTrayNumber    = NLAYERS;
 }
 
 StatusCode TkrGeometrySvc::getTowerLimits()
@@ -421,6 +418,9 @@ void TkrGeometrySvc::getTowerType()
 
 void TkrGeometrySvc::makeTowerIds()
 {
+    idents::VolumeIdentifier nullId;
+    nullId.init(0,0);
+    m_volId_tower.resize(m_numTowers, nullId);
     int tower;
     for(tower=0;tower<m_numX*m_numY;++tower) {
         idents::VolumeIdentifier vId;
@@ -441,7 +441,7 @@ void TkrGeometrySvc::makeLayerIds()
         for (view=0; view<NVIEWS; ++view) {
             int tray;
             int face;            
-            m_volId_layer[bilayer][view].init(0,0);
+            m_volId_layer[view][bilayer].init(0,0);
             layerToTray(bilayer, view, tray, face);
             if (tray==-1) continue;
             idents::VolumeIdentifier vId;
@@ -450,7 +450,7 @@ void TkrGeometrySvc::makeLayerIds()
             vId.append(face);
             vId.append(0); vId.append(0); // ladder and wafer
 
-            m_volId_layer[bilayer][view].append(vId);
+            m_volId_layer[view][bilayer].append(vId);
         }
     }  
 }
@@ -535,6 +535,8 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
 
     double radlen;
     bool startCount = false;
+    int maxLayerNum = -1;
+    int maxTrayNum  = -1;
     for (istep=0; istep<numSteps; ++istep) {
         Point stepPoint = track->getStepPosition(istep);
         id = track->getStepVolumeId(istep);
@@ -543,13 +545,13 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         radlen = track->getStepRadLength(istep);
         /*
         double arclen = track->getStepArcLen(istep);
-        
+
         std::cout << "step " << istep << " rl " << radlen 
         << " arclen " << arclen 
         << " volid " << id.name()
         << " pos " << stepPoint <<   std::endl;
         */
-        
+
         //check if in a layer
         if(id[0]==0 && id[3]==1 && id.size()>6) {
             int tray = id[4];
@@ -566,7 +568,11 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             } else { 
                 trayToLayer(tray, 1, layer, view);
             }
-             if (item==2) { // converter
+
+            maxLayerNum = std::max(layer, maxLayerNum);
+            maxTrayNum  = std::max(tray, maxTrayNum);
+
+            if (item==2) { // converter
                 m_radLenConv[layer] = radlen;
                 m_convZ[layer] = stepPoint.z();
             } else {
@@ -579,10 +585,16 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         }
     }
 
+    maxLayerNum++;
+    maxTrayNum++;
+
+    m_numTrays = maxTrayNum;
+    
     log << MSG::DEBUG;
     int numAll = 0;
     int i, ind;
-    for (i=0; i<NLAYERS; ++i) {
+    
+    for (i=0; i<maxLayerNum; ++i) {
         convType type = getLayerType(i);
         if (type==ABSENT) continue;
         ind = (int) type;
@@ -599,18 +611,16 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
                 << m_radLenRest[i] << endreq;
         }
     }
+
     log << endreq;
 
-    if(numAll!=m_numLayers[(int)ALL]) {
+    if(maxLayerNum!=numAll) {
         log<< MSG::ERROR << "Inconsistent layer accounting, " 
-            << numAll << " vs " <<m_numLayers[(int)ALL] << endreq;
+            << numAll << " vs " <<maxLayerNum << endreq;
         return StatusCode::FAILURE;
     } else {
         m_numLayers[(int)ALL] = numAll;
     }
-
-
-    // reverseLayerNumber() starts working here!
 
     log << MSG::INFO << endreq;
     for (ind=0;ind<NTYPES;++ind) {
@@ -635,14 +645,14 @@ double TkrGeometrySvc::getLayerZ(int digiLayer, int view) const
 
     switch (view) {
     case 0:
-        return m_planeZ[m_layerToPlane[digiLayer][view]];
+        return m_planeZ[m_layerToPlane[view][digiLayer]];
         break;
     case 1:
-        return m_planeZ[m_layerToPlane[digiLayer][view]];
+        return m_planeZ[m_layerToPlane[view][digiLayer]];
         break;
     default:
-        return 0.5*(m_planeZ[m_layerToPlane[digiLayer][0]] 
-        + m_planeZ[m_layerToPlane[digiLayer][1]]);
+        return 0.5*(m_planeZ[m_layerToPlane[0][digiLayer]] 
+        + m_planeZ[m_layerToPlane[1][digiLayer]]);
     }
 }
 
@@ -811,8 +821,9 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
                 sc = m_pDetSvc->getTransform3DByID(vId2,&T);
                 if (sc.isSuccess()) {
                     found = true;
-                    m_planeZ[plane] = (T.getTranslation()).z();
-                    m_planeToView[plane] = view;
+                    double planeZ = (T.getTranslation()).z();
+                    m_planeZ.push_back(planeZ);
+                    m_planeToView.push_back(view);
                     lastTray = tray;
                     lastFace = face;
                     lastPlane = plane;
@@ -825,18 +836,25 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
     }
     m_topTrayNumber = ( (lastFace==0 && lastTray>0) ? lastTray : -1);
     m_numPlanes     = plane; // it's one more than the last plane number!
-    
+
+    //Now we know how many planes there are, we can init more arrays:
+    m_planeToLayer.resize(m_numPlanes, -1);
+    m_isTopPlaneInLayer.resize(m_numPlanes, false);
+
+    int numLayersGuess = (m_numPlanes)/2 +1;
+    m_layerToPlane[0].resize(numLayersGuess, -1);
+    m_layerToPlane[1].resize(numLayersGuess, -1);
+
     //Figure out the layers by finding the adjacent planes.
     //  "Adjacent" means the distance is less than the layerSeparation
     layer = 0;
-    double layerSeparation = 10.0;
     for (plane=0;plane<=lastPlane;++plane) {
-       view = m_planeToView[plane];
-       m_planeToLayer[plane]       = layer;
-       m_layerToPlane[layer][view] = plane;
-       if (plane==lastPlane) break;
-       double thisZ = m_planeZ[plane];
-       if(fabs(thisZ-m_planeZ[plane+1])>layerSeparation) {
+        view = m_planeToView[plane];
+        m_planeToLayer[plane] = layer;  
+        m_layerToPlane[view][layer] = plane;
+        if (plane==lastPlane) break;
+        double thisZ = m_planeZ[plane];
+        if(fabs(thisZ-m_planeZ[plane+1])>m_layerSeparation) {
             ++layer;
             m_isTopPlaneInLayer[plane] = true;
         }
@@ -867,7 +885,7 @@ StatusCode TkrGeometrySvc::getTestTower()
         // might not be a "real" bottom tray though.
         tray = 0;
         for(view=0; view<2&&!found; ++view) {
-             for(face=0; face<2&&!found; ++face) {
+            for(face=0; face<2&&!found; ++face) {
                 vId1 = vId;
                 vId1.append(tray);
                 vId1.append(view);
@@ -929,7 +947,8 @@ unsigned int TkrGeometrySvc::getDefaultClusterStatus() const
 }
 
 double TkrGeometrySvc::truncateCoord( double x, double pitch, 
-                     int numElements, int& elementNumber, bool reverse) const
+                                     int numElements, int& elementNumber, 
+                                     bool reverse) const
 {
     //Returns an element number and the coordinates in the local element
 

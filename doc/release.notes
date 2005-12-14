@@ -9,6 +9,11 @@
 
   On main branch
   ------------------------------
+  v3r5p10  13-Dec-05 LSR TkrGeometrySvc:
+                           New Properties: siResolutionFactor, layerSeparation
+                           Remove all fixed arrays that depend on numLayers and numPlanes
+                             and replace with std::vectors sized dynamically from the geometry
+                         TkrAlignmentSvc: start rearranging code to be more compatible with EGRET
   v3r5p9   12-Nov-05 LSR Fix implementation of numberOfHitsNear(view, layer, ...)
                            (Has not been called before.)
   v3r5p8   07-Oct-05 LSR Make towerFactor a Property for TkrQueryClustersTool

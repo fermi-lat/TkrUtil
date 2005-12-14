@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.33 2005/01/03 23:22:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.34 2005/08/19 19:20:44 jrb Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -164,35 +164,49 @@ StatusCode TkrAlignmentSvc::getGeometry()
 
     m_pDetSvc->accept(*visitor);
 
-    for (tray =1; tray<m_tkrGeom->numLayers(); ++tray) {
+    double siThickness = m_tkrGeom->siThickness();
+    int firstTray = 1;
+    int endTray   = m_tkrGeom->numLayers();
+
+    // some shenanigans to accommodate EGRET.
+    // LAT has bot bottom and top trays: nTrays == nLayers + 1;
+    // EGRET has neither bottom nor top tray: nTrays == nLayers;
+    // I think there's an EM with a configuration that isn't covered here,
+    //    but I don't care!
+
+    if(m_tkrGeom->getBottomTrayFlag()==1) { // There's a bottom tray; handle it!
+        double trayBotHeight = visitor->getTrayBotHeight();
+        m_tkrGeom->trayToLayer(0,1,layer,view);
+        zTop = m_tkrGeom->getLayerZ(layer, view); 
+        m_trayZ[0] = zTop + 0.5*siThickness - 0.5*trayBotHeight;
+        m_faceZ[0][1] = 0.5*(trayBotHeight - siThickness);
+        m_faceZ[0][0] = - 0.5*trayBotHeight;
+    } else { // otherwise include the lowest tray in the loop
+        firstTray = 0;
+        if(m_tkrGeom->getTopTrayFlag()==1) {endTray--;}
+    }
+
+    if(m_tkrGeom->getTopTrayFlag()==1) { // there's a top tray...
+        double trayTopHeight = visitor->getTrayTopHeight();
+        tray = m_tkrGeom->numLayers();
+        m_tkrGeom->trayToLayer(tray,0,layer, view);
+        zBot = m_tkrGeom->getLayerZ(layer, view);
+        m_trayZ[tray] = zBot - 0.5*siThickness + 0.5*trayTopHeight;
+        m_faceZ[tray][0] = -0.5*(trayTopHeight - siThickness);
+        m_faceZ[tray][1] = 0.5*trayTopHeight;
+    } 
+
+    for (tray =firstTray; tray<endTray; ++tray) {
         m_tkrGeom->trayToLayer(tray,0,layer,view);
         zBot = m_tkrGeom->getLayerZ(layer, view);
         m_tkrGeom->trayToLayer(tray,1,layer,view);
         zTop = m_tkrGeom->getLayerZ(layer, view);
         m_trayZ[tray] = 0.5*(zBot+zTop);
-        m_faceZ[tray][0] = zBot - m_trayZ[tray];
-        m_faceZ[tray][1] = zTop - m_trayZ[tray];
+        double halfHeight = 0.5*(zTop - zBot);
+        m_faceZ[tray][0] = -halfHeight;
+        m_faceZ[tray][1] =  halfHeight;
     }
 
-    double siThickness = m_tkrGeom->siThickness();
-
-    //bottom tray
-    double trayBotHeight = visitor->getTrayBotHeight();
-    m_tkrGeom->trayToLayer(0,1,layer,view);
-    zTop = m_tkrGeom->getLayerZ(layer, view); 
-    m_trayZ[0] = zTop + 0.5*siThickness - 0.5*trayBotHeight;
-    m_faceZ[0][1] = 0.5*(trayBotHeight - siThickness);
-    m_faceZ[0][0] = - 0.5*trayBotHeight;
-
-    //top tray
-    double trayTopHeight = visitor->getTrayTopHeight();
-    tray = m_tkrGeom->numLayers();
-    m_tkrGeom->trayToLayer(tray,0,layer, view);
-    zBot = m_tkrGeom->getLayerZ(layer, view);
-    m_trayZ[tray] = zBot - 0.5*siThickness + 0.5*trayTopHeight;
-    m_faceZ[tray][0] = -0.5*(trayTopHeight - siThickness);
-    m_faceZ[tray][1] = 0.5*trayTopHeight;
-    
     log << MSG::DEBUG ;
     if (log.isActive()) {
         for(tray = 0; tray<m_tkrGeom->numLayers()+1; ++tray) {

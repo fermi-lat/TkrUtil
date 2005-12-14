@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.24 2005/03/01 00:57:46 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.25 2005/08/17 00:41:30 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -27,7 +27,7 @@ class TkrGeometrySvc : public Service,
         virtual public ITkrGeometrySvc
 {
 public:
-    enum { NVIEWS=2, NLAYERS=18, NTOWERS=16, NPLANES=36};
+    enum { NVIEWS=2 /*, NLAYERS=18, NTOWERS=16, NPLANES=36*/};
     
     TkrGeometrySvc(const std::string& name, ISvcLocator* pSvcLocator); 
     virtual ~TkrGeometrySvc() {}
@@ -245,6 +245,8 @@ private:
     int    m_nviews;        
     int m_nWaferAcross;
     int m_numPlanes;
+    int m_numTowers;
+    int m_numTrays;
 
     /// Distance between centers of adjacent towers
     double m_towerPitch;
@@ -267,6 +269,8 @@ private:
     double m_siStripPitch; 
     /// nominally, (strip pitch)/sqrt(12)
     double m_siResolution;
+    /// resolution factor, default = 1/sqrt(12)
+    double m_siResolutionFactor;
     /// thickness of the silicon
     double m_siThickness;
     /// width of the dead region around the edge of a wafer
@@ -284,15 +288,16 @@ private:
 	/// (maximum) width in y of active CsI across the entire instrument
 	double m_calYWidth;
     /// z positions of all the planes (digi convention)
-    double m_planeZ[NPLANES];
-
+    std::vector<double> m_planeZ;
+    /// the two planes in a layer are separated by more than this:
+    double m_layerSeparation;
     /// radiation lengths of converter, by recon layer *** really digi layer, I think!
-    double m_radLenConv[NLAYERS];
+    std::vector<double> m_radLenConv;
     /// radiation lengths of remainder of layer
     /// we count from the bottom of the converter to the top of the next lower converter
-    double m_radLenRest[NLAYERS];
+    std::vector<double> m_radLenRest;
     /// position of radiators
-    double m_convZ[NLAYERS];
+    std::vector<double> m_convZ;
     /// number of layers of each type
     int m_numLayers[NTYPES];
     /// average radlen of converter
@@ -300,10 +305,10 @@ private:
     /// average radlen of the rest
     double m_aveRadLenRest[NTYPES];
 
-    int m_planeToView[NPLANES];
-    int m_planeToLayer[NPLANES];
-    bool m_isTopPlaneInLayer[NPLANES];
-    int m_layerToPlane[NLAYERS][NVIEWS];
+    std::vector<int> m_planeToView;
+    std::vector<int> m_planeToLayer;
+    std::vector<bool> m_isTopPlaneInLayer;
+    std::vector<int> m_layerToPlane[NVIEWS];
 
     int m_topTrayNumber;
     int m_bottomTrayNumber;
@@ -339,14 +344,14 @@ private:
     IGlastDetSvc * m_pDetSvc;
 
     /// array of tower types; type is number of exposed edges, -1 means no tower
-    int  m_towerType[NTOWERS];
+    std::vector<int>  m_towerType;
     /// lowest and highest actual tower in x and y
     int  m_xLim[2];
     int  m_yLim[2];
     /// array to hold the tower part of the volumeIds of the silicon planes
-    idents::VolumeIdentifier m_volId_tower[NTOWERS];
+    std::vector<idents::VolumeIdentifier> m_volId_tower;
     /// array to hold the tray part of the volumeIds of the silicon planes
-    idents::VolumeIdentifier m_volId_layer[NLAYERS][NVIEWS];
+    std::vector<idents::VolumeIdentifier> m_volId_layer[NVIEWS];
 
     /// Pointer to the old-style propagator needed by the track fit
     IKalmanParticle* m_KalParticle;
