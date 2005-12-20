@@ -58,9 +58,15 @@
   with TKR geometry.
  
   In addition, it stores pointers for TkrFailureModeSvc, TkrAlignmentSvc, and
-  TkrBadStripsSvc, TkrSplitsSvc, TkrToTSvc, and GlastPropagatorSvc, which simplifies a lot of code, 
-  since many modules that use
-  the geometry use the other services as well.
+  TkrBadStripsSvc, TkrSplitsSvc, TkrToTSvc, and GlastPropagatorSvc, which simplifies 
+  a lot of code, since many modules that use the geometry use the other services as well.
+
+
+  @section TkrMakeClustersTool TkrMakeClustersTool
+
+  TkrMakeClustersTool either makes clusters out of the digis in an event, taking into account
+  dead strips, or (at initialization time) produces the list of bad clusters, 
+  for use in the pattern recognition.
  
   @section TkrQueryClustersTool TkrQueryClustersTool
 

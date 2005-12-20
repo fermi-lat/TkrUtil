@@ -9,7 +9,7 @@
 
   On main branch
   ------------------------------
-  v3r6     19-Dec-05 LSR Refactor several services, replacing fixed multiply-dimensioned
+  v3r6p1   19-Dec-05 LSR Refactor several services, replacing fixed multiply-dimensioned
                              arrays with IndexedVector, derived from std::vector
   v3r5p10  13-Dec-05 LSR TkrGeometrySvc:
                            New Properties: siResolutionFactor, layerSeparation
