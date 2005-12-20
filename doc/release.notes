@@ -9,7 +9,7 @@
 
   On main branch
   ------------------------------
-  v3r6p2   19-Dec-05 LSR Fixed an int that should have been double (warnings again!)
+  v3r6p2   20-Dec-05 LSR Fixed an int that should have been double (warnings again!)
   v3r6p1   19-Dec-05 LSR Refactor several services, replacing fixed multiply-dimensioned
                              arrays with IndexedVector, derived from std::vector
   v3r5p10  13-Dec-05 LSR TkrGeometrySvc:
