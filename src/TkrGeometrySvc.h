@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.26 2005/12/14 03:04:08 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.27 2005/12/20 02:35:58 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -294,7 +294,7 @@ private:
     /// the two planes in a layer are separated by more than this:
     double m_layerSeparation;
     /// number that distinguishes STANDARD from SUPER converter trays
-    int    m_radLenCut;
+    double m_radLenCut;
     /// radiation lengths of converter, by recon layer *** really digi layer, I think!
     std::vector<double> m_radLenConv;
     /// radiation lengths of remainder of layer

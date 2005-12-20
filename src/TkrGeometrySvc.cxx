@@ -336,7 +336,7 @@ void TkrGeometrySvc::initializeArrays()
     m_radLenRest.resize(nLayers, 0.0);
     idents::VolumeIdentifier volId;
     volId.init(0,0);
-    bool valid = m_volId_layer.setDims(nLayers, 2);
+    /*bool valid = */ m_volId_layer.setDims(nLayers, 2);
     m_volId_layer.setRangeCheck(false);
 
     m_convZ.resize(nLayers, 0.0);
@@ -879,7 +879,7 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
     m_isTopPlaneInLayer.resize(m_numPlanes, false);
 
     int numLayersGuess = (m_numPlanes)/2 +1;
-    bool valid = m_layerToPlane.setDims(numLayersGuess, 2);
+    /*bool valid = */ m_layerToPlane.setDims(numLayersGuess, 2);
     m_layerToPlane.setRangeCheck(false);
     m_layerToPlane.setValue(-1);
 

@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.35 2005/12/14 03:04:08 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.36 2005/12/20 02:35:57 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -652,7 +652,7 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     std::vector<bool> done(m_nLadders, false);
 
     AlignmentItem item;
-    int nLadders = m_tkrGeom->nWaferAcross();
+    //int nLadders = m_tkrGeom->nWaferAcross();
     while (getNextItem(LADDER,item)) {
         m_ladder = item.getNumber();
         if (m_ladder>=m_nLadders) {
