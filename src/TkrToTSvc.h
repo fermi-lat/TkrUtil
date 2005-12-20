@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.9 2005/04/11 22:52:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.10 2005/04/12 23:02:37 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -27,8 +27,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.9 2005/04/11 2
 class TkrToTSvc : public Service, virtual public ITkrToTSvc  {
 
 public:
-
-    //enum {NTOWERS=16, NLAYERS=18, NVIEWS=2, NSTRIPS=1536};
 
     TkrToTSvc(const std::string& name, ISvcLocator* pSvcLocator); 
 
@@ -57,11 +55,9 @@ public:
     int    getMaxToT() const { return m_maxToT; }
 
     double getCharge(double rawToT, int tower, int layer, int view, int strip) const;
-    //double getCharge(double rawToT, idents::TkrId hitId, int strip) const;
     double getMipsFromToT(double rawToT, int tower, int layer, int view, int strip) const;
     double getMipsFromCharge(double charge) const;
     int    getRawToT(double eDep, int tower, int layer, int view, int strip) const;
-    //int    getRawToT(double eDep, idents::TkrId hitId, int strip) const;
 
     /// update the pointer
     void update(CalibData::TkrTotCol* pToT) { m_pToT = pToT; }
@@ -75,13 +71,14 @@ private:
     /// check index
     bool valid(int tower, int layer, int view, int strip) const
     {
-        //return (tower>-1 && tower <NTOWERS && layer>-1 && layer<NLAYERS
-        //    && view>-1 && view<NVIEWS && strip>-1 && strip<NSTRIPS);
-        return true;
+        return (tower>-1 && tower <m_nTowers && layer>-1 && layer<m_nLayers
+            && view>-1 && view<m_nViews && strip>-1 && strip<m_nStrips);
     }
 
     void getConsts(idents::TkrId id, int strip, 
         double& threshold, double& gain, double& quad, double& muonScale) const;
+
+    idents::TkrId getId(int tower, int layer, int view) const;
 
     /// mode: currently "default" or "EM"
     std::string m_mode;
@@ -113,6 +110,12 @@ private:
     bool m_useSingleTowerConsts;
     /// tower to duplicate
     int m_baseTower;
+
+    /// some useful constants
+    int m_nTowers;
+    int m_nLayers;
+    int m_nViews;
+    int m_nStrips;
 };
 
 

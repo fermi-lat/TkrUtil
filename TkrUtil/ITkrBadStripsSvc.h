@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrBadStripsSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.7 2004/12/26 23:27:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.8 2005/03/01 00:57:45 lsrea Exp $
 */
 
 
@@ -29,7 +29,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.7 2
 //             Leon Rochester, 3-June-2001
 //----------------------------------------------
 
-static const InterfaceID IID_ITkrBadStripsSvc("ITkrBadStripsSvc", 4 , 0); 
+static const InterfaceID IID_ITkrBadStripsSvc("ITkrBadStripsSvc", 5 , 0); 
 
 /// A small class to define tagged strips 
 class TaggedStrip 
@@ -82,11 +82,8 @@ public:
 
     static const InterfaceID& interfaceID() { return IID_ITkrBadStripsSvc; }
    
-    virtual int getIndex(int tower, int layer, 
-        idents::GlastAxis::axis axis) const = 0;
     virtual const stripCol* getBadStrips(int tower, int layer, 
         idents::GlastAxis::axis axis) const = 0;
-    virtual const stripCol* getBadStrips(int index) const = 0;
     virtual bool isBadStrip(int tower, int layer, 
         idents::GlastAxis::axis axis, int strip) const = 0;
     virtual bool isBadStrip(const stripCol* v, int strip) const = 0;
@@ -102,6 +99,9 @@ public:
     virtual Event::TkrClusterCol*   getBadClusterCol() const = 0;
     virtual Event::TkrIdClusterMap* getBadIdClusterMap() const = 0;
     virtual StatusCode makeBadDigiCol(Event::TkrDigiCol* pDigis) = 0;
- };
+ 
+    //! Fill the ASCII output stream
+    friend std::ostream& operator<<( std::ostream& s , stripCol* v);  
+};
 
 #endif

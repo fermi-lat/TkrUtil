@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.9 2004/12/26 23:27:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.10 2005/03/01 00:57:46 lsrea Exp $
 */
 
 #ifndef TKRBADSTRIPSSVC_H
@@ -54,6 +54,7 @@
 #include "TkrUtil/ITkrBadStripsSvcCalib.h"
 
 #include "TkrUtil/ITkrGeometrySvc.h"
+#include "TkrUtil/IndexedVector.h"
 
 #include <string>
 
@@ -106,29 +107,22 @@ public:
     StatusCode initialize();
     StatusCode finalize();
     
-    /// converts from (tower, layer, view) to index into array
-    int getIndex(int tower, int layer, 
-        idents::GlastAxis::axis) const ;
     /// adds a strip to a badstrip vector
     void addStrip(stripCol* v, TaggedStrip taggedStrip);
     /// returns a pointer to a vector of bad strips for a given 
     /// (tower, layer and view)
     const stripCol* getBadStrips(int tower, int layer, 
         idents::GlastAxis::axis) const;
-    /// returns a pointer to a vector of bad strips for a given array index
-    const stripCol* getBadStrips(int index) const;
     /// returns true if the strip (tower, layer, view, strip) is bad
     bool isBadStrip(int tower, int layer, 
         idents::GlastAxis::axis, int strip) const;
     /// returns true if the given strip is found in the vector pointed 
     /// to by stripCol
     bool isBadStrip(const stripCol* v, int strip) const;
-	
-    //bool killDigi() const {return m_killDigi;}
 		
     std::ostream& fillStream( std::ostream& s ) const;        
 
-    bool empty() const;
+    bool empty() const { return m_empty; }
 
     // for bad clusters
     void  setBadClusterCol(Event::TkrClusterCol* pClus)    {
@@ -172,11 +166,8 @@ private:
     /// File name for constants
     std::string m_badStripsFile;  
     
-    /// implicit dimension of 256 array
-    enum {NLAYERS = 18, NVIEWS = 2, NTOWERS = 16, NELEMENTS = NLAYERS*NVIEWS*NTOWERS};
-    
     /// array to hold bad strips vectors  [ max needed: 576 = 16*18*2 ]   
-    stripCol m_stripsCol[NELEMENTS];
+    mutable IndexedVector<stripCol> m_stripsCol;
 	
 	BadVisitor* m_visitor;
 
@@ -192,30 +183,38 @@ private:
 
 //! Fill the ASCII output stream
 
-inline std::ostream& TkrBadStripsSvc::fillStream( std::ostream& s ) const 
-{
-	
-	s << "class TkrBadStripsSvc bad strip lists from fillStream: " << std::endl;
-	for(int i=0;i<NELEMENTS;i++) {
-		const stripCol* v = getBadStrips(i);
-		int size = v->size();
-		int tower = i/(NLAYERS*NVIEWS);
-		int layer = i%(NLAYERS*NVIEWS)/2;
-		int view  = i%2;
-		if (size) {
-			s << " index " << i <<" tower " << tower << " layer "
-				<< layer << " view " << view <<" size " << size << std::endl << " strips " ;
-			for (int j=0;j<size;j++) {
-				int strip = (*v)[j].getStripNumber();
-				s << strip<< " " ;
-			}
-			s << std::endl;
-		}
-	}
-	return s;
+std::ostream& operator<<(std::ostream &s, stripCol* v) {
+    int size = v->size();
+    if (size) {
+        s << " size " << size << std::endl << " strips " ;
+        for (int j=0;j<size;j++) {
+            int strip = (*v)[j].getStripNumber();
+            s << strip<< " " ;
+        }
+        s << std::endl;
+    }
+    return s;
 }
 
+inline std::ostream& TkrBadStripsSvc::fillStream( std::ostream& s ) const 
+{
+    int nTowers = m_stripsCol.getDim(0);
+    int nLayers = m_stripsCol.getDim(1);
+    int nViews  = m_stripsCol.getDim(2);
+    int tower, layer, view;
 
+    s << "class TkrBadStripsSvc bad strip lists from fillStream: " << std::endl;
+    for(tower=0; tower<nTowers;++tower) {
+        for(layer=0; layer<nLayers; ++layer) {
+            for(view=0; view<nViews; ++view) {
+                s << "Twr/lyr/view (" << tower << ", " << layer << ", " << view  << ")";
+                const stripCol* v = &m_stripsCol(tower, layer, view);
+                s << v ;
+            }
+        }
+    }
+    return s;
+}
 
 #endif // TKRBADSTRIPSSVC_H
 

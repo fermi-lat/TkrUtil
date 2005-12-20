@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.25 2005/08/17 00:41:30 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.26 2005/12/14 03:04:08 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -21,6 +21,7 @@
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 #include "idents/VolumeIdentifier.h"
+#include "TkrUtil/IndexedVector.h"
 
 
 class TkrGeometrySvc : public Service,
@@ -41,6 +42,7 @@ public:
     int    numYTowers() const     {return m_numY;} 
     int    numViews()   const     {return m_nviews;} 
     int    numLayers()  const     {return getNumType(ALL);}
+    int    numTrays()   const     {return m_numTrays;}
     int    numNoConverter() const {return getNumType(NOCONV);}
     int    numSuperGlast()  const {return getNumType(SUPER);}
     int    numRegular()     const {return getNumType(STANDARD);}
@@ -210,17 +212,15 @@ public:
 
         // definitions of plane, layer
     int trayToPlane(int tray, int botTop) const {
-        return 2*tray + botTop - getBottomTrayFlag() ;
+        int plane = 2*tray + botTop - getBottomTrayFlag() ;
+        if (plane<0 || plane >=numPlanes()) plane = -1;
+        return plane;
     }
     int trayToBiLayer(int tray, int botTop) const {
-        return tray + botTop - getBottomTrayFlag() ;
+        int layer =  tray + botTop - getBottomTrayFlag() ;
+        if (layer<0 || layer >=numLayers()) layer = -1;
+        return layer;
     }
-    /*
-    void planeToTray(int plane, int& tray, int& face) const {
-        tray = planeToTray(plane);
-        face = planeToBotTop(plane);
-    }
-    */
     int planeToTray(int plane) const {
         return (plane+getBottomTrayFlag())/2;
     }
@@ -287,10 +287,14 @@ private:
 	double m_calXWidth;
 	/// (maximum) width in y of active CsI across the entire instrument
 	double m_calYWidth;
+    /// safe distance from edge to guarantee that we're in an active area
+    double m_activeOffset;
     /// z positions of all the planes (digi convention)
     std::vector<double> m_planeZ;
     /// the two planes in a layer are separated by more than this:
     double m_layerSeparation;
+    /// number that distinguishes STANDARD from SUPER converter trays
+    int    m_radLenCut;
     /// radiation lengths of converter, by recon layer *** really digi layer, I think!
     std::vector<double> m_radLenConv;
     /// radiation lengths of remainder of layer
@@ -308,7 +312,8 @@ private:
     std::vector<int> m_planeToView;
     std::vector<int> m_planeToLayer;
     std::vector<bool> m_isTopPlaneInLayer;
-    std::vector<int> m_layerToPlane[NVIEWS];
+    mutable IndexedVector<int>m_layerToPlane;
+    //std::vector<int> m_layerToPlane[NVIEWS];
 
     int m_topTrayNumber;
     int m_bottomTrayNumber;
@@ -351,7 +356,8 @@ private:
     /// array to hold the tower part of the volumeIds of the silicon planes
     std::vector<idents::VolumeIdentifier> m_volId_tower;
     /// array to hold the tray part of the volumeIds of the silicon planes
-    std::vector<idents::VolumeIdentifier> m_volId_layer[NVIEWS];
+    mutable IndexedVector<idents::VolumeIdentifier> m_volId_layer;
+    //std::vector<idents::VolumeIdentifier> m_volId_layer[NVIEWS];
 
     /// Pointer to the old-style propagator needed by the track fit
     IKalmanParticle* m_KalParticle;

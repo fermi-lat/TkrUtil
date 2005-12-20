@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.15 2005/08/17 00:41:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.16 2005/08/17 00:57:37 lsrea Exp $
 
 */
 
@@ -41,21 +41,6 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
 
     // declare the properties
 
-    // The default gains and threshold are chosen to reproduce the 
-    // previous behavior of the ToT
-    //declareProperty("defaultThreshold", m_defaultThreshold = -2.92);       // original
-    //declareProperty("defaultGain",      m_defaultGain      = 2.50267833 ); // original
-    //declareProperty("defaultQuad",      m_defaultQuad     = 0.0);          // original
-    //declareProperty("defaultThreshold", m_defaultThreshold = 1.16675);   // new formulas
-    //declareProperty("defaultGain",      m_defaultGain      = 0.399572 ); // new formulas
-    //declareProperty("defaultQuad",      m_defaultQuad     = 0.0);        // new formulas
-
-    //declareProperty("defaultThreshold", m_defaultThreshold = 1.3);   // more realistic
-    //declareProperty("defaultGain",      m_defaultGain      = 0.5 );  // more realistic
-    //declareProperty("defaultQuad",      m_defaultQuad     = 0.004);  // more realistic
-    //declareProperty("defaultQuality",   m_defaultQuality   = 0.0);
-    //declareProperty("mevPerMip"       , m_mevPerMip        = 0.155);
-    //declareProperty("fCPerMip"        , m_fCPerMip         = 4.667);
 
     // values adjusted 03-Jul-05, based on average for Tracker A and B
     declareProperty("defaultThreshold", m_defaultThreshold = 1.177);   
@@ -69,12 +54,11 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     declareProperty("fCPerMip"        , m_fCPerMip         = 5.0);
 
 
-    declareProperty("defaultMuonScale", m_defaultMuonScale = 1.0);
-    //declareProperty("mode"            , m_mode             = "ideal");
-    declareProperty("countsPerMicrosecond", m_countsPerMicrosecond = 5.0);
-    declareProperty("maxToT"          , m_maxToT           = 250);
+    declareProperty("defaultMuonScale",      m_defaultMuonScale      = 1.0);
+    declareProperty("countsPerMicrosecond",  m_countsPerMicrosecond  = 5.0);
+    declareProperty("maxToT",                m_maxToT                = 250);
     declareProperty("useSingleTowerConsts" , m_useSingleTowerConsts  = false);
-    declareProperty("baseTower"       , m_baseTower        = 0);
+    declareProperty("baseTower",             m_baseTower             = 0);
 }
 
 StatusCode  TkrToTSvc::queryInterface (const IID& riid, void **ppvIF)
@@ -120,6 +104,11 @@ StatusCode TkrToTSvc::initialize ()
         return StatusCode::FAILURE;
     }
 
+    m_nTowers = m_tkrGeom->numXTowers()*m_tkrGeom->numYTowers();
+    m_nLayers = m_tkrGeom->numLayers();
+    m_nViews  = 2;
+    m_nStrips = m_tkrGeom->ladderNStrips()*m_tkrGeom->nWaferAcross();
+
     // Bind all of the properties for this service
     if ( (status = setProperties()).isFailure() ) {
         log << MSG::ERROR << "Failed to set properties" << endreq;
@@ -144,10 +133,7 @@ double TkrToTSvc::getGain(int tower, int layer, int view, int strip) const
     if(m_useSingleTowerConsts) tower = m_baseTower;
     if (!valid(tower, layer, view, strip)) { return -1.0; }
     if (m_pToT) {
-        int tray, face;
-        m_tkrGeom->layerToTray(layer, view, tray, face);
-        TowerId towerId = TowerId(tower);
-        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
         return  pInfo->getSlope();
     } else {
@@ -156,13 +142,10 @@ double TkrToTSvc::getGain(int tower, int layer, int view, int strip) const
 }
 double TkrToTSvc::getQuad(int tower, int layer, int view, int strip) const 
 {
-     if(m_useSingleTowerConsts) tower = m_baseTower;
-   if (!valid(tower, layer, view, strip)) { return -1.0; }
+    if(m_useSingleTowerConsts) tower = m_baseTower;
+    if (!valid(tower, layer, view, strip)) { return -1.0; }
     if (m_pToT) {
-        int tray, face;
-        m_tkrGeom->layerToTray(layer, view, tray, face);
-        TowerId towerId = TowerId(tower);
-        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
         return  pInfo->getQuad();
     } else {
@@ -174,10 +157,7 @@ double TkrToTSvc::getThreshold(int tower, int layer, int view, int strip) const
     if(m_useSingleTowerConsts) tower = m_baseTower;
     if (!valid(tower, layer, view, strip)) { return -1.0; }
     if (m_pToT) {
-        int tray, face;
-        m_tkrGeom->layerToTray(layer, view, tray, face);
-        TowerId towerId = TowerId(tower);
-        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
         return  pInfo->getIntercept();
     } else {
@@ -189,10 +169,7 @@ double TkrToTSvc::getQuality(int tower, int layer, int view, int strip) const
     if(m_useSingleTowerConsts) tower = m_baseTower;
     if (!valid(tower, layer, view, strip)) { return -1.0; }
     if (m_pToT) {
-        int tray, face;
-        m_tkrGeom->layerToTray(layer, view, tray, face);
-        TowerId towerId = TowerId(tower);
-        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
         return  pInfo->getChi2();
     } else {
@@ -206,10 +183,7 @@ double TkrToTSvc::getMuonScale(int tower, int layer, int view, int strip) const
     double muonScale = -1.0;
     if (!valid(tower, layer, view, strip)) { return muonScale; }
     if (m_pScale) {
-        int tray, face;
-        m_tkrGeom->layerToTray(layer, view, tray, face);
-        TowerId towerId = TowerId(tower);
-        TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+        TkrId id = getId(tower, layer, view);
         CalibData::TkrScaleObj pInfo = m_pScale->getStripInfo(id, strip);
         muonScale = static_cast<double>(pInfo.getScale());
     } else {
@@ -223,11 +197,7 @@ int TkrToTSvc::getRawToT(double eDep, int tower, int layer, int view, int strip)
     if(m_useSingleTowerConsts) tower = m_baseTower;
     if (!valid(tower, layer, view, strip)) { return 0; }
 
-    int tray, face;
-    m_tkrGeom->layerToTray(layer, view, tray, face);
-    TowerId towerId = TowerId(tower);
-    TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
-
+    TkrId id = getId(tower, layer, view);
     double gain, quad, threshold, muonScale;
     getConsts(id, strip, threshold, gain, quad, muonScale);
 
@@ -255,11 +225,7 @@ double TkrToTSvc::getCharge(double rawToT, int tower, int layer, int view, int s
     if(m_useSingleTowerConsts) tower = m_baseTower;
     if (!valid(tower, layer, view, strip)) { return 0.0; }
 
-    int tray, face;
-    m_tkrGeom->layerToTray(layer, view, tray, face);
-    TowerId towerId = TowerId(tower);
-    TkrId id = TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
-
+    TkrId id = getId(tower, layer, view);
     double gain, quad, threshold, muonScale;
     getConsts(id, strip, threshold, gain, quad, muonScale);
 
@@ -268,6 +234,14 @@ double TkrToTSvc::getCharge(double rawToT, int tower, int layer, int view, int s
   
     return charge;
 }
+idents::TkrId TkrToTSvc::getId(int tower, int layer, int view) const
+{
+    int tray, face;
+    m_tkrGeom->layerToTray(layer, view, tray, face);
+    TowerId towerId = TowerId(tower);
+    return TkrId(towerId.ix(), towerId.iy(), tray, (face==TkrId::eTKRSiTop));
+}
+
 
 double TkrToTSvc::getMipsFromToT(double rawToT, 
                                  int tower, int layer, int view, int strip) const

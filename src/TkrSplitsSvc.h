@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.7 2005/04/11 22:52:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.8 2005/08/17 00:41:30 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
@@ -13,6 +13,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.7 2005/04/1
 // Include files
 #include "TkrUtil/ITkrSplitsSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
+#include "TkrUtil/IndexedVector.h"
 #include "GaudiKernel/Service.h"
 #include "GaudiKernel/IDataProviderSvc.h"
 
@@ -28,7 +29,7 @@ class TkrSplitsSvc : public Service, virtual public ITkrSplitsSvc  {
 
 public:
 
-    enum {NTOWERS=16, NTRAYS =19, NLAYERS=18, NVIEWS=2, NFACES=2, NPLANES=36};
+    //enum {NTOWERS=16, NTRAYS =19, NLAYERS=18, NVIEWS=2, NFACES=2, NPLANES=36, NENDS=2};
     TkrSplitsSvc(const std::string& name, ISvcLocator* pSvcLocator); 
 
     StatusCode initialize();
@@ -78,15 +79,19 @@ private:
     /// name of the input file, if present
     std::string m_splitsFile;
     /// array containing splits, for use as a quick test
-    int m_splits[NTOWERS][NTRAYS][NFACES];
+    mutable IndexedVector<int> m_splits; // (nTowers, nTrays, nFaces)
     /// default maxStrips
     int m_defaultMaxStrips;
     /// File containing the max strips information
     std::string m_maxStripsFile;
     /// full maxStrips
-    int m_maxStrips[NTOWERS][NTRAYS][NFACES][2];
+    mutable IndexedVector<int> m_maxStrips; // (nTowers, nTrays, nFaces, nEnds)
     /// cable buffer size
     int m_cableBuffer;
+    /// strip number of default split point
+    int m_defaultSplit;
+    /// number of strips in a chip
+    int m_stripsPerChip;
 };
 
 #endif // TkrSplitsSvc_H

@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.14 2004/10/12 19:04:55 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.15 2005/08/19 19:20:44 jrb Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -15,6 +15,7 @@
 #include "GaudiKernel/Service.h"
 #include "GaudiKernel/ContainedObject.h"
 #include "TkrUtil/ITkrAlignmentSvc.h"
+#include "TkrUtil/IndexedVector.h"
 
 #include "GaudiKernel/ContainedObject.h"
 
@@ -102,7 +103,9 @@ public:
     virtual void popShape();
     
     /// Need a setMode in case someone wants other than default 
-    virtual void setMode(std::string pmode) {m_mode = pmode;}
+    virtual void setMode(std::string pmode) {
+        m_mode = pmode;
+    }
     /// Implements getMode for IGeometry interface
     virtual std::string getMode() {return m_mode;}
     
@@ -176,8 +179,7 @@ public:
     /// returns the service type
     const IID& type() const;    
     
-private:
-    
+private:   
     
     /// returns the constants for a given element
     const AlignmentConsts* getConsts(constType type, int index) const;
@@ -191,9 +193,13 @@ private:
         const AlignmentConsts* alConsts, 
         double& deltaPointX, double& deltaPointY) const;
 
-
-    /// returns index
-    int getIndex(int tower, int layer, int view, int ladder, int wafer) const;
+    /// set the const mode
+    void setMode(std::string pmode) {
+        m_mode = pmode;
+        if     (m_mode=="sim") {m_constType = SIM;}
+        else if(m_mode=="rec") {m_constType = REC;}
+        else                   {m_constType = UNKNOWN_TYPE;}
+    }
     
     /// gets relevant coordinates from the geometry
     StatusCode getGeometry();
@@ -236,25 +242,29 @@ private:
     int m_fileFlag;
     /// maximum allowed delta (sqrt(deltaX**2 + sqrt(deltaY**2)
     double m_maxDelta;
+        
+    /* Although the information about the alignment is developed in terms of trays and faces,
+       it's stored in the arrays by layer and view, since this is the preferred set of
+       variables for reconstruction.
+
+       Yes, I know it's confusing... I just confused myself about all this!
+    */
     
-    /// dimension of arrays
-    // the flight instrument only has (4 ladders)x(4 wafers) but to allow
-    //   for possible conversion to BFEM/BTEM I've started with 5 each.
-    enum {NLAYERS = 18, NTRAYS = 19, NVIEWS = 2, NTOWERS = 16, NLADDERS= 4, NWAFERS = 4,
-        NELEMENTS = NLAYERS*NVIEWS*NTOWERS*NLADDERS*NWAFERS};
-    
-    /// array to hold simulation constants  [ max needed: 9216 = 16*18*2*4*4 ]   
-    AlignmentConsts m_simConsts[NELEMENTS];
-    /// array to hold reconstruction constants  [ max needed: 9216 = 16*18*2*4*4 ]   
-    AlignmentConsts m_recConsts[NELEMENTS];
+    typedef IndexedVector<AlignmentConsts> ConstsVec;
+
+    // array size will be nTowers*nLayers*nViews*nLadders*nWafers (currently nLadders = nWafers)
+    /// array to hold simulation constants   
+    mutable ConstsVec m_simConsts; 
+    /// array to hold reconstruction constants  
+    mutable ConstsVec m_recConsts; 
     
     // the following consts are used to construct the wafer constants 
     //   from the tower, tray and ladder constants.
     
     /// z of tray center in tower
-    double m_trayZ[NLAYERS+1];
+    std::vector<double> m_trayZ;
     /// z of plane in tray, vs. tray number and botTop
-    double m_faceZ[NLAYERS+1] [NVIEWS];
+    mutable IndexedVector<double> m_faceZ;
     
     /// holds alignment consts for the towers during construction
     mutable AlignmentConsts m_towerConsts;
@@ -274,6 +284,7 @@ private:
     mutable int m_wafer;
 
     std::string m_mode;
+    constType m_constType;
     std::ifstream* m_dataFile;
 
     ITkrGeometrySvc* m_tkrGeom;
@@ -284,6 +295,15 @@ private:
     alignCol m_itemCol;
     /// item being processed
     alignCol::iterator m_pItem;
+
+    /// some useful constants
+    int m_nTowers;
+    int m_nTrays;
+    int m_nLayers;
+    int m_nViews;
+    int m_nFaces;
+    int m_nLadders;
+    int m_nWafers;
 };
 
 
@@ -313,7 +333,6 @@ inline StreamBuffer& AlignmentConsts::serialize( StreamBuffer& s )       {
 }
 
 //! Fill the ASCII output stream
-
 std::ostream& operator<<(std::ostream &s, AlignmentConsts consts) {
         s << "AlignmentConsts: "
             << "delta(" 
@@ -326,22 +345,6 @@ std::ostream& operator<<(std::ostream &s, AlignmentConsts consts) {
         << consts.getRotZ() << ")" ; 
     return s;
 }
-
-/*
-inline std::ostream& AlignmentConsts::fillStream( std::ostream& s ) const {
-    s << "class AlignmentConsts: "
-        << "delta(X,Y,Z) (" 
-        << m_deltaX << ", "
-        << m_deltaY << ", "
-        << m_deltaZ << ") "
-        << " rot(X,Y,Z) ("
-        << m_rotX << ", "
-        << m_rotY << ", "
-        << m_rotZ << ")"
-        << std::endl;
-    return s;
-}
-*/
 
 #endif // TKRALIGNMENTSVC_H
 

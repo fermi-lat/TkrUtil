@@ -94,6 +94,8 @@
   @param TkrAlignmentSvc.recFile
   The name of the file containing the alignment constants to be used
   during reconstruction.  Format is the same as that of the simFile.
+  @param TkrAlignmentSvc.testMode
+  sets a fixed offset in x and y into every silicon wafer as a simple test
   @param TkrAlignment.maximumDelta
   Limits the maximum correction (default = 5 mm).  Possibly needed to protect against bad things
   happening during digitization, not to mention towers crashing together!
@@ -103,6 +105,17 @@
   The name of the file containing
   a list of bad (dead and hot) strips (default: null). These will be merged with bad strips
   coming from the calibration database.
+  *
+  @param TkrGeometrySvc.siResolutionFactor
+  This number multiplies the strip with to generate the intrinsic strip resolution. Default is 
+  1.0/sqrt(12.0)
+  @param TkrGeometrySvc.layerSeparation
+  Used to determine whether adjacent planes belong to the same layer. If they are
+  separated by less than this distance, they are in the same layer, otherwise not. Default is 8   mm.
+  @param radLenCut
+  Used to separate standard from superglast layers. Default is 0.10 radiation lengths.
+  @param activeOffset
+  The test propagator is launched with this offset from the edge of a tower. Default is 40 mm.
   *
   @param TkrCalibAlg.calibFlavor
   Sets the overall flavor of calibration requested. Defaults to "ideal", which does nothing.
@@ -141,8 +154,7 @@
   The name of the file containing the thresholds and gains. Currently
   has no effect.
   @param TkrToTSvc.defaultThreshold
-  For ideal mode, all thresholds are set to this value 
-  (default = 1.177 fC).
+  For ideal mode, all thresholds are set to this value (default = 1.177 fC).
  
   @param TkrToTSvc.defaultGain
   For ideal mode, all gains are set to this value (default = 0.589 fC/microsecond)

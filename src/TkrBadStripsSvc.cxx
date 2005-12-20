@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.20 2005/04/20 21:35:39 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.21 2005/08/17 00:57:37 lsrea Exp $
 */
 
 
@@ -74,15 +74,16 @@ StatusCode TkrBadStripsSvc::initialize()
     m_empty = true;
     
     setProperties();
-    
-    for (int i=0;i<NELEMENTS;i++) { m_stripsCol[i].clear();}
-    
-    // commented code in this routine was the original attempt to implement
-    //  the bad strips as a vector of vectors.
-    
-    // int size = 0;
-    // makeCol(size); //make sure that Collection is sensibly initialized
 
+    int nTowers = m_tkrGeom->numXTowers()*m_tkrGeom->numYTowers();
+    int nLayers = m_tkrGeom->numLayers();
+    int nViews  = 2;
+
+    bool valid = m_stripsCol.setDims(nTowers, nLayers, nViews);
+    if (!valid) return StatusCode::FAILURE;
+    stripCol null(0);
+    m_stripsCol.setValue(null);
+    
     // this method resolves environmental variables in the file name
     if (m_badStripsFile!="") {
         int ret =  facilities::Util::expandEnvVar(&m_badStripsFile);
@@ -103,7 +104,6 @@ StatusCode TkrBadStripsSvc::initialize()
     
     return sc;
 }
-
 
 StatusCode TkrBadStripsSvc::doInit()
 {
@@ -297,25 +297,6 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
     return;
 }
 
-int TkrBadStripsSvc::getIndex(int tower, int layer, 
-                              idents::GlastAxis::axis axis) const
-{
-    // Purpose:  calculate index into array of vectors
-    // Inputs:   tower, bilayer, axis
-    // Outputs:  index
-    
-    int view; 
-    // this is to decouple the store from the current definition of axes
-    // not that it will ever change
-    int index = -1;
-    if (axis==idents::GlastAxis::X)  {view = 0;}
-    else if (axis==idents::GlastAxis::Y) {view = 1;}
-    else {return index;}
-    if (layer<0 || layer>=NLAYERS || tower<0 || tower>=NTOWERS) {return index;} 
-    // for now, hardwired to be as large as will ever by needed
-    return view + NVIEWS*(layer + NLAYERS*tower);
-}
-
 void TkrBadStripsSvc::addStrip(stripCol* v, TaggedStrip taggedStrip) 
 {
     // Purpose: add a bad strip to the list, already tagged bad
@@ -333,23 +314,9 @@ const stripCol* TkrBadStripsSvc::getBadStrips(int tower, int layer,
     // Inputs:   tower, layer, axis
     // Outputs:  pointer to that vector
     
-    int index = getIndex(tower, layer, axis);
+    //int index = getIndex(tower, layer, axis);
     
-    return getBadStrips(index);
-}
-
-
-const stripCol* TkrBadStripsSvc::getBadStrips(int index) const
-{
-    // Purpose:  return pointer to a bad strip vector
-    // Inputs:   index
-    // Outputs:  pointer to that vector
-    
-    // original code... maybe some day...
-    // int ind = (m_stripsCol.size()==0) ? m_stripsCol.size() : index;
-    
-    if (index>=0 && index < NELEMENTS) {return &m_stripsCol[index];}
-    else                         {return 0;}
+    return &m_stripsCol(tower, layer, axis);
 }
 
 
@@ -361,7 +328,7 @@ bool TkrBadStripsSvc::isBadStrip(int tower, int layer,
     // Inputs:  tower, bilayer, axis, strip#
     // Output:  true if strip is in the list ( that is, is bad)
     
-    const stripCol* v = getBadStrips(tower, layer, axis);
+    const stripCol* v = &m_stripsCol(tower, layer, axis);
     return isBadStrip(v, strip);
 }
 
@@ -387,11 +354,6 @@ bool TkrBadStripsSvc::isBadStrip(const stripCol* v, int strip) const
     //return (it!=v->end());
 }
 
-bool TkrBadStripsSvc::empty() const
-{
-    return m_empty;
-}
-
 StatusCode TkrBadStripsSvc::makeBadDigiCol(Event::TkrDigiCol* pDigis) 
 { 
     MsgStream log( msgSvc(), name() );
@@ -399,11 +361,15 @@ StatusCode TkrBadStripsSvc::makeBadDigiCol(Event::TkrDigiCol* pDigis)
     // loop over all the bad strips and make an empty digi for each plane
     if (m_pBadDigi) { delete m_pBadDigi; }
 
+    int nTowers = m_stripsCol.getDim(0);
+    int nLayers = m_stripsCol.getDim(1);
+    int nViews  = m_stripsCol.getDim(2);
+
     m_pBadDigi = pDigis;
     int tower, layer, view;
-    for (tower=0; tower<NTOWERS; ++tower) {
-        for (layer=0; layer<NLAYERS; ++layer) {
-            for (view=0; view<NVIEWS; ++view) {
+    for (tower=0; tower<nTowers; ++tower) {
+        for (layer=0; layer<nLayers; ++layer) {
+            for (view=0; view<nViews; ++view) {
                 idents::GlastAxis::axis axis = ( view ? idents::GlastAxis::X : idents::GlastAxis::Y);
                 const stripCol* strips = getBadStrips(tower, layer, axis);
                 if (strips==0 || strips->size()==0) continue;
@@ -437,7 +403,6 @@ StatusCode  TkrBadStripsSvc::queryInterface (const IID& riid, void **ppvIF)
 const IID&  TkrBadStripsSvc::type () const {
     return IID_ITkrBadStripsSvc;
 }
-
 
 CalibData::eVisitorRet BadVisitor::badTower(unsigned int /* row */, 
                                             unsigned int /* col */,

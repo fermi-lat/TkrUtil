@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.7 2005/04/11 22:52:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.8 2005/08/17 00:41:30 lsrea Exp $
 */
 
 #ifndef ITkrToTSvc_H
@@ -21,7 +21,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.7 2005/04
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
 
-static const InterfaceID IID_ITkrToTSvc("ITkrToTSvc", 3 , 0);
+static const InterfaceID IID_ITkrToTSvc("ITkrToTSvc", 4 , 0);
 
 /** @class ITkrToTSvc
 * @brief Interface class for TkrToTSvc
@@ -48,10 +48,8 @@ public:
     
     virtual double getCharge(double rawToT, int tower, 
         int layer, int view, int strip) const = 0;
-    //virtual double getCharge(double rawToT, idents::TkrId hitId, int strip) const = 0;
     virtual int    getRawToT(double eDep, int tower, 
         int layer, int view, int strip) const = 0;
-    //virtual int    getRawToT(double eDep, idents::TkrId hitId, int strip) const = 0;
     virtual double getMipsFromToT(double rawToT, int tower, 
         int layer, int view, int strip) const = 0;
     virtual double getMipsFromCharge(double charge) const = 0;

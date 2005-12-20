@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.13.2.1 2004/09/22 04:47:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.15 2004/10/01 19:40:58 usher Exp $
 */
 
 
@@ -20,12 +20,14 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.13.
 #include <vector>
 #include <iostream>
 
-static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 5, 0); 
+static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 6, 0); 
+
 
 namespace {
-    enum constType {SIM=0, REC=1};
-    enum alignTask {NULLTASK= 0, APPLYCONSTS=1, FINDTOWERCONSTS=2, FINDWAFERCONSTS};
+    enum constType {SIM=0, REC=1, UNKNOWN_TYPE=2};
+    enum alignTask {NULLTASK= 0, APPLYCONSTS=1, FINDTOWERCONSTS=2, FINDWAFERCONSTS=3};
 }
+
 
 /// A small class to define alignment constants
 
@@ -64,7 +66,6 @@ public:
         && m_rotX==0. &&m_rotY==0. && m_rotZ==0.);} 
 
     //! Fill the ASCII output stream
-    //std::ostream& fillStream( std::ostream& s ) const;  
     friend std::ostream& operator<<( std::ostream& s , AlignmentConsts consts);  
         
     //! Serialize the object for reading
@@ -98,6 +99,7 @@ private:
 class ITkrAlignmentSvc : public virtual IInterface
 {
 public:
+
 
     static const InterfaceID& interfaceID() { return IID_ITkrAlignmentSvc; }
    
