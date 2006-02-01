@@ -3,6 +3,10 @@
 
 @verbatim
 
+  On branch GR-v7r3p20-newext
+  ---------------------------
+  v3r5cl0  31-Jan-06  TU Tag development branch for new externals
+
   On branch v2r0p2-gr-45-patches
   ------------------------------
   v2r0p2gr1 11-Sep-04 LSR First checkin... add Service::initialize() calls
