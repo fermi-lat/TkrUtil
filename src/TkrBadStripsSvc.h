@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.9 2004/12/26 23:27:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.10 2005/03/01 00:57:46 lsrea Exp $
 */
 
 #ifndef TKRBADSTRIPSSVC_H
@@ -150,13 +150,13 @@ public:
 
     
     /// queryInterface - required for a service
-    StatusCode queryInterface(const IID& riid, void** ppvUnknown);
+    StatusCode queryInterface(const InterfaceID& riid, void** ppvUnknown);
     /// required for a service
     static const InterfaceID& interfaceID() { 
         return ITkrBadStripsSvc::interfaceID(); 
     }
     /// returns the service type
-    const IID& type() const;   
+    const InterfaceID& type() const;   
     
 private:
 	  

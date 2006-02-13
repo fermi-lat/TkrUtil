@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.24 2005/03/01 00:57:46 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.25 2005/08/17 00:41:30 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -200,13 +200,13 @@ public:
     /// calculate layer (digi format) and view from plane
     void planeToLayer (int plane, int& layer, int& view) const;
      
-    StatusCode queryInterface(const IID& riid, void** ppvUnknown);
+    StatusCode queryInterface(const InterfaceID& riid, void** ppvUnknown);
 
     static const InterfaceID& interfaceID() {
         return ITkrGeometrySvc::interfaceID(); 
     }
     /// return the service type
-    const IID& type() const;
+    const InterfaceID& type() const;
 
         // definitions of plane, layer
     int trayToPlane(int tray, int botTop) const {

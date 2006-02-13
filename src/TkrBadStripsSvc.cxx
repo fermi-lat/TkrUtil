@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.20 2005/04/20 21:35:39 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.21 2005/08/17 00:57:37 lsrea Exp $
 */
 
 
@@ -420,7 +420,7 @@ StatusCode TkrBadStripsSvc::makeBadDigiCol(Event::TkrDigiCol* pDigis)
 
 // queryInterface
 
-StatusCode  TkrBadStripsSvc::queryInterface (const IID& riid, void **ppvIF)
+StatusCode  TkrBadStripsSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
 {
     if (IID_ITkrBadStripsSvc == riid) {
         *ppvIF = dynamic_cast<ITkrBadStripsSvc*> (this);
@@ -434,7 +434,7 @@ StatusCode  TkrBadStripsSvc::queryInterface (const IID& riid, void **ppvIF)
 
 // access the type of this service
 
-const IID&  TkrBadStripsSvc::type () const {
+const InterfaceID&  TkrBadStripsSvc::type () const {
     return IID_ITkrBadStripsSvc;
 }
 

@@ -226,7 +226,7 @@ void TkrGeometrySvc::planeToLayer(int plane,
 
 // queryInterface
 
-StatusCode  TkrGeometrySvc::queryInterface (const IID& riid, void **ppvIF)
+StatusCode  TkrGeometrySvc::queryInterface (const InterfaceID& riid, void **ppvIF)
 {
     if (IID_ITkrGeometrySvc == riid) {
         *ppvIF = dynamic_cast<ITkrGeometrySvc*> (this);
@@ -239,7 +239,7 @@ StatusCode  TkrGeometrySvc::queryInterface (const IID& riid, void **ppvIF)
 
 // access the type of this service
 
-const IID&  TkrGeometrySvc::type () const {
+const InterfaceID&  TkrGeometrySvc::type () const {
     return IID_ITkrGeometrySvc;
 }
 

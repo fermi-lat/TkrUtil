@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.14 2004/10/12 19:04:55 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.15 2005/08/19 19:20:44 jrb Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -168,13 +168,13 @@ public:
     bool alignRec() const {return ((m_fileFlag&(1<<REC_SHIFT))>0); }
     
     /// queryInterface - required for a service
-    StatusCode queryInterface(const IID& riid, void** ppvUnknown);
+    StatusCode queryInterface(const InterfaceID& riid, void** ppvUnknown);
     /// required for a service
     static const InterfaceID& interfaceID() { 
         return ITkrAlignmentSvc::interfaceID(); 
     }
     /// returns the service type
-    const IID& type() const;    
+    const InterfaceID& type() const;    
     
 private:
     

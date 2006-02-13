@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.15 2005/08/17 00:41:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.16 2005/08/17 00:57:37 lsrea Exp $
 
 */
 
@@ -77,7 +77,7 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     declareProperty("baseTower"       , m_baseTower        = 0);
 }
 
-StatusCode  TkrToTSvc::queryInterface (const IID& riid, void **ppvIF)
+StatusCode  TkrToTSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
 {
     if (IID_ITkrToTSvc == riid) {
         *ppvIF = dynamic_cast<ITkrToTSvc*> (this);
@@ -87,7 +87,7 @@ StatusCode  TkrToTSvc::queryInterface (const IID& riid, void **ppvIF)
     }
 }
 
-const IID&  TkrToTSvc::type () const {
+const InterfaceID&  TkrToTSvc::type () const {
     return IID_ITkrToTSvc;
 }
 

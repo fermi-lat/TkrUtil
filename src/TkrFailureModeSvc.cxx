@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.17 2005/03/01 00:57:46 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.18 2005/04/20 21:35:39 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -39,7 +39,7 @@ TkrFailureModeSvc::TkrFailureModeSvc(const std::string& name,ISvcLocator* svc) :
     m_existsList = false;
 }
 
-StatusCode  TkrFailureModeSvc::queryInterface (const IID& riid, void **ppvIF)
+StatusCode  TkrFailureModeSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
 {
     if (IID_ITkrFailureModeSvc == riid) {
         *ppvIF = dynamic_cast<ITkrFailureModeSvc*> (this);
@@ -53,7 +53,7 @@ StatusCode  TkrFailureModeSvc::queryInterface (const IID& riid, void **ppvIF)
     }
 }
 
-const IID&  TkrFailureModeSvc::type () const {
+const InterfaceID&  TkrFailureModeSvc::type () const {
     return IID_ITkrFailureModeSvc;
 }
 
