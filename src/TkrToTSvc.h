@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.10 2005/04/12 23:02:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.11 2005/12/20 02:35:58 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -34,14 +34,14 @@ public:
     StatusCode finalize();
 
     /// queryInterface - for implementing a Service this is necessary
-    StatusCode queryInterface(const IID& riid, void** ppvUnknown);
+    StatusCode queryInterface(const InterfaceID& riid, void** ppvUnknown);
 
     static const InterfaceID& interfaceID() {
         return ITkrToTSvc::interfaceID(); 
     }
 
     /// return the service type
-    const IID& type() const;
+    const InterfaceID& type() const;
 
     double getGain(int tower, int layer, int view, int strip) const;
     double getQuad(int tower, int layer, int view, int strip) const; 

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.15 2005/08/17 18:53:10 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.16 2005/12/20 02:35:58 lsrea Exp $
 
 */
 
@@ -48,7 +48,7 @@ TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc)
     declareProperty("cableBufferSize",  m_cableBuffer=128);
 }
 
-StatusCode  TkrSplitsSvc::queryInterface (const IID& riid, void **ppvIF)
+StatusCode  TkrSplitsSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
 {
     if (IID_ITkrSplitsSvc == riid) {
         *ppvIF = dynamic_cast<ITkrSplitsSvc*> (this);
@@ -58,7 +58,7 @@ StatusCode  TkrSplitsSvc::queryInterface (const IID& riid, void **ppvIF)
     }
 }
 
-const IID&  TkrSplitsSvc::type () const {
+const InterfaceID&  TkrSplitsSvc::type () const {
     return IID_ITkrSplitsSvc;
 }
 

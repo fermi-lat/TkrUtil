@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.1 2005/06/22 21:40:59 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.2 2005/08/17 00:57:37 lsrea Exp $
  */
 
 #include "GaudiKernel/AlgTool.h"
@@ -169,7 +169,7 @@ double TkrEnergyTool::getTotalEnergy(const Event::TkrTrack* track, double CalEne
     while(layer--) 
 
     {
-        //HepMatrix Q = m_propagator->getMscatCov(arc_len, CalEnergy/2.);
+        //CLHEP::HepMatrix Q = m_propagator->getMscatCov(arc_len, CalEnergy/2.);
         //double xms = Q(1,1);
         //double yms = Q(3,3);
 

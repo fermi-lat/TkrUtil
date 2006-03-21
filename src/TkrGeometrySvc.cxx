@@ -10,6 +10,7 @@
 
 #include "idents/TowerId.h"
 #include "Event/Recon/TkrRecon/TkrCluster.h"
+#include "CLHEP/Geometry/Transform3D.h"
 
 #include <iostream>
 #include <algorithm>
@@ -243,7 +244,7 @@ void TkrGeometrySvc::planeToLayer(int plane,
 
 // queryInterface
 
-StatusCode  TkrGeometrySvc::queryInterface (const IID& riid, void **ppvIF)
+StatusCode  TkrGeometrySvc::queryInterface (const InterfaceID& riid, void **ppvIF)
 {
     if (IID_ITkrGeometrySvc == riid) {
         *ppvIF = dynamic_cast<ITkrGeometrySvc*> (this);
@@ -256,7 +257,7 @@ StatusCode  TkrGeometrySvc::queryInterface (const IID& riid, void **ppvIF)
 
 // access the type of this service
 
-const IID&  TkrGeometrySvc::type () const {
+const InterfaceID&  TkrGeometrySvc::type () const {
     return IID_ITkrGeometrySvc;
 }
 
@@ -355,7 +356,7 @@ StatusCode TkrGeometrySvc::getTowerLimits()
 
     StatusCode sc;
 
-    HepTransform3D T;
+    HepGeom::Transform3D T;
     int tower;
     // fill the towerType array
     m_xLim[0] = 1000; m_xLim[1] = -1;
@@ -501,7 +502,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     //bottom.append(1); // TKR
     bottom.append(0);                // tray 0
     idents::VolumeIdentifier idBot;
-    HepTransform3D botTransform;
+    HepGeom::Transform3D botTransform;
     for (int view = 0; view<2; ++view) {
         idBot = bottom;
         idBot.append(view);          // try both views
@@ -768,7 +769,7 @@ StatusCode TkrGeometrySvc::getCalInfo()
     topLayerId.append(0);  // x view
 
     StatusCode sc;
-    HepTransform3D transfTop;
+    HepGeom::Transform3D transfTop;
     for (count=0;count<3;++count) {
         topLayerId.append(0);
         if((sc = m_pDetSvc->getTransform3DByID(topLayerId,&transfTop)).isSuccess()) break;
@@ -815,7 +816,7 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
 {
     StatusCode sc = StatusCode::SUCCESS;
 
-    HepTransform3D T;
+    HepGeom::Transform3D T;
     bool found = false;
 
     int tray, face, layer, view;
@@ -912,7 +913,7 @@ StatusCode TkrGeometrySvc::getTestTower()
 
     bool found = false;
 
-    HepTransform3D T;
+    HepGeom::Transform3D T;
     int tower, tray, face, view;
 
     m_testTower = -1;

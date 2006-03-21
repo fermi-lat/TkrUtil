@@ -2,11 +2,11 @@
  * @class TkrCovMatrix
  *
  * @brief Implementation of a particular "matrix" class for the generic Kalman Filter fitter. 
- *        This version based on CLHEP HepMatrix. 
+ *        This version based on CLHEP CLHEP::HepMatrix. 
  *
  * @author Tracy Usher
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrCovMatrix.h,v 1.1 2004/09/18 18:38:42 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrCovMatrix.h,v 1.2 2004/10/04 16:15:29 usher Exp $
  */
 
 #ifndef TkrCovMatrix_h
@@ -15,25 +15,25 @@
 #include "CLHEP/Matrix/Matrix.h"
 #include "Event/Recon/TkrRecon/TkrTrackParams.h"
 
-class TkrCovMatrix : public HepMatrix, virtual public Event::ITkrTrackParamsAccess
+class TkrCovMatrix : public CLHEP::HepMatrix, virtual public Event::ITkrTrackParamsAccess
 {
 public:
 
     // Destructor
     virtual ~TkrCovMatrix() {}
 
-    // Constructors from HepMatrix
-    TkrCovMatrix() : HepMatrix() {}
-    TkrCovMatrix(int p, int q): HepMatrix(p,q) {}
-    TkrCovMatrix(int p, int q, int i) : HepMatrix(p,q,i) {}
-    TkrCovMatrix(int p, int q, HepRandom &r) : HepMatrix(p,q,r) {}
-    TkrCovMatrix(const HepMatrix &m1) : HepMatrix(m1) {}
-    TkrCovMatrix(const TkrCovMatrix &m1) : HepMatrix(m1) {}
+    // Constructors from CLHEP::HepMatrix
+    TkrCovMatrix() : CLHEP::HepMatrix() {}
+    TkrCovMatrix(int p, int q): CLHEP::HepMatrix(p,q) {}
+    TkrCovMatrix(int p, int q, int i) : CLHEP::HepMatrix(p,q,i) {}
+    TkrCovMatrix(int p, int q, CLHEP::HepRandom &r) : CLHEP::HepMatrix(p,q,r) {}
+    TkrCovMatrix(const CLHEP::HepMatrix &m1) : CLHEP::HepMatrix(m1) {}
+    TkrCovMatrix(const TkrCovMatrix &m1) : CLHEP::HepMatrix(m1) {}
     // Copy constructor.
 
-    TkrCovMatrix(const HepSymMatrix &m1) : HepMatrix(m1) {}
-    TkrCovMatrix(const HepDiagMatrix &m1) : HepMatrix(m1) {}
-    TkrCovMatrix(const HepVector &m1) : HepMatrix(m1) {}
+    TkrCovMatrix(const CLHEP::HepSymMatrix &m1) : CLHEP::HepMatrix(m1) {}
+    TkrCovMatrix(const CLHEP::HepDiagMatrix &m1) : CLHEP::HepMatrix(m1) {}
+    TkrCovMatrix(const CLHEP::HepVector &m1) : CLHEP::HepMatrix(m1) {}
     // Constructors from SymMatrix, DiagMatrix and Vector.
 
     inline TkrCovMatrix(Event::TkrTrackParams& m1);
@@ -42,7 +42,7 @@ public:
     inline void getParams(Event::TkrTrackParams* params);
 };
 
-TkrCovMatrix::TkrCovMatrix(Event::TkrTrackParams& m1) : HepMatrix(4,4) 
+TkrCovMatrix::TkrCovMatrix(Event::TkrTrackParams& m1) : CLHEP::HepMatrix(4,4) 
 {
     (*this)(1,1) = m1(1,1);
     (*this)(1,2) = m1(1,2);

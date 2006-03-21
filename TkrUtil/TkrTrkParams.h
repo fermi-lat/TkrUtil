@@ -1,11 +1,11 @@
 /**
  * @class TkrTrkParams
  *
- * @brief Implementation of a Vector for the generic Kalman Filter. This version based on CLHEP HepVector
+ * @brief Implementation of a Vector for the generic Kalman Filter. This version based on CLHEP CLHEP::HepVector
  *
  * @author Tracy Usher
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrTrkParams.h,v 1.1 2004/09/18 18:38:42 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrTrkParams.h,v 1.2 2004/10/04 16:15:29 usher Exp $
  */
 
 #ifndef TkrTrkParams_h
@@ -15,30 +15,30 @@
 #include "Event/Recon/TkrRecon/TkrTrackParams.h"
 
 
-class TkrTrkParams : public HepVector, virtual public Event::ITkrTrackParamsAccess
+class TkrTrkParams : public CLHEP::HepVector, virtual public Event::ITkrTrackParamsAccess
 {
 public:
 
     // Destructor
     virtual ~TkrTrkParams() {}
 
-    // Constructors from HepMatrix
-    TkrTrkParams() : HepVector() {}
+    // Constructors from CLHEP::HepMatrix
+    TkrTrkParams() : CLHEP::HepVector() {}
     // Default constructor. Gives vector of length 0.
     // Another Vector can be assigned to it.
 
-    TkrTrkParams(int p) : HepVector(p) {}
-    TkrTrkParams(int p, int i) : HepVector(p, i) {}
+    TkrTrkParams(int p) : CLHEP::HepVector(p) {}
+    TkrTrkParams(int p, int i) : CLHEP::HepVector(p, i) {}
 
-    TkrTrkParams(const TkrTrkParams &m1) : HepVector(m1) {}
+    TkrTrkParams(const TkrTrkParams &m1) : CLHEP::HepVector(m1) {}
     // Constructor. Gives vector of length p.
 
 #ifdef HEP_USE_RANDOM
-    TkrTrkParams(int p, HepRandom &r) : HepVector(p,r) {}
+    TkrTrkParams(int p, CLHEP::HepRandom &r) : CLHEP::HepVector(p,r) {}
 #endif
 
-    TkrTrkParams(const HepVector &v) : HepVector(v) {}
-    TkrTrkParams(const HepMatrix &m) : HepVector(m) {}
+    TkrTrkParams(const CLHEP::HepVector &v) : CLHEP::HepVector(v) {}
+    TkrTrkParams(const CLHEP::HepMatrix &m) : CLHEP::HepVector(m) {}
 
     inline TkrTrkParams(Event::TkrTrackParams& m1);
 
@@ -46,7 +46,7 @@ public:
     inline void getParams(Event::TkrTrackParams* params);
 };
 
-TkrTrkParams::TkrTrkParams(Event::TkrTrackParams& m1) : HepVector(4)
+TkrTrkParams::TkrTrkParams(Event::TkrTrackParams& m1) : CLHEP::HepVector(4)
 {
     (*this)(1) = m1(1);
     (*this)(2) = m1(2);

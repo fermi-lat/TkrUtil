@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.36 2005/12/20 02:35:57 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.37 2005/12/20 17:17:44 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -1159,7 +1159,7 @@ void TkrAlignmentGeomVisitor::popShape() { return;}
 
 // queryInterface
 
-StatusCode  TkrAlignmentSvc::queryInterface (const IID& riid, void **ppvIF)
+StatusCode  TkrAlignmentSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
 {
     if (IID_ITkrAlignmentSvc == riid) {
         *ppvIF = dynamic_cast<ITkrAlignmentSvc*> (this);
@@ -1172,6 +1172,6 @@ StatusCode  TkrAlignmentSvc::queryInterface (const IID& riid, void **ppvIF)
 
 // access the type of this service
 
-const IID&  TkrAlignmentSvc::type () const {
+const InterfaceID&  TkrAlignmentSvc::type () const {
     return IID_ITkrAlignmentSvc;
 }

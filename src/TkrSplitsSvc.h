@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.8 2005/08/17 00:41:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.h,v 1.9 2005/12/20 02:35:58 lsrea Exp $
 
 */
 #ifndef TkrSplitsSvc_H
@@ -37,14 +37,14 @@ public:
     StatusCode finalize();
 
     /// queryInterface - for implementing a Service this is necessary
-    StatusCode queryInterface(const IID& riid, void** ppvUnknown);
+    StatusCode queryInterface(const InterfaceID& riid, void** ppvUnknown);
 
     static const InterfaceID& interfaceID() {
         return ITkrSplitsSvc::interfaceID(); 
     }
 
     /// return the service type
-    const IID& type() const;
+    const InterfaceID& type() const;
 
     /// get the last C0 strip for this plane
     int getSplitPoint(int tower, int layer, int view) const;
