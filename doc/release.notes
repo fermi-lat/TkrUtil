@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r7     23-Mar-06  TU Tagging for new externals (CLHEP, Gaudi, etc.)
   v3r6p2   20-Dec-05 LSR Fixed an int that should have been double (warnings again!)
   v3r6p1   19-Dec-05 LSR Refactor several services, replacing fixed multiply-dimensioned
                              arrays with IndexedVector, derived from std::vector
