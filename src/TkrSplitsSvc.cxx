@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.16 2005/12/20 02:35:58 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.17 2006/03/21 01:15:48 usher Exp $
 
 */
 
@@ -156,7 +156,7 @@ int TkrSplitsSvc::getLastC0Strip(int tower, int layer, int view) const
         idents::TowerId twr(tower);
         int towerX = twr.ix();
         int towerY = twr.iy();
-        idents::TkrId thisPlane(towerY, towerX, tray, isTop);
+        idents::TkrId thisPlane(towerX, towerY, tray, isTop);
         CalibData::RangeBase* pPlane = m_pSplits->getChannel(thisPlane);
         CalibData::TkrSplit* pSplit = dynamic_cast<CalibData::TkrSplit*>(pPlane);
         /*
