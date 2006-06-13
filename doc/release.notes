@@ -9,6 +9,8 @@
 
   On main branch
   ------------------------------
+  v3r7p3   13-Jun-06 LSR More error-checking for Alignment constants file
+                         Kill job if there are errors in Alignment or FailureMode service setups
   v3r7p2   10-Apr-06 LSR Fixed the order of x and y in the TkrId call in TkrSplitsSvc
   v3r7p1   27-Mar-06 JCT Comment out Glast event selector
   v3r7     23-Mar-06  TU Tagging for new externals (CLHEP, Gaudi, etc.)
