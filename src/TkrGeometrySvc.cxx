@@ -144,14 +144,16 @@ StatusCode TkrGeometrySvc::initialize()
     // Get the alignment service 
     m_tkrAlign = 0;
     if( service( "TkrAlignmentSvc", m_tkrAlign, true).isFailure() ) {
-        log << MSG::INFO << "Couldn't set up TkrAlignmentSvc" << endreq;
-        log << "Will assume it is not required"    << endreq;
+        log << MSG::ERROR << "Couldn't set up TkrAlignmentSvc" << endreq;
+        return StatusCode::FAILURE;
+        //log << "Will assume it is not required"    << endreq;
     }
     // Get the bad strips service
     m_badStrips = 0;
     if( service( "TkrBadStripsSvc", m_badStrips, true).isFailure() ) {
-        log << MSG::INFO << "Couldn't set up TkrBadStripsSvc" << endreq;
-        log << "Will assume it is not required"    << endreq;
+        log << MSG::ERROR << "Couldn't set up TkrBadStripsSvc" << endreq;
+        return StatusCode::FAILURE;
+        //log << "Will assume it is not required"    << endreq;
     }
     // get the splits service
     m_tkrSplits = 0;

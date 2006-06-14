@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.37 2005/12/20 17:17:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.38 2006/03/21 01:15:47 usher Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -382,19 +382,24 @@ StatusCode TkrAlignmentSvc::readFromFile()
     StatusCode sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
 
-    std::string mystring;
+    std::string mystring, mystring0;
     std::string flag;
 
     // clear the list
     m_itemCol.clear();
     m_pItem = m_itemCol.begin();
+    int lineNum = 0;
 
     while(!m_dataFile->eof()) {
         mystring = "";
         getline(*m_dataFile, mystring);
+        mystring0 = mystring;
+        lineNum++;
         // upper-case the string
         unsigned int i;
         for (i=0;i<mystring.size();++i) {mystring[i] = toupper(mystring[i]);}
+        int pos = mystring.find("//");
+        if(pos>0) mystring = mystring.substr(0,pos);
 
         // this stuff apparently no longer needed
         //#ifdef DEFECT_NO_STRINGSTREAM
@@ -437,7 +442,13 @@ StatusCode TkrAlignmentSvc::readFromFile()
                 mystream >> a >> b >> c >> d >> e >> f ;
                 consts = AlignmentConsts(0.001*a, 0.001*b, 0.001*c,
                     0.001*d, 0.001*e, 0.001*f);
-            } 
+            } else if(tokenCount!=2) {
+                log << MSG::ERROR << "Error in Alignment File: " << endreq 
+                    << "Line No. " << lineNum << ": " << mystring0 << endreq
+                    << "Please fix this and resubmit the job"
+                    << endreq;
+                return StatusCode::FAILURE;
+            }
 
             AlignmentItem* pItem = new AlignmentItem(iflag, number,consts); 
             m_itemCol.push_back(pItem);
