@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r8     17-Jul-06 LSR Restore TkrGeometrySvc::inTower()... Johann likes it!
   v3r7p4   13-Jun-06 LSR More error-checking for Alignment constants file
                          Kill job if there are errors in Alignment or FailureMode service setups
   v3r7p2   10-Apr-06 LSR Fixed the order of x and y in the TkrId call in TkrSplitsSvc

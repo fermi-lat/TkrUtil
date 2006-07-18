@@ -1007,3 +1007,71 @@ double TkrGeometrySvc::truncateCoord( double x, double pitch,
     if (reverse) elementNumber = numElements - 1 - elementNumber;
     return pitch*(xMod - theFloor - 0.5);
 }
+
+bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower, 
+                             double& xActiveDist, double& yActiveDist, 
+                             double& xGap, double& yGap) const
+{
+    // input: view, Point
+    // returns: inTower, iXTower, iYTower, xActiveDist, yActiveDist,
+    //          xGap, yGap
+
+    // If inTower, x/yActiveDist is distance from activeWafer edge
+    // else, it's distance from entire active silicon plane
+
+    double twrPitch = towerPitch();
+    int numX = numXTowers();
+    int numY = numYTowers();
+    bool isInTower = true;
+    double xTower = truncateCoord(p.x(), twrPitch, numX, iXTower);
+    double yTower = truncateCoord(p.y(), twrPitch, numY, iYTower);
+    // check if the point is in an inter-tower gap
+    int nWafer = nWaferAcross();
+    double xPitch, yPitch, xSiGap, ySiGap;
+    double deadGap = siDeadDistance();
+    if (view==0) {
+        xPitch = ladderPitch();
+        yPitch = waferPitch();
+        xSiGap   = ladderGap();
+        ySiGap   = ladderInnerGap();
+    } else {
+        yPitch = ladderPitch();
+        xPitch = waferPitch();
+        ySiGap   = ladderGap();
+        xSiGap   = ladderInnerGap();
+    }
+
+    // if these are negative, track misses active area of tower
+    // probably no point in constraining hit in this plane
+    xGap = xSiGap + 2*deadGap;
+    yGap = ySiGap + 2*deadGap;
+    xActiveDist = 0.5*(nWafer*xPitch + xGap) - fabs(xTower); 
+    yActiveDist = 0.5*(nWafer*yPitch + yGap) - fabs(yTower);
+    if (xActiveDist>0 && yActiveDist>0) { // test for "inside active Tower"
+        // look for internal gaps
+        double xWafer, yWafer;
+        int iXWafer, iYWafer;
+        xWafer = truncateCoord(xTower, xPitch, nWafer, iXWafer);
+        yWafer = truncateCoord(yTower, yPitch, nWafer, iYWafer);
+
+        double activeWaferSide = siActiveWaferSide();
+        xActiveDist = 0.5*activeWaferSide - fabs(xWafer);
+        yActiveDist = 0.5*activeWaferSide - fabs(yWafer);
+    } else {
+        // towerGap is big, so no point in keeping 2 versions
+        double towerGap    = twrPitch - nWafer*xPitch + xGap;
+
+        // note that if we are on the outside of an edge tower the "gap" 
+        // is infinite, but the simple intertower gap is effectively infinite
+        // as far as the fit is concerned, so it shouldn't matter.
+        isInTower = false;
+        if (xActiveDist<0 ) {
+            yGap = twrPitch;
+            xGap = (yActiveDist<0 ? twrPitch : towerGap);
+        } else {
+            xGap = twrPitch;
+            yGap = towerGap;
+        }
+    }
+    return isInTower;
+}

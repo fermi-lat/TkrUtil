@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.24 2005/08/17 00:41:30 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.25 2005/12/20 02:35:57 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -29,7 +29,7 @@
  * @author Tracy Usher
  */
 
-static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 13 , 0); 
+static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 14 , 0); 
 
 namespace {
     enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
@@ -186,6 +186,9 @@ public:
     virtual double gettkrZBot() const = 0;
 
     // new stuff here for minimal disruption
+    // put this back... Johann uses it!
+    virtual bool inTower(int view, const Point p, int& iXTower, int& iYTower,
+        double& xActiveDist, double& yActiveDist, double& xGap, double &yGap) const = 0;
 
 };
 
