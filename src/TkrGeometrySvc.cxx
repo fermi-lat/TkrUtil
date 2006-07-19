@@ -1045,8 +1045,8 @@ bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower
     // probably no point in constraining hit in this plane
     xGap = xSiGap + 2*deadGap;
     yGap = ySiGap + 2*deadGap;
-    xActiveDist = 0.5*(nWafer*xPitch + xGap) - fabs(xTower); 
-    yActiveDist = 0.5*(nWafer*yPitch + yGap) - fabs(yTower);
+    xActiveDist = 0.5*(nWafer*xPitch - xGap) - fabs(xTower); 
+    yActiveDist = 0.5*(nWafer*yPitch - yGap) - fabs(yTower);
     if (xActiveDist>0 && yActiveDist>0) { // test for "inside active Tower"
         // look for internal gaps
         double xWafer, yWafer;
