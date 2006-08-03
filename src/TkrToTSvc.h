@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.11 2005/12/20 02:35:58 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.12 2006/03/21 01:15:48 usher Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -15,6 +15,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.11 2005/12/20 
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "GaudiKernel/Service.h"
 #include "idents/TowerId.h"
+#include "idents/TkrId.h"
 
 /** @class TkrToTSvc
 * @brief Service to store and compare to a list of desired failure modes in
@@ -23,6 +24,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.11 2005/12/20 
 * Author:  L. Rochester (after R.Dubois)
 *
 */
+
+enum constType {GAIN=0, QUAD, THRESHOLD, SCALE, QUALITY};
 
 class TkrToTSvc : public Service, virtual public ITkrToTSvc  {
 
@@ -47,8 +50,9 @@ public:
     double getQuad(int tower, int layer, int view, int strip) const; 
     double getThreshold(int tower, int layer, int view, int strip) const; 
     double getQuality(int tower, int layer, int view, int strip) const; 
-
     double getMuonScale(int tower, int layer, int view, int strip) const;
+    void   doWarning(const std::string type, const idents::TkrId id, int string) const;
+
     double getCountsPerMicrosecond() const { return m_countsPerMicrosecond;}
     double getMevPerMip() const { return m_mevPerMip; }
     double getFCPerMip() const { return m_fCPerMip; }
@@ -99,6 +103,8 @@ private:
     /// Charge deposited by a mini particle traversing a silicon plane
     double m_fCPerMip;
     int    m_maxToT;
+    /// flag to use default values if not in calibration file (otherwise use zeros)
+    bool   m_useDefaultIfMissing;
 
     /// pointer to geometry service
     ITkrGeometrySvc* m_tkrGeom;
@@ -116,6 +122,8 @@ private:
     int m_nLayers;
     int m_nViews;
     int m_nStrips;
+
+    mutable int m_callCount;
 };
 
 

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.17 2005/12/20 02:35:58 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.18 2006/03/21 01:15:48 usher Exp $
 
 */
 
@@ -59,6 +59,7 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     declareProperty("maxToT",                m_maxToT                = 250);
     declareProperty("useSingleTowerConsts" , m_useSingleTowerConsts  = false);
     declareProperty("baseTower",             m_baseTower             = 0);
+    declareProperty("useDefaultIfMissing"  , m_useDefaultIfMissing   = false);
 }
 
 StatusCode  TkrToTSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
@@ -109,6 +110,8 @@ StatusCode TkrToTSvc::initialize ()
     m_nViews  = 2;
     m_nStrips = m_tkrGeom->ladderNStrips()*m_tkrGeom->nWaferAcross();
 
+    m_callCount = 0;
+
     // Bind all of the properties for this service
     if ( (status = setProperties()).isFailure() ) {
         log << MSG::ERROR << "Failed to set properties" << endreq;
@@ -135,7 +138,12 @@ double TkrToTSvc::getGain(int tower, int layer, int view, int strip) const
     if (m_pToT) {
         TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
-        return  pInfo->getSlope();
+        if(pInfo!=0) {
+            return  pInfo->getSlope();
+        } else {
+            if (m_useDefaultIfMissing) {return m_defaultGain;}
+            else {return 0.0;}
+        }
     } else {
         return m_defaultGain;
     }
@@ -147,7 +155,12 @@ double TkrToTSvc::getQuad(int tower, int layer, int view, int strip) const
     if (m_pToT) {
         TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
-        return  pInfo->getQuad();
+        if(pInfo!=0) {
+            return  pInfo->getQuad();
+        } else {
+            if (m_useDefaultIfMissing) {return m_defaultQuad;}
+            else {return 0.0;}
+        }
     } else {
         return m_defaultQuad;
     }
@@ -159,7 +172,12 @@ double TkrToTSvc::getThreshold(int tower, int layer, int view, int strip) const
     if (m_pToT) {
         TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
-        return  pInfo->getIntercept();
+        if(pInfo!=0) {
+            return  pInfo->getIntercept();
+        } else {
+            if (m_useDefaultIfMissing) {return m_defaultThreshold;}
+            else {return 0.0;}
+        }
     } else {
         return m_defaultThreshold;
     }
@@ -171,7 +189,12 @@ double TkrToTSvc::getQuality(int tower, int layer, int view, int strip) const
     if (m_pToT) {
         TkrId id = getId(tower, layer, view);
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
-        return  pInfo->getChi2();
+        if(pInfo!=0) {
+            return  pInfo->getChi2();
+        } else {
+            if (m_useDefaultIfMissing) {return m_defaultQuality;}
+            else {return 0.0;}
+        }
     } else {
         return m_defaultQuality;
     }
@@ -186,6 +209,7 @@ double TkrToTSvc::getMuonScale(int tower, int layer, int view, int strip) const
         TkrId id = getId(tower, layer, view);
         CalibData::TkrScaleObj pInfo = m_pScale->getStripInfo(id, strip);
         muonScale = static_cast<double>(pInfo.getScale());
+        if(muonScale==0.0 && m_useDefaultIfMissing) muonScale = m_defaultMuonScale;
     } else {
         muonScale = m_defaultMuonScale;
     }
@@ -202,9 +226,12 @@ int TkrToTSvc::getRawToT(double eDep, int tower, int layer, int view, int strip)
     getConsts(id, strip, threshold, gain, quad, muonScale);
 
     double charge    = eDep/m_mevPerMip*m_fCPerMip; // in fCs
-  
+
     // consts are for ToT -> charge
     // Here is the inverse:
+
+    if(gain==0 || muonScale==0) { return 0; }
+
     double term = (charge/muonScale-threshold)/gain;
     double test = quad/gain;
     double time;
@@ -215,6 +242,7 @@ int TkrToTSvc::getRawToT(double eDep, int tower, int layer, int view, int strip)
         // degenerate case
         time = term*(1.0 - test*term);
     }
+
     time *= m_countsPerMicrosecond;
     int iToT = static_cast<int> ( std::max( 0., time));
     return std::min(iToT, m_maxToT);
@@ -231,7 +259,7 @@ double TkrToTSvc::getCharge(double rawToT, int tower, int layer, int view, int s
 
     double time = rawToT/m_countsPerMicrosecond;
     double charge = muonScale*(threshold + time*(gain + time*quad));
-  
+
     return charge;
 }
 idents::TkrId TkrToTSvc::getId(int tower, int layer, int view) const
@@ -258,28 +286,76 @@ void TkrToTSvc::getConsts(idents::TkrId id, int strip,
                           double& threshold, double& gain,
                           double& quad, double& muonScale) const 
 {
+    bool warned = false;
     if (m_pToT) {
         const CalibData::TkrTotStrip* pInfo = m_pToT->getStripInfo(id, strip);
-        gain = pInfo->getSlope();
-        quad = pInfo->getQuad();
-        threshold = pInfo->getIntercept();
+        if (pInfo!=0) {
+            gain = pInfo->getSlope();
+            quad = pInfo->getQuad();
+            threshold = pInfo->getIntercept();
+        } else {
+            if(m_useDefaultIfMissing) {
+                gain = m_defaultGain;
+                quad = m_defaultQuad;
+                threshold = m_defaultThreshold;
+            } else {
+                gain = 0.0;
+                quad = 0.0;
+                threshold = 0.0;
+            }
+            doWarning("ToT consts", id, strip);
+            m_callCount++;
+            warned = true;
+        }
     } else {
         gain      = m_defaultGain;
         quad      = m_defaultQuad;
         threshold = m_defaultThreshold;
     }
+
     if(m_pScale) {
         CalibData::TkrScaleObj pInfo1 = m_pScale->getStripInfo(id, strip);
         muonScale = static_cast<double>(pInfo1.getScale());
+        if(muonScale==0.0) {
+            doWarning("muon scale", id, strip);
+            if(m_useDefaultIfMissing) {
+                muonScale = m_defaultMuonScale;
+            }
+            if (!warned) m_callCount++;
+        }
     } else {
         muonScale = m_defaultMuonScale;
     }
-    
+
     return;
 }
 
+void TkrToTSvc::doWarning(const std::string type, const idents::TkrId id, int strip) const
+{
+    const int maxWarn = 20;
+    if (m_callCount>=maxWarn) return;
+    MsgStream log(msgSvc(), name());
+    log << MSG::WARNING << "Info missing for " << type 
+        << ", TkrId: TowerX/Y " << id.getTowerX() << "/" << id.getTowerY()
+        << " Tray/botTop " << id.getTray() << "/" << id.getBotTop() 
+        << " strip " << strip;
+    log << (m_useDefaultIfMissing ? ", default used" : ", set to zero") << endreq;
+    if (m_callCount==maxWarn-1) log << " Warning suppressed for the rest of this job" << endreq;
+    return;
+}
 StatusCode TkrToTSvc::finalize() {
 
     MsgStream log(msgSvc(), name());
+    if(m_callCount>0) {
+        log << MSG::WARNING << m_callCount 
+            << "Call(s) to getConsts() with missing info;";
+        if (m_useDefaultIfMissing){ 
+            log << " default values used";
+        } else {
+            log << " consts set to zero";
+        }
+        log << endreq;
+    }
+
     return StatusCode::SUCCESS;
 }

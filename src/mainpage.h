@@ -180,6 +180,9 @@
   use a single set of ToT constants for all the towers (For tests, default = false)
   @param TkrToTSvc.baseTower
   If useSingleTowerConstants is true, the tower of the constants to be used
+  @param TkrToTSvc.useDefaultIfMissing (default = false)
+  Specifies treatment of missing values when using calibration data. If false,
+  missing constants are set to zero; if true, standard default values are used.
   
   <hr>
   @section files Structure of Input Files

@@ -9,6 +9,8 @@
 
   On main branch
   ------------------------------
+  v3r8p2   02-Aug-06 LSR Handle missing info in TkrToTSvc... default is to set all  the consts to zero if missing
+                            TkrToTSvc.useDefaultIfMissing uses the default values instead
   v3r8p1   19-Jul-06 LSR Fix a sign error in TkrGeometrySvc::inTower()
   v3r8     17-Jul-06 LSR Restore TkrGeometrySvc::inTower()... Johann likes it!
   v3r7p4   13-Jun-06 LSR More error-checking for Alignment constants file
