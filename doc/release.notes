@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r8p3   06-Sep-06 LSR Less tricky version of IndexedVector to avoid unix link problems, and test program
   v3r8p2   02-Aug-06 LSR Handle missing info in TkrToTSvc... default is to set all  the consts to zero if missing
                             TkrToTSvc.useDefaultIfMissing uses the default values instead
   v3r8p1   19-Jul-06 LSR Fix a sign error in TkrGeometrySvc::inTower()

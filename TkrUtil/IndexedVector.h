@@ -4,7 +4,7 @@
 @brief "Multi-dimensional" vector based on std::vector (should be in some more general package)
 
 @author Leon Rochester
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/IndexedVector.h,v 1.1 2005/12/20 02:35:57 lsrea Exp $
 */
 
 #include <vector>
@@ -94,6 +94,9 @@ public:
         /// checks the range of the arguments
         // note: "break"s are conditinal on purpose; code sweeps through
         //     currently defined dimensions
+        // this code doesn't compile under compat gcc32
+        // So it's converted to if's below
+        /*
         bool valid = false;
         switch (m_nDim) {
             case 5:
@@ -110,7 +113,27 @@ public:
             default:
                 valid = false;
         }
-        return valid;
+        */
+
+        if (m_nDim<=0 || m_nDim>NUMDIMS)      return false;
+
+        // using a loop, for future reference:
+        /*
+        int ind[NUMDIMS];
+        ind[0] = i; ind[1] = j; ind[2] = k; ind[3] = m; ind[4] = n;
+        int dim;
+        for(dim=0; dim<m_nDim; ++dim) {
+            if(ind[dim]<0 || ind[dim]>=m_dim[dim]) return false;
+        }
+        */
+
+        if (m_nDim>0 && (i<0 || i>=m_dim[0])) return false;
+        if (m_nDim>1 && (j<0 || j>=m_dim[1])) return false;
+        if (m_nDim>2 && (k<0 || k>=m_dim[2])) return false;
+        if (m_nDim>3 && (m<0 || m>=m_dim[3])) return false;
+        if (m_nDim>4 && (n<0 || n>=m_dim[4])) return false;
+
+        return true;
     }
 
     /// returns the overall index given the individual indices
@@ -126,8 +149,10 @@ public:
         if (m_checkRange) {
            if(!checkIndex(i, j, k, m, n)) throw std::invalid_argument("IndexedVector: access");
         }
-
-        // this could be a loop, but it would probably be slower
+         
+        //   the following code doesn't link properly in compat-gcc32
+        //   so rewritten below
+        /*
         switch(m_nDim){
             case 1:  
                 return i;
@@ -142,6 +167,33 @@ public:
             default: // needn't happen if the status is checked when dims are set
                 throw std::invalid_argument("IndexedVector: access");
         }
+        */
+
+        int result;
+
+        // using a loop:
+        /*
+        int dim;
+        int ind[NUMDIMS];
+        ind[0] = i; ind[1] = j; ind[2] = k; ind[3] = m; ind[4] = n;
+        if(m_nDim<1 || m_nDim>NUMDIMS) throw std::invalid_argument("IndexedVector: access");
+        result = ind[0];
+        for(dim=1; dim<m_nDim; ++dim) {
+            result = result*m_dim[dim]+ ind[dim];
+        }
+        */
+
+        result = -1;
+        if      (m_nDim==2) result = i*m_dim[1]+j;
+        else if (m_nDim==3) result = (i*m_dim[1]+j)*m_dim[2]+k;
+        else if (m_nDim==4) result = ((i*m_dim[1]+j)*m_dim[2]+k)*m_dim[3]+m;
+        else if (m_nDim==5) result = (((i*m_dim[1]+j)*m_dim[2]+k)*m_dim[3]+m)*m_dim[4]+n;
+        else if (m_nDim==1) result = i; // last, because not likely to be used!
+        else { // needn't happen if the status is checked when ind are set
+            throw std::invalid_argument("IndexedVector: access");
+        }
+
+        return result;
     }
 
     /// sets range-checking off or on; default is on
