@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.3 2005/07/04 17:34:10 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.4 2005/08/17 00:41:30 lsrea Exp $
 */
 
 // Include files
@@ -227,6 +227,8 @@ StatusCode TkrMakeClustersTool::makeClusters(
 
                     Event::TkrCluster* cl = new Event::TkrCluster(hitId, strip0, stripf, 
                         pos, rawToT, ToT, status, nBad);
+
+
                     // for tests
                     //if(m_type == ITkrBadStripsSvc::BADCLUSTERS) {
                     //    std::cout << tower << " " << nHits << " " <<

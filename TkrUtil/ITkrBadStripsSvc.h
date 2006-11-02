@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrBadStripsSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.8 2005/03/01 00:57:45 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvc.h,v 1.9 2005/12/20 02:35:57 lsrea Exp $
 */
 
 
@@ -81,7 +81,7 @@ public:
     //! Constructor of this form must be provided
 
     static const InterfaceID& interfaceID() { return IID_ITkrBadStripsSvc; }
-   
+
     virtual const stripCol* getBadStrips(int tower, int layer, 
         idents::GlastAxis::axis axis) const = 0;
     virtual bool isBadStrip(int tower, int layer, 

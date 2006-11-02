@@ -60,11 +60,16 @@ public:
     //StatusCode execute();
     StatusCode finalize();
 
-    /// get the list of enabled failure mode conditions
-    int getFailureConditions() const {return m_failureModes;}
+    /// sets type to SIM or REC
+    void SetCalibType(calibType type) const {m_calibType = type;}
 
-    bool empty() const { return m_failureModes==0;}
-    void setFailureModes( int modeBit ) { m_failureModes = m_failureModes | modeBit;}
+    /// get the list of enabled failure mode conditions
+    int getFailureConditions() const {return m_failureModes[m_calibType];}
+
+    bool empty() const { return m_failureModes[m_calibType]==0;}
+    void setFailureModes( int modeBit ) { 
+        m_failureModes[m_calibType] = m_failureModes[m_calibType] | modeBit;
+    }
 
 
     StatusCode update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot);
@@ -105,19 +110,23 @@ private:
 
 private:
 
+    /// type of calibration
+    mutable calibType m_calibType;
     /// List of towers from jobOptions
-    StringArrayProperty m_towerListProperty;
+    StringArrayProperty m_commonTowerListProperty;
+    StringArrayProperty m_towerListProperty[2];
 
     /// List of layers from jobOptions
-    StringArrayProperty m_layerListProperty;
+    StringArrayProperty m_commonLayerListProperty;
+    StringArrayProperty m_layerListProperty[2];
 
     /// bitmap of failure modes
-    int m_failureModes;
+    int m_failureModes[2];
     /// tells whether a list was read in
-    bool m_existsList;
+    bool m_existsList[2];
 
     /// vector of towers to fail
-    std::vector<int> m_towerList;
+    std::vector<int> m_towerList[2];
 
     /// vector of layers to fail
     //    std::map <int, std::vector<int> > m_layerList;
@@ -126,7 +135,7 @@ private:
 
 
     /// vector of layers to fail
-    LayerMap  m_layerList;
+    LayerMap  m_layerList[2];
 
     ITkrGeometrySvc*     m_tkrGeom;
     };

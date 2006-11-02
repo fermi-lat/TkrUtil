@@ -2,7 +2,7 @@
 @brief Abstract Interface to TkrBadStripsSvc, used by TkrCalibAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvcCalib.h,v 1.2 2003/04/11 23:27:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvcCalib.h,v 1.3 2003/07/02 20:15:06 cohen Exp $
 */
 
 
@@ -27,7 +27,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvcCalib.h,v 
 //             Leon Rochester, 3-June-2001
 //----------------------------------------------
 
-static const InterfaceID IID_ITkrBadStripsSvcCalib("ITkrBadStripsSvcCalib", 2 , 0); 
+static const InterfaceID IID_ITkrBadStripsSvcCalib("ITkrBadStripsSvcCalib", 3 , 0); 
 
 
 
@@ -35,11 +35,15 @@ class ITkrBadStripsSvcCalib //: public virtual ITkrBadStripsSvc
 {
 public:
 
+    enum calibType { SIM, REC, NCALIBTYPES };
+
     //! Constructor of this form must be provided
 
 	static const InterfaceID& interfaceID() { return IID_ITkrBadStripsSvcCalib; }
 
 	virtual StatusCode update(CalibData::BadStrips* pDead, CalibData::BadStrips* pHot) = 0;
+
+    virtual void SetCalibType(calibType type) const = 0;
  };
 
 #endif

@@ -1,7 +1,7 @@
 /** @file ITkrGeometrySvc.h
  @brief Abstract interface to TkrGeometrySvc (q.v.)
 
-  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.25 2005/12/20 02:35:57 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGeometrySvc.h,v 1.26 2006/07/18 20:09:30 lsrea Exp $
 */
 
 #ifndef __ITKRGEOMETRYSVC_H
@@ -32,7 +32,8 @@
 static const InterfaceID IID_ITkrGeometrySvc("ITkrGeometrySvc", 14 , 0); 
 
 namespace {
-    enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NTYPES};
+    enum convType { ABSENT = -1, NOCONV = 0, STANDARD, SUPER, ALL, NCONVTYPES};
+    convType ANYCONV = ALL;
     enum limitType { LOW, HIGH };
 }
 

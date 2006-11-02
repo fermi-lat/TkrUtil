@@ -6,12 +6,38 @@
  
   @section description Description
  
-  This package provides TKR utilities for common use, both inside and outside of TkrRecon.  
+  This package provides TKR utilities for common use, both inside and outside of TkrRecon.
 
-  @section TkrAlignmentSvc
-  TkrAlignmentSvc provides alignment constants for simulation and reconstruction. The constants
-  are read in when filenames are supplied. (See below.)
+  @section TkrCalibAlg TkrCalibAlg
+  TkrCalibAlg can be called once or twice for each event. If called once, it is called 
+  before any tracker code is executed. It 
+  checks the calibration database for a calibration in the validity interval 
+  for each calibration type, and
+  if a new one is required (or it's the first time through) it calls the appropriate
+  service(s) (see below), to cause them to update their lists.
+
+  It can also be called twice, once at the beginning of the simulation sequence
+  and a second time at the beginning of the reconstruction sequence. In this case, the two calls
+  are distinguished by having different names in the Gaudi sequence:
+  TkrCalibAlg/SimCalib and TkrCalibAlg/RecCalib. Each instance of the algorithm can be
+  initialized separately, and controls an independent set of calibration constants.
  
+  Those services that store local information about the calibrations (TkrBadStripsSvc, 
+  TkrFailureModeSvc, and eventually, TkrAlignmentSvc), have been modified to be able to
+  store two sets of internal information. Which set is active is controlled by a call to 
+  SetCalibType() for that service, which call is provided automatically by TkrCalibAlg.
+
+  The algorithm's access methods for TkrBadStripsSvc and TkrFailureModeSvc
+  are distinct from the usual ones and
+  modify the class members, so for safety, are implemented
+  through a separate abstract interface. This requires the services to check against
+  two interface ID's in their queryInterface() methods.
+ 
+  The default flavor for TkrCalibAlg is set to "ideal". In this mode the algorithm does
+  nothing. So the flavor property of the algorithm must be set in the jobOptions for 
+  anything to happen. In addition, there are separate properties for each calibration
+  type, and setting these overrides the general flavor for that type. 
+
   @section TkrBadStripsSvc TkrBadStripsSvc
   TkrBadStripsSvc creates a list of individual strips failures in the Tkr, and utilities
   to search the lists to allow digi and recon algorithms to deal with hits based
@@ -22,24 +48,6 @@
   of (tower, plane) elements, each with its own list of badstrips (dead or hot); 
   and/or from the TkrBadStrips calibration data in the TCDS. 
  
-  @section TkrCalibAlg TkrCalibAlg
-  TkrCalibAlg is called once per event, before any tracker code is executed. It 
-  checks the calibration database for a calibration in the validity interval 
-  for each calibration type, and
-  if a new one is required (or it's the first time through) it calls the appropriate
-  service(s) (see below), to cause them to update their lists.
- 
-  The algorithm's access methods for TkrBadStripsSvc and TkrFailureModeSvc
-  are distinct from the usual ones and
-  modify the class members, so for safety, are implemented
-  through a separate abstract interface. This requires the services to check against
-  two interface ID's in their queryInterface() methods.
- 
-  The default flavor for TkrCalibAlg is set to "ideal". In this mode the algorithm does
-  nothing. So the flavor property of the algorithm must be set in the jobOptions for 
-  anything to happen. In addition, there are separate properties for each calibration
-  type, and setting these overrides the general flavor for that type.
-  
   @section TkrFailureModeSvc TkrFailureModeSvc
   TkrFailureModeSvc creates a list of large-scale failures in the Tkr, 
   and utilities to search the lists to allow digi and recon algorithms 
@@ -52,6 +60,11 @@
   a common list, with duplicates removed.
  
   It provides a method to see if a TKR plane is contained in the lists.
+ 
+  @section TkrAlignmentSvc
+  TkrAlignmentSvc provides alignment constants for simulation and reconstruction. The constants
+  are read in when filenames are supplied. (See below.) This will eventually become a part of
+  the calibration system.
  
   @section TkrGeometrySvc TkrGeometrySvc
   TkrGeometrySvc assembles the methods required by various TKR algorithms that deal
@@ -111,6 +124,13 @@
   The name of the file containing
   a list of bad (dead and hot) strips (default: null). These will be merged with bad strips
   coming from the calibration database.
+
+  The above property can be set individually for the simulation and reconstruction, if the 
+  sequence is set up appropriately. in this case, the jobOptions looks like:
+
+  TkrBadStripsSvc.simBadStripsFile = ...;
+
+  TkrBadStripsSvc.recBadStripsFile = ...;
   *
   @param TkrGeometrySvc.siResolutionFactor
   This number multiplies the strip with to generate the intrinsic strip resolution. Default is 
@@ -135,6 +155,10 @@
   Overrides the overall flavor for ToT charge injection calibration
   @param TkrCalibAlg.muonCalibFlavor
   Overrides the overall flavor for ToT muon calibration
+
+  As discussed above, if TkrCalibAlg is being called twice, the correct form is:
+
+  TkrSimCalib.... and TkrRecCalib....
  *
   @param TkrFailureModeSvc.towerList
   Provide a list of strings of the form "tower" indicating towers that will be made dead.
@@ -142,6 +166,15 @@
   Provide a list of strings of the form "tower_layer_view" indicating 
   planes that will be made dead.
   *
+  The above property can be set individually for the simulation and reconstruction, if the 
+  sequence is set up appropriately. in this case, the jobOptions looks like:
+
+  TkrFailureModeSvc.simTowerList = ...;
+
+  TkrFailureModeSvc.recLayerList = ...;
+
+  etc.
+
   @param TkrQueryClustersTool.towerFactor
   factor to multiply tower pitch to get test distance for the unmeasured direction
   *

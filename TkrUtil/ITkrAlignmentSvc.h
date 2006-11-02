@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.16 2005/12/20 02:35:57 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.17 2006/03/21 01:15:47 usher Exp $
 */
 
 
@@ -29,10 +29,10 @@ typedef HepGeom::Point3D<double> HepPoint3D;
 typedef HepGeom::Vector3D<double> HepVector3D;
 #endif
 
-static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 6, 0); 
+static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 7, 0); 
 
 namespace {
-    enum constType {SIM=0, REC=1, UNKNOWN_TYPE=2};
+    enum calibType {SIM=0, REC, NCALIBTYPES, UNKNOWN_TYPE};
     enum alignTask {NULLTASK= 0, APPLYCONSTS=1, FINDTOWERCONSTS=2, FINDWAFERCONSTS=3};
 }
 
@@ -112,10 +112,10 @@ public:
     static const InterfaceID& interfaceID() { return IID_ITkrAlignmentSvc; }
    
     /// retrieve the alignment consts for element tower, layer, view, ladder, wafer
-    virtual const AlignmentConsts* getConsts(constType type, int tower, 
+    virtual const AlignmentConsts* getConsts(calibType type, int tower, 
         int layer, int view, int ladder=0, int wafer=0) const = 0;
     /// retrieve the alignment consts for a given volume Id
-    virtual const AlignmentConsts* getConsts(constType type, 
+    virtual const AlignmentConsts* getConsts(calibType type, 
         idents::VolumeIdentifier id) const = 0;
     /// move the McHit by the alignment consts
     virtual void moveMCHit(idents::VolumeIdentifier id, 

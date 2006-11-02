@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.17 2006/03/21 01:15:48 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.18 2006/04/12 07:05:38 lsrea Exp $
 
 */
 
@@ -187,7 +187,7 @@ void TkrSplitsSvc::update(CalibData::TkrSplitsCalib* pSplits)
 
     m_pSplits = pSplits;
 
-    log << MSG::INFO << "Splits pointer updated" << endreq;
+    //log << MSG::INFO << "Splits pointer updated" << endreq;
 }
 
 StatusCode TkrSplitsSvc::doInit()

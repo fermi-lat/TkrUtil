@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.12 2006/03/21 01:15:48 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.13 2006/08/03 00:46:51 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -25,7 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.12 2006/03/21 
 *
 */
 
-enum constType {GAIN=0, QUAD, THRESHOLD, SCALE, QUALITY};
+enum calibType {GAIN=0, QUAD, THRESHOLD, SCALE, QUALITY};
 
 class TkrToTSvc : public Service, virtual public ITkrToTSvc  {
 

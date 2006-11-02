@@ -346,7 +346,7 @@ void TkrGeometrySvc::initializeArrays()
 
     //Types
     int ind;
-    for (ind=0; ind<NTYPES; ++ind) {
+    for (ind=0; ind<NCONVTYPES; ++ind) {
         m_numLayers[ind]     = 0;
         m_aveRadLenConv[ind] = 0.;
         m_aveRadLenRest[ind] = 0.;
@@ -643,7 +643,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
     }
 
     log << MSG::INFO << endreq;
-    for (ind=0;ind<NTYPES;++ind) {
+    for (ind=0;ind<NCONVTYPES;++ind) {
         m_aveRadLenConv[ind] = m_numLayers[ind] ? m_aveRadLenConv[ind]/m_numLayers[ind] : 0;
         m_aveRadLenRest[ind] = m_numLayers[ind] ? m_aveRadLenRest[ind]/m_numLayers[ind] : 0;
         log << MSG::INFO  << "Type " << ind << " numLayers " << m_numLayers[ind] 

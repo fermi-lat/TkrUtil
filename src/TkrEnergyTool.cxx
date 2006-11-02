@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.2 2005/08/17 00:57:37 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.3 2006/03/21 01:15:48 usher Exp $
  */
 
 #include "GaudiKernel/AlgTool.h"
@@ -153,10 +153,10 @@ double TkrEnergyTool::getTotalEnergy(const Event::TkrTrack* track, double CalEne
     double radKal = m_propagator->getRadLength();                 
 
     // Set up summed var's and loop over all layers between track start and cal
-    int    numHits[NTYPES];
-    int    numLayers[NTYPES];
+    int    numHits[NCONVTYPES];
+    int    numLayers[NCONVTYPES];
 
-    for(int i=0; i < NTYPES; ++i) 
+    for(int i=0; i < NCONVTYPES; ++i) 
     {
         numHits[i] = 0;
         numLayers[i] = 0;

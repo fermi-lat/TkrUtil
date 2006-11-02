@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.11 2005/04/14 05:06:00 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.12 2005/04/20 21:35:39 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -23,29 +23,33 @@
 
 #include <string>
 
-
 /**
 @file TkrCalibAlg.cxx Algorithm to organize the updating the calibration data
 
-  TkrCalibAlg is an algorithm which
-  accesses calibration data in what is expected to be a standard manner to inform
-  the services of the appearance of a new calibration. 
+TkrCalibAlg is an algorithm which
+accesses calibration data in what is expected to be a standard manner to inform
+the services of the appearance of a new calibration. 
 */
 
 /** 
 @class TkrCalibAlg
-  Algorithm that handles updating the calibrations
+Algorithm that handles updating the calibrations
 */
 class TkrCalibAlg : public Algorithm {
-    
+
 public:
     TkrCalibAlg(const std::string& name, ISvcLocator* pSvcLocator);    
     StatusCode initialize();
     StatusCode execute();
     StatusCode finalize();
-    
+
 private:
-    
+
+    void showCalibrationInfo(const std::string type, const std::string path, 
+        const CalibData::CalibBase* ptr, const CalibData::BadStrips* bs_ptr=0) const; 
+    StatusCode failedAccess(const std::string type) const;
+    StatusCode failedUpdate(const std::string type) const;
+
     /// pointer to data provider
     IDataProviderSvc*   m_pCalibDataSvc;
     /// Handle to the IDetDataSvc interface of the CalibDataSvc
@@ -101,7 +105,7 @@ TkrCalibAlg::TkrCalibAlg(const std::string&  name,
     declareProperty("hotStripsCalibFlavor",  m_hotStripsFlavor  = "notSet");
     declareProperty("splitsCalibFlavor",     m_splitsFlavor     = "notSet");
     declareProperty("chargeInjectionCalibFlavor",  
-                                             m_injectionFlavor  = "notSet");
+        m_injectionFlavor  = "notSet");
     declareProperty("muonCalibFlavor",       m_muonFlavor       = "notSet");
 }
 
@@ -110,10 +114,10 @@ StatusCode TkrCalibAlg::initialize()
     StatusCode sc;
     MsgStream log(msgSvc(), name());
     log << MSG::INFO << "Initialize()" << endreq;
-    
+
     // So far don't have any properties, but in case we do some day..
     setProperties();
-    
+
     sc = service("CalibDataSvc", m_pCalibDataSvc, true);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
@@ -124,18 +128,18 @@ StatusCode TkrCalibAlg::initialize()
 
     // Query the IDetDataSvc interface of the calib data service
     sc = m_pCalibDataSvc->queryInterface(IID_IDetDataSvc, 
-                                (void**) &m_detDataSvc);
+        (void**) &m_detDataSvc);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
-	    << "Could not query IDetDataSvc interface of CalibDataSvc" 
-	    << endreq;
+            << "Could not query IDetDataSvc interface of CalibDataSvc" 
+            << endreq;
         return sc;
     } else {
         log << MSG::DEBUG 
-	    << "Retrieved IDetDataSvc interface of CalibDataSvc" 
-	    << endreq;
+            << "Retrieved IDetDataSvc interface of CalibDataSvc" 
+            << endreq;
     }
-    
+
     sc = service("TkrBadStripsSvc", m_pTkrBadStripsSvc, true);
     if ( !sc.isSuccess()) {
         log << MSG::ERROR 
@@ -143,7 +147,7 @@ StatusCode TkrCalibAlg::initialize()
             << endreq;
         return sc;
     }
-    
+
     sc = service("TkrFailureModeSvc", m_pTkrFailureModeSvc, true);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
@@ -151,7 +155,7 @@ StatusCode TkrCalibAlg::initialize()
             << endreq;
         return sc;
     }
-        
+
     sc = service("TkrSplitsSvc", m_pTkrSplitsSvc, true);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
@@ -167,9 +171,6 @@ StatusCode TkrCalibAlg::initialize()
             << endreq;
         return sc;
     }
-
-    // Get properties from the JobOptionsSvc
-    sc = setProperties();
 
     // go through the individual flavors... 
     // set them equal to the overall flavor unless they've been set
@@ -191,200 +192,180 @@ StatusCode TkrCalibAlg::initialize()
 
 
 StatusCode TkrCalibAlg::execute( ) {
-    
-    MsgStream log(msgSvc(), name());
-    
-    // check the dead channels
 
-    //    SmartDataPtr<CalibData::BadStrips> pDead(m_pCalibDataSvc, "");
-    CalibData::BadStrips* pDead = 0; //  = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, "");
+    MsgStream log(msgSvc(), name());
+
+    // set service for SIM or REC
+
+    // look for "Rec" in the name
+    if(name().find("Rec")!=std::string::npos) {
+        m_pTkrBadStripsSvc->SetCalibType(ITkrBadStripsSvcCalib::REC);
+        m_pTkrFailureModeSvc->SetCalibType(ITkrFailureModeSvcCalib::REC);
+    } else {
+        m_pTkrBadStripsSvc->SetCalibType(ITkrBadStripsSvcCalib::SIM);
+        m_pTkrFailureModeSvc->SetCalibType(ITkrFailureModeSvcCalib::SIM);
+    }
+
+    std::string fullPath;
+    DataObject* pObject;
+    std::string type;
+
+    // check the dead channels
+    type = "dead strips";
+    CalibData::BadStrips* pDead = 0;
+
     if(m_deadStripsFlavor!="ideal" && m_deadStripsFlavor!="") {
-        std::string fullDeadPath = "/Calib/TKR_DeadChan/"+m_deadStripsFlavor;
-        pDead = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullDeadPath);
-        if (!pDead) {
-            log << MSG::ERROR 
-                << "Failed access to Dead strips via smart ptr" << endreq;
-            return StatusCode::FAILURE;
-        }
+        fullPath = "/Calib/TKR_DeadChan/"+m_deadStripsFlavor;
+        pDead = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullPath);
+        if (!pDead) {return failedAccess(type);}
 
         m_pCalibDataSvc->updateObject((CalibData::BadStrips *)pDead);
-        if (!pDead) {
-            log << MSG::ERROR 
-                << "Update of dead strips failed" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pDead) {return failedAccess(type);}
 
         int newSerNo = pDead->getSerNo();
         if (newSerNo!=m_serDead) {
-            log << MSG::INFO << "deadStrips serial number changed..." 
-                << endreq;
             m_serDead = newSerNo;
-            log << MSG::INFO << "Retrieved with path " << fullDeadPath << endreq
-                << "Serial #" <<  pDead->getSerNo() << endreq; 
-            log << MSG::INFO << "Vstart: " <<  (pDead->validSince()).hours()
-                << "  Vend: " << (pDead->validTill()).hours() << endreq;
-            log << MSG::INFO << "Bad type: " << pDead->getBadType() 
-                << " has " << pDead->getBadTowerCount() << " bad towers " << endreq;				
-            log << MSG::INFO <<" about to update constants" << endreq;
+            showCalibrationInfo(type, fullPath, pDead, pDead); 
             m_pTkrBadStripsSvc->update(pDead, 0);
             m_pTkrFailureModeSvc->update(pDead, 0);
         }
     }
 
     // now the hot channels
+    type = "hot strips";
+    CalibData::BadStrips* pHot = 0;
 
-    //    SmartDataPtr<CalibData::BadStrips>pHot(m_pCalibDataSvc, "");
-    CalibData::BadStrips* pHot = 0; // = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, "");
     if(m_hotStripsFlavor!="ideal" && m_hotStripsFlavor!="") {
-        std::string fullHotPath = "/Calib/TKR_HotChan/"+m_hotStripsFlavor;
-        pHot = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullHotPath);
-        if (!pHot) {
-            log << MSG::ERROR 
-                << "Failed access to Hot strips via smart ptr" << endreq;
-            return StatusCode::FAILURE;
-        }
+
+        fullPath = "/Calib/TKR_HotChan/"+m_hotStripsFlavor;
+        pHot = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullPath);
+        if (!pHot) { return failedAccess(type); }
 
         m_pCalibDataSvc->updateObject((CalibData::BadStrips *)pHot);
-        if (!pHot) {
-            log << MSG::ERROR 
-                << "Update of Hot strips failed" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pHot) { return failedUpdate(type); }
 
         int newSerNo = pHot->getSerNo();
         if (newSerNo!=m_serHot) {
-            log << MSG::INFO << "hotStrips serial number changed..." 
-                << endreq;
             m_serHot = newSerNo;
-            log << MSG::INFO << "Retrieved with path " << fullHotPath << endreq
-                << "Serial #" <<  pHot->getSerNo() << endreq; 
-            log << MSG::INFO << "Vstart: " <<  (pHot->validSince()).hours()
-                << "  Vend: " << (pHot->validTill()).hours() << endreq;
-            log << MSG::INFO << "Bad type: " << pHot->getBadType() 
-                << " has " << pHot->getBadTowerCount() << " bad towers " << endreq;
-            log << MSG::INFO <<" about to update constants" << endreq;
+            showCalibrationInfo(type, fullPath, pHot, pHot); 
             m_pTkrBadStripsSvc->update(0, pHot);
             m_pTkrFailureModeSvc->update(0, pHot);
         }
     }
 
-    // now the splits
+    // for the rest, we need to update on every call, because we may be alternating calibrations
+
+    // next the splits
+    type = "splits";
+    CalibData::TkrSplitsCalib* pSplits = 0;
+
     if(m_splitsFlavor!="ideal" && m_splitsFlavor!="") {
 
-        std::string fullSplitsPath = CalibData::TKR_Splits + "/" + m_splitsFlavor;
-        DataObject* pObject;
-        m_pCalibDataSvc->retrieveObject(fullSplitsPath, pObject);
-        CalibData::TkrSplitsCalib* pSplits = 0;
+        fullPath = CalibData::TKR_Splits + "/" + m_splitsFlavor;
+        m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pSplits = dynamic_cast<CalibData::TkrSplitsCalib*> (pObject);
-        if (!pSplits) {
-            log << MSG::ERROR 
-                << "Failed access to splits via smart ptr" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pSplits) { return failedAccess(type); }
+
         m_pCalibDataSvc->updateObject(pObject);
         pSplits = dynamic_cast<CalibData::TkrSplitsCalib*> (pObject);
-        if (!pSplits) {
-            log << MSG::ERROR 
-                << "Update of splits failed" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pSplits) { return failedUpdate(type); }
 
         int newSerNo = pSplits->getSerNo();
         if (newSerNo!=m_serSplits) {
-            log << MSG::INFO << "splits serial number changed..." 
-                << endreq;
             m_serSplits = newSerNo;
-            log << MSG::INFO << "Retrieved with path " << fullSplitsPath << endreq
-                << "Serial #" <<  pSplits->getSerNo() << endreq; 
-            log << MSG::INFO << "Vstart: " <<  (pSplits->validSince()).hours()
-                << "  Vend: " << (pSplits->validTill()).hours() << endreq;
-
-           // last thing, pass pointer to TkrSplitsSvc
-           m_pTkrSplitsSvc->update(pSplits);
+            showCalibrationInfo(type, fullPath, pSplits); 
         }
     }
+    m_pTkrSplitsSvc->update(pSplits);
 
     // now charge injection
+    type = "charge injection";
+    CalibData::TkrTotCol* pToT = 0;
+
     if(m_injectionFlavor!="ideal" && m_injectionFlavor!="") {
 
-        std::string fullToTPath = CalibData::TKR_TOTSignal + "/" + m_injectionFlavor;
-        DataObject* pObject;
-        m_pCalibDataSvc->retrieveObject(fullToTPath, pObject);
-        CalibData::TkrTotCol* pToT = 0;
+        fullPath = CalibData::TKR_TOTSignal + "/" + m_injectionFlavor;
+        m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pToT = dynamic_cast<CalibData::TkrTotCol*> (pObject);
-        if (!pToT) {
-            log << MSG::ERROR 
-                << "Failed access to charge-injection via smart ptr" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pToT) { return failedAccess(type); }
+
         m_pCalibDataSvc->updateObject(pObject);
         pToT = dynamic_cast<CalibData::TkrTotCol*> (pObject);
-        if (!pToT) {
-            log << MSG::ERROR 
-                << "Update of ToT charge-injection constants failed" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pToT) { return failedUpdate(type); }
 
-        int newSerNo = pToT->getSerNo();
+        int newSerNo = pToT->getSerNo();        
         if (newSerNo!=m_serInjection) {
-            log << MSG::INFO << "charge-injection serial number changed..." 
-                << endreq;
             m_serInjection = newSerNo;
-            log << MSG::INFO << "Retrieved with path " << fullToTPath << endreq
-                << "Serial #" <<  pToT->getSerNo() << endreq; 
-            log << MSG::INFO << "Vstart: " <<  (pToT->validSince()).hours()
-                << "  Vend: " << (pToT->validTill()).hours() << endreq;
-
-           // last thing, pass pointer to TkrSplitsSvc
-           m_pTkrToTSvc->update(pToT);
+            showCalibrationInfo(type, fullPath, pToT);
         }
     }
-    // now muon calibration
-    if(m_muonFlavor!="ideal" && m_muonFlavor!="") {
-        // muon code here!
+    m_pTkrToTSvc->update(pToT);
 
-        std::string fullToTPath = CalibData::TKR_ChargeScale + "/" + m_muonFlavor;
-        DataObject* pObject;
-        m_pCalibDataSvc->retrieveObject(fullToTPath, pObject);
-        CalibData::TkrScaleCol* pScale = 0;
+    // now muon calibration
+    type = "muon scale";
+    CalibData::TkrScaleCol* pScale = 0;
+
+    if(m_muonFlavor!="ideal" && m_muonFlavor!="") {
+
+        fullPath = CalibData::TKR_ChargeScale + "/" + m_muonFlavor;
+        m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pScale = dynamic_cast<CalibData::TkrScaleCol*> (pObject);
-        if (!pScale) {
-            log << MSG::ERROR 
-                << "Failed access to muon scale via smart ptr" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pScale) { return failedAccess(type); }
+
         m_pCalibDataSvc->updateObject(pObject);
         pScale = dynamic_cast<CalibData::TkrScaleCol*> (pObject);
-        if (!pScale) {
-            log << MSG::ERROR 
-                << "Update of ToT muon scale constants failed" << endreq;
-            return StatusCode::FAILURE;
-        }
+        if (!pScale) { return failedUpdate(type); }
 
         int newSerNo = pScale->getSerNo();
         if (newSerNo!=m_serMuons) {
-            log << MSG::INFO << "muon scale serial number changed..." 
-                << endreq;
             m_serMuons = newSerNo;
-            log << MSG::INFO << "Retrieved with path " << fullToTPath << endreq
-                << "Serial #" <<  pScale->getSerNo() << endreq; 
-            log << MSG::INFO << "Vstart: " <<  (pScale->validSince()).hours()
-                << "  Vend: " << (pScale->validTill()).hours() << endreq;
-
-           // last thing, pass pointer to TkrSplitsSvc
-           m_pTkrToTSvc->update(pScale);
+            showCalibrationInfo(type, fullPath, pScale);
         }
     }
+    m_pTkrToTSvc->update(pScale);
 
     return StatusCode::SUCCESS;
 }
 
 StatusCode TkrCalibAlg::finalize( ) {
-    
+
     MsgStream log(msgSvc(), name());
     log << MSG::INFO 
         << "          Finalize TkrCalibAlg "
         << endreq;
-    
+
     return StatusCode::SUCCESS;
+}
+
+void TkrCalibAlg::showCalibrationInfo(const std::string type, 
+                                      const std::string path, 
+                                      const CalibData::CalibBase* ptr,
+                                      const CalibData::BadStrips* bs_ptr) const
+{
+    MsgStream log(msgSvc(), name());
+
+    log << MSG::INFO << "New " << type << " serial number: " << ptr->getSerNo()<< endreq;  
+    log << "path: " << path << endreq;
+    log << "Vstart: " <<  (ptr->validSince()).hours()
+        << "  Vend: " << (ptr->validTill()).hours() << endreq;
+    if(bs_ptr!=0) {
+        log << "Bad type: " << bs_ptr->getBadType() 
+            << " has " << bs_ptr->getBadTowerCount() << " towers with " << type << endreq;				
+    }
+}
+
+StatusCode TkrCalibAlg::failedAccess(const std::string type) const
+{
+    MsgStream log(msgSvc(), name());
+    log << MSG::ERROR 
+        << "Failed to access " << type << endreq;
+    return StatusCode::FAILURE;
+}
+
+StatusCode TkrCalibAlg::failedUpdate(const std::string type) const
+{
+    MsgStream log(msgSvc(), name());
+    log << MSG::ERROR 
+        << "Failed to update " << type << endreq;
+    return StatusCode::FAILURE;
 }

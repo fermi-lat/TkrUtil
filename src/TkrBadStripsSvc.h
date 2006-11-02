@@ -6,7 +6,7 @@
  First version 3-Jun-2001
   @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.11 2005/12/20 02:35:58 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.h,v 1.12 2006/03/21 01:15:48 usher Exp $
 */
 
 #ifndef TKRBADSTRIPSSVC_H
@@ -106,6 +106,9 @@ public:
     //. reads in bad strips and creates in-memory vectors
     StatusCode initialize();
     StatusCode finalize();
+
+    /// sets type to SIM or REC
+    void SetCalibType(calibType type) const {m_calibType = type;}
     
     /// adds a strip to a badstrip vector
     void addStrip(stripCol* v, TaggedStrip taggedStrip);
@@ -122,20 +125,20 @@ public:
 		
     std::ostream& fillStream( std::ostream& s ) const;        
 
-    bool empty() const { return m_empty; }
+    bool empty() const { return m_empty[m_calibType]; }
 
     // for bad clusters
     void  setBadClusterCol(Event::TkrClusterCol* pClus)    {
-        if (m_pBadClus)  {delete m_pBadClus;}
-        m_pBadClus = pClus; 
+        if (m_pBadClus[m_calibType])  {delete m_pBadClus[m_calibType];}
+        m_pBadClus[m_calibType] = pClus; 
     }
     void  setBadIdClusterMap(Event::TkrIdClusterMap* pMap) {
-        if(m_pBadMap) { delete m_pBadMap;}
-        m_pBadMap = pMap; 
+        if(m_pBadMap[m_calibType]) { delete m_pBadMap[m_calibType];}
+        m_pBadMap[m_calibType] = pMap; 
     }
 
-    Event::TkrClusterCol*  getBadClusterCol() const    { return m_pBadClus; }
-    Event::TkrIdClusterMap* getBadIdClusterMap() const { return m_pBadMap; }
+    Event::TkrClusterCol*  getBadClusterCol() const    { return m_pBadClus[m_calibType]; }
+    Event::TkrIdClusterMap* getBadIdClusterMap() const { return m_pBadMap[m_calibType]; }
     //Event::TkrDigiCol* getBadDigiCol() const           { return m_pBadDigi; }
     StatusCode makeBadDigiCol(Event::TkrDigiCol* pDigis);
 
@@ -164,21 +167,23 @@ private:
     StatusCode generateBadClusters() ;    	
 	
     /// File name for constants
-    std::string m_badStripsFile;  
+    std::string m_commonBadStripsFile;
+    std::string m_badStripsFile[2];  
     
     /// array to hold bad strips vectors  [ max needed: 576 = 16*18*2 ]   
-    mutable IndexedVector<stripCol> m_stripsCol;
+    mutable IndexedVector<stripCol> m_stripsCol[2];
 	
 	BadVisitor* m_visitor;
 
     ITkrGeometrySvc* m_tkrGeom;
 	
-    bool m_empty;
+    bool m_empty[2];
 
-    Event::TkrDigiCol*      m_pBadDigi;
-    Event::TkrClusterCol*   m_pBadClus;
-    Event::TkrIdClusterMap* m_pBadMap;
+    Event::TkrDigiCol*      m_pBadDigi[2];
+    Event::TkrClusterCol*   m_pBadClus[2];
+    Event::TkrIdClusterMap* m_pBadMap[2];
     mutable bool m_generateBadClusters;
+    mutable calibType m_calibType;
 };
 
 //! Fill the ASCII output stream
@@ -198,9 +203,9 @@ std::ostream& operator<<(std::ostream &s, stripCol* v) {
 
 inline std::ostream& TkrBadStripsSvc::fillStream( std::ostream& s ) const 
 {
-    int nTowers = m_stripsCol.getDim(0);
-    int nLayers = m_stripsCol.getDim(1);
-    int nViews  = m_stripsCol.getDim(2);
+    int nTowers = m_stripsCol[0].getDim(0);
+    int nLayers = m_stripsCol[0].getDim(1);
+    int nViews  = m_stripsCol[0].getDim(2);
     int tower, layer, view;
 
     s << "class TkrBadStripsSvc bad strip lists from fillStream: " << std::endl;
@@ -208,7 +213,7 @@ inline std::ostream& TkrBadStripsSvc::fillStream( std::ostream& s ) const
         for(layer=0; layer<nLayers; ++layer) {
             for(view=0; view<nViews; ++view) {
                 s << "Twr/lyr/view (" << tower << ", " << layer << ", " << view  << ")";
-                const stripCol* v = &m_stripsCol(tower, layer, view);
+                const stripCol* v = &m_stripsCol[m_calibType](tower, layer, view);
                 s << v ;
             }
         }

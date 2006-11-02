@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.29 2006/03/21 01:15:48 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.30 2006/07/18 20:09:30 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -306,11 +306,11 @@ private:
     /// position of radiators
     std::vector<double> m_convZ;
     /// number of layers of each type
-    int m_numLayers[NTYPES];
+    int m_numLayers[NCONVTYPES];
     /// average radlen of converter
-    double m_aveRadLenConv[NTYPES];
+    double m_aveRadLenConv[NCONVTYPES];
     /// average radlen of the rest
-    double m_aveRadLenRest[NTYPES];
+    double m_aveRadLenRest[NCONVTYPES];
 
     std::vector<int> m_planeToView;
     std::vector<int> m_planeToLayer;

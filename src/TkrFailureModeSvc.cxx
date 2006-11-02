@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.18 2005/04/20 21:35:39 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.19 2006/03/21 01:15:48 usher Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -16,6 +16,9 @@
 
 #include <algorithm>
 
+namespace {
+    const std::string typeStr[2] = { "SIM", "REC" };
+}
 
 // declare the service factories for the TkrFailureModeSvc
 static SvcFactory<TkrFailureModeSvc> a_factory;
@@ -33,10 +36,15 @@ TkrFailureModeSvc::TkrFailureModeSvc(const std::string& name,ISvcLocator* svc) :
 
     // declare the properties
 
-    declareProperty("towerList", m_towerListProperty);
-    declareProperty("layerList", m_layerListProperty);
+    declareProperty("towerList", m_commonTowerListProperty);
+    declareProperty("simTowerList", m_towerListProperty[0]);
+    declareProperty("recTowerList", m_towerListProperty[1]);
+    declareProperty("layerList", m_commonLayerListProperty);
+    declareProperty("simLayerList", m_layerListProperty[0]);
+    declareProperty("recLayerList", m_layerListProperty[1]);
     m_visitor = 0;
-    m_existsList = false;
+    m_existsList[0] = false;
+    m_existsList[1] = false;
 }
 
 StatusCode  TkrFailureModeSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
@@ -92,14 +100,34 @@ StatusCode TkrFailureModeSvc::initialize ()
         log << MSG::ERROR << "Failed to set properties" << endreq;
     }
 
-    sc = doInit();
+    std::vector<std::string> theProperty = m_commonLayerListProperty.value( );
+    if (theProperty.size()>0) {
+        m_layerListProperty[0] = m_commonLayerListProperty;
+        m_layerListProperty[1] = m_commonLayerListProperty;
+    }
+
+    theProperty = m_commonTowerListProperty.value( );
+    if (theProperty.size()>0) {
+        m_towerListProperty[0] = m_commonTowerListProperty;
+        m_towerListProperty[1] = m_commonTowerListProperty;
+    }
+
+    int type;
+    for (type=SIM; type<NCALIBTYPES; ++type) {
+        SetCalibType((calibType) type);
+        sc = doInit();
+        if (sc.isFailure()) {
+            log << MSG::ERROR << "Failed to initialize" << endreq;
+            return sc;
+        }
+    }
 
     return StatusCode::SUCCESS;
 }
 
 StatusCode TkrFailureModeSvc::doInit()
 {
-    m_failureModes = 0;
+    m_failureModes[m_calibType] = 0;
     processTowerList();
     processLayerList();
 
@@ -116,9 +144,9 @@ StatusCode TkrFailureModeSvc::update(CalibData::BadStrips* pDead, CalibData::Bad
     if (!m_existsList) {
         if (pDead) pDead->traverse(m_visitor);
         if (pHot)  pHot->traverse(m_visitor);
-        m_failureModes = 0;
-        if(m_towerList.size()) m_failureModes |= 1<<TOWER_SHIFT;
-        if(m_layerList.size()) m_failureModes |= 1<<LAYER_SHIFT;
+        m_failureModes[m_calibType] = 0;
+        if(m_towerList[m_calibType].size()) m_failureModes[m_calibType] |= 1<<TOWER_SHIFT;
+        if(m_layerList[m_calibType].size()) m_failureModes[m_calibType] |= 1<<LAYER_SHIFT;
     } else {
         log << MSG::INFO << "No update done -- layer and tower list is being used instead" << endreq;
     }
@@ -153,12 +181,12 @@ void TkrFailureModeSvc::processLayerList() {
 
     MsgStream log(msgSvc(), name());
 
-    const std::vector<std::string>& theLayers = m_layerListProperty.value( );
+    const std::vector<std::string>& theLayers = m_layerListProperty[m_calibType].value( );
     if (theLayers.empty()) return;
 
     log << MSG::DEBUG;
     if (log.isActive() ) {
-        log << "Layers to kill ";
+        log << "Layers to kill, cal type " << typeStr[m_calibType] << ": ";
     }
     log << endreq;
     
@@ -181,10 +209,10 @@ void TkrFailureModeSvc::processLayerList() {
             log << "Tower " << tower << " Layer " << layer << " View " << view;
         }
         log << endreq;
-        std::vector<int>& curList = m_layerList[tower];
+        std::vector<int>& curList = m_layerList[m_calibType][tower];
         curList.push_back(plane);
-        m_failureModes = m_failureModes | 1 << LAYER_SHIFT;
-        m_existsList = true;
+        m_failureModes[m_calibType] = m_failureModes[m_calibType] | 1 << LAYER_SHIFT;
+        m_existsList[m_calibType] = true;
 
         /*
         std::cout << "debug output from processLayerList" << std::endl;
@@ -213,13 +241,13 @@ void TkrFailureModeSvc::processTowerList() {
 
     MsgStream log(msgSvc(), name());
 
-    const std::vector<std::string>& theTowers = m_towerListProperty.value( );
+    const std::vector<std::string>& theTowers = m_towerListProperty[m_calibType].value( );
 
     if (theTowers.empty()) return;
 
     log << MSG::DEBUG;
     if (log.isActive () ) {
-        log << "Towers to kill: ";
+        log << "Towers to kill, cal type " << typeStr[m_calibType] << ": ";
     }
     log << endreq;
 
@@ -232,16 +260,17 @@ void TkrFailureModeSvc::processTowerList() {
             log << "Tower " << tower;
         }
         log << endreq;
-        m_towerList.push_back(tower);
-        m_failureModes = m_failureModes | 1 << TOWER_SHIFT;
-        m_existsList = true;
+        m_towerList[m_calibType].push_back(tower);
+        m_failureModes[m_calibType] = m_failureModes[m_calibType] | 1 << TOWER_SHIFT;
+        m_existsList[m_calibType] = true;
     }
 }
 
 bool TkrFailureModeSvc::towerFailed(int tower) const {
     // Search to see if this event id is among the list of ids we want to pause on
-    std::vector<int>::const_iterator loc = std::find(m_towerList.begin(), m_towerList.end(), tower);                
-    return (loc != m_towerList.end());
+    std::vector<int>::const_iterator loc;
+    loc = std::find(m_towerList[m_calibType].begin(), m_towerList[m_calibType].end(), tower);                
+    return (loc != m_towerList[m_calibType].end());
 }
 
 
@@ -264,7 +293,7 @@ bool TkrFailureModeSvc::isFailed(int tower, int layer, int view) const {
 bool TkrFailureModeSvc::layerFailed(int tower, int layer, int view)  const {
     // Purpose and Method: look for the given id in the tower list
     //                        
-    if (m_layerList.empty()) return false;
+    if (m_layerList[m_calibType].empty()) return false;
 
     // just a number, no physical relation to anything!
     int plane = 2*layer + view; 
@@ -272,24 +301,25 @@ bool TkrFailureModeSvc::layerFailed(int tower, int layer, int view)  const {
     // because layerFailed is const, we have to go thru extra shenanigans to access the 
     // vector of failed planes.  (because map[] adds an element if it isn't there!
 
-    LayerMap::const_iterator iList = m_layerList.find(tower);
+    LayerMap::const_iterator iList = m_layerList[m_calibType].find(tower);
 
-    if (iList==m_layerList.end()) { return false; }
+    if (iList==m_layerList[m_calibType].end()) { return false; }
 
     const std::vector<int> &layerList = iList->second;
-    std::vector<int>::const_iterator loc = std::find(layerList.begin(), layerList.end(), plane);  
+    std::vector<int>::const_iterator loc;
+    loc = std::find(layerList.begin(), layerList.end(), plane);  
 
     return (loc != layerList.end());
 }
 
 std::vector<int>& TkrFailureModeSvc::getLayers(int tower) 
 {
-    return m_layerList[tower];
+    return m_layerList[m_calibType][tower];
 }
 
 std::vector<int>& TkrFailureModeSvc::getTowers()
 {
-    return m_towerList;
+    return m_towerList[m_calibType];
 }
 
 CalibData::eVisitorRet BadVisitorFM::badTower(unsigned int row, unsigned int col,

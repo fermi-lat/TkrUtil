@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.16 2005/12/20 02:35:57 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.17 2006/03/21 01:15:48 usher Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -143,11 +143,11 @@ public:
     
     /// returns the constants for a given element
     const AlignmentConsts* getConsts
-        (constType type, int tower, int layer, int view, int ladder, int wafer) const;
+        (calibType type, int tower, int layer, int view, int ladder, int wafer) const;
     
     /// returns the constants for a given element
     const AlignmentConsts* getConsts
-        (constType type, idents::VolumeIdentifier id) const;
+        (calibType type, idents::VolumeIdentifier id) const;
     
     /// moves the entry and exit of an MCPositionHit according to alignment consts
     void moveMCHit(idents::VolumeIdentifier id, 
@@ -182,7 +182,7 @@ public:
 private:   
     
     /// returns the constants for a given element
-    const AlignmentConsts* getConsts(constType type, int index) const;
+    const AlignmentConsts* getConsts(calibType type, int index) const;
     
     /// to calculate delta of a point
     HepVector3D getDelta(int view,  const HepPoint3D& point, const HepVector3D& dir,
@@ -196,9 +196,9 @@ private:
     /// set the const mode
     void setMode(std::string pmode) {
         m_mode = pmode;
-        if     (m_mode=="sim") {m_constType = SIM;}
-        else if(m_mode=="rec") {m_constType = REC;}
-        else                   {m_constType = UNKNOWN_TYPE;}
+        if     (m_mode=="sim") {m_calibType = SIM;}
+        else if(m_mode=="rec") {m_calibType = REC;}
+        else                   {m_calibType = UNKNOWN_TYPE;}
     }
     
     /// gets relevant coordinates from the geometry
@@ -284,7 +284,7 @@ private:
     mutable int m_wafer;
 
     std::string m_mode;
-    constType m_constType;
+    calibType m_calibType;
     std::ifstream* m_dataFile;
 
     ITkrGeometrySvc* m_tkrGeom;
