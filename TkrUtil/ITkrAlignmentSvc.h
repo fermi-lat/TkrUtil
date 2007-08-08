@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.17 2006/03/21 01:15:47 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.18 2006/11/02 19:34:47 lsrea Exp $
 */
 
 
@@ -119,7 +119,8 @@ public:
         idents::VolumeIdentifier id) const = 0;
     /// move the McHit by the alignment consts
     virtual void moveMCHit(idents::VolumeIdentifier id, 
-        HepPoint3D& entry, HepPoint3D &exit) const = 0;
+        HepPoint3D& entry, HepPoint3D &exit, 
+        HepVector3D &dir=HepVector3D(0.,0.,1.0)) const = 0;
     /// move the recon hit by the alignment consts
     virtual void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
         int layer, int view, alignTask task = APPLYCONSTS, 

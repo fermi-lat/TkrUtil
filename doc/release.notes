@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r10    08-Aug-07 LSR Mods to TkrAlignmentSvc, for choice of mode
   v3r9     02-Nov-06 LSR Mods for dual calibrations, and some cleanup
   v3r8p4   03-Oct-06 JCT Fix up test program
   v3r8p3   06-Sep-06 LSR Less tricky version of IndexedVector to avoid unix link problems, and test program

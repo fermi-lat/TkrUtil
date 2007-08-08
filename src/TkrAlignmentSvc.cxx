@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.39 2006/06/14 05:15:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.40 2006/11/02 19:34:48 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -869,7 +869,8 @@ const AlignmentConsts* TkrAlignmentSvc::getConsts(calibType type, int index) con
 }
 
 void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
-                                HepPoint3D& exit) const
+                                HepPoint3D& exit,
+                                HepVector3D& dir) const
 {
     // Purpose:     Move an McHit according to alignment constants
     // Inputs:      volId and entry and exit points
@@ -877,12 +878,12 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
 
     //This is called "dir" but what I'm calculating is a direction normalized to dir.z() = 1;
     //  This yields the slopes in x and y as the x() and y() components.
-    HepVector3D dir = (exit-entry);
+    //HepVector3D dir = (exit-entry);
     double delz = dir.z();
 
     HepVector3D tempVec = dir; // just being superstitious here
-    if (delz!=0) { dir = tempVec/delz;}
-    else         { dir = HepVector3D(0., 0., 1.);}    
+    if (delz!=0) { tempVec = tempVec/delz;}
+    else         { tempVec = HepVector3D(0., 0., 1.);}    
 
     // calculation is done separately for entry and exit, because transformation depends
     //    in 2nd order (~ microns) on the coordinates. This can be speeded up if
@@ -892,8 +893,8 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
 
     int view = id[5];
 
-    HepVector3D deltaEntry = getDelta(view, entry, dir, alConsts);
-    HepVector3D deltaExit  = getDelta(view, exit,  dir, alConsts);
+    HepVector3D deltaEntry = getDelta(view, entry, tempVec, alConsts);
+    HepVector3D deltaExit  = getDelta(view, exit,  tempVec, alConsts);
 
     // for now, limit delta to m_maxDelta (default = 5mm, modifiable in jobOptions
     // later fix transformation for special cases

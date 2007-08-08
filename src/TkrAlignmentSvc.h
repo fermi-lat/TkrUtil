@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.17 2006/03/21 01:15:48 usher Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.18 2006/11/02 19:34:48 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -151,7 +151,7 @@ public:
     
     /// moves the entry and exit of an MCPositionHit according to alignment consts
     void moveMCHit(idents::VolumeIdentifier id, 
-        HepPoint3D& entry, HepPoint3D &exit) const;
+        HepPoint3D& entry, HepPoint3D &exit, HepVector3D &dir) const;
     
     HepVector3D deltaReconPoint(const HepPoint3D& point, const HepVector3D& dir, 
         int layer, int view, alignTask task, const AlignmentConsts* consts) const;
