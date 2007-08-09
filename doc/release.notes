@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r10p1  09-Aug-07 LSR Fix to the fix (use old version as default)
   v3r10    08-Aug-07 LSR Mods to TkrAlignmentSvc, for choice of mode
   v3r9     02-Nov-06 LSR Mods for dual calibrations, and some cleanup
   v3r8p4   03-Oct-06 JCT Fix up test program
