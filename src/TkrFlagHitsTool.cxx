@@ -1,4 +1,4 @@
-// $Header$
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFlagHitsTool.cxx,v 1.1 2007/09/05 00:00:47 lsrea Exp $
 
 // Include files
 
@@ -226,7 +226,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
         // nothing measured, just flag the hit
         status_bits |= TkrTrackHit::HITISDEADPLN;
         stage = 1;
-        goto hitFlagged;
+        return stage;
     }
 
     // +++++++++++++++++++++++++++
@@ -286,7 +286,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
                     status_bits |= TkrTrackHit::HITISTRUNCATED;
 
                     stage = 2;
-                    goto hitFlagged;
+                    return stage;
                 }
             }
         }
@@ -342,7 +342,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
         status_bits |= TkrTrackHit::HITISTWR;
 
         stage = 3;
-        goto hitFlagged;
+        return stage;
     }
 
     // We're in the active area of the tower, so:
@@ -383,7 +383,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
             status_bits |= TkrTrackHit::HITISGAP;
 
             stage = 4;
-            goto hitFlagged;
+            return stage;
         }
 
         // not clear where to put the hit
@@ -423,7 +423,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
         else          {status_bits |= TkrTrackHit::MEASURESY;}
 
         stage = 5;
-        goto hitFlagged;
+        return stage;
     }
 
     // +++++++++++++++++++++++++++
@@ -492,7 +492,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
         outParams(yPosIdx, yPosIdx) = sigmaY * sigmaY;
 
         stage = 6;
-        goto hitFlagged;
+        return stage;
     } 
 
     // +++++++++++++++++++++++++++
@@ -505,5 +505,5 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
     //std::cout << pos << " t/l/v " << tower << " " << layer << " " << view 
     //    << " width " << hitWidth << " xyErr " << xError << " " << yError << std::endl;
 
-hitFlagged: return stage;
+    return stage;
 }
