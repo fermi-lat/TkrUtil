@@ -9,6 +9,7 @@
 
   On main branch
   ------------------------------
+  v3r12    11-Sep-07 LSR Use Joanne's CalibPathSvc in TkrCalibAlg
   v3r11p1  06-Sep-07 LSR Fix code for linux
   v3r11    05-Sep-07 LSR Add FlagHitsTool, which catagorizes hits and misses along track axis
   v3r10p1  09-Aug-07 LSR Fix to the fix (use old version as default)

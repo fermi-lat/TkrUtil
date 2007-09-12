@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.12 2005/04/20 21:35:39 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.13 2006/11/02 19:34:48 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -11,6 +11,8 @@
 
 #include "CalibData/CalibTime.h"
 #include "CalibData/CalibModel.h"
+#include "CalibSvc/ICalibRootSvc.h"
+#include "CalibSvc/ICalibPathSvc.h"
 #include "CalibData/Tkr/BadStrips.h"
 #include "CalibData/Tkr/TkrSplitsCalib.h"
 #include "CalibData/Tkr/TkrTot.h"
@@ -52,6 +54,8 @@ private:
 
     /// pointer to data provider
     IDataProviderSvc*   m_pCalibDataSvc;
+    /// pointer to path provider
+    ICalibPathSvc*      m_pCalibPathSvc;
     /// Handle to the IDetDataSvc interface of the CalibDataSvc
     IDetDataSvc*        m_detDataSvc;
     /// pointer to bad strips service
@@ -122,6 +126,14 @@ StatusCode TkrCalibAlg::initialize()
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
             << "Could not get IDataProviderSvc interface of CalibDataSvc" 
+            << endreq;
+        return sc;
+    }
+
+    sc = service("CalibDataSvc", m_pCalibPathSvc, true); 
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+            << "Could not get ICalibPathSvc interface of CalibDataSvc"
             << endreq;
         return sc;
     }
@@ -215,7 +227,9 @@ StatusCode TkrCalibAlg::execute( ) {
     CalibData::BadStrips* pDead = 0;
 
     if(m_deadStripsFlavor!="ideal" && m_deadStripsFlavor!="") {
-        fullPath = "/Calib/TKR_DeadChan/"+m_deadStripsFlavor;
+        //fullPath = "/Calib/TKR_DeadChan/"+m_deadStripsFlavor;
+        fullPath = m_pCalibPathSvc->getCalibPath(
+            ICalibPathSvc::Calib_TKR_DeadChan, m_deadStripsFlavor );
         pDead = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullPath);
         if (!pDead) {return failedAccess(type);}
 
@@ -237,7 +251,9 @@ StatusCode TkrCalibAlg::execute( ) {
 
     if(m_hotStripsFlavor!="ideal" && m_hotStripsFlavor!="") {
 
-        fullPath = "/Calib/TKR_HotChan/"+m_hotStripsFlavor;
+        //fullPath = "/Calib/TKR_HotChan/"+m_hotStripsFlavor;
+        fullPath = m_pCalibPathSvc->getCalibPath(
+            ICalibPathSvc::Calib_TKR_HotChan, m_hotStripsFlavor );
         pHot = SmartDataPtr<CalibData::BadStrips>(m_pCalibDataSvc, fullPath);
         if (!pHot) { return failedAccess(type); }
 
@@ -261,7 +277,9 @@ StatusCode TkrCalibAlg::execute( ) {
 
     if(m_splitsFlavor!="ideal" && m_splitsFlavor!="") {
 
-        fullPath = CalibData::TKR_Splits + "/" + m_splitsFlavor;
+        //fullPath = CalibData::TKR_Splits + "/" + m_splitsFlavor;
+        fullPath = m_pCalibPathSvc->getCalibPath(
+            ICalibPathSvc::Calib_TKR_Splits, m_splitsFlavor );
         m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pSplits = dynamic_cast<CalibData::TkrSplitsCalib*> (pObject);
         if (!pSplits) { return failedAccess(type); }
@@ -284,7 +302,9 @@ StatusCode TkrCalibAlg::execute( ) {
 
     if(m_injectionFlavor!="ideal" && m_injectionFlavor!="") {
 
-        fullPath = CalibData::TKR_TOTSignal + "/" + m_injectionFlavor;
+        //fullPath = CalibData::TKR_TOTSignal + "/" + m_injectionFlavor;
+        fullPath = m_pCalibPathSvc->getCalibPath(
+            ICalibPathSvc::Calib_TKR_TOTSignal, m_injectionFlavor );
         m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pToT = dynamic_cast<CalibData::TkrTotCol*> (pObject);
         if (!pToT) { return failedAccess(type); }
@@ -307,7 +327,9 @@ StatusCode TkrCalibAlg::execute( ) {
 
     if(m_muonFlavor!="ideal" && m_muonFlavor!="") {
 
-        fullPath = CalibData::TKR_ChargeScale + "/" + m_muonFlavor;
+        //fullPath = CalibData::TKR_ChargeScale + "/" + m_muonFlavor;
+        fullPath = m_pCalibPathSvc->getCalibPath(
+            ICalibPathSvc::Calib_TKR_ChargeScale, m_muonFlavor );
         m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pScale = dynamic_cast<CalibData::TkrScaleCol*> (pObject);
         if (!pScale) { return failedAccess(type); }
