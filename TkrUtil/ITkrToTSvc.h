@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.8 2005/08/17 00:41:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.9 2005/12/20 02:35:57 lsrea Exp $
 */
 
 #ifndef ITkrToTSvc_H
@@ -13,7 +13,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrToTSvc.h,v 1.8 2005/08
 #include "idents/VolumeIdentifier.h"
 #include "idents/TkrId.h"
 
-#include "CalibData/CalibModel.h"
 #include "CalibData/Tkr/TkrTot.h"
 #include "CalibData/Tkr/TkrScale.h"
 

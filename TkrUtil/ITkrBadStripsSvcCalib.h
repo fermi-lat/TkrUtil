@@ -2,7 +2,7 @@
 @brief Abstract Interface to TkrBadStripsSvc, used by TkrCalibAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvcCalib.h,v 1.3 2003/07/02 20:15:06 cohen Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvcCalib.h,v 1.4 2006/11/02 19:34:47 lsrea Exp $
 */
 
 
@@ -13,7 +13,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrBadStripsSvcCalib.h,v 
 #include "GaudiKernel/IInterface.h"
 
 #include "GaudiKernel/IDataProviderSvc.h"
-#include "CalibData/CalibModel.h"
 #include "CalibData/Tkr/BadStrips.h"
 
 

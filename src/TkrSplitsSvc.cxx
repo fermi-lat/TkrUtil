@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.18 2006/04/12 07:05:38 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.19 2006/11/02 19:34:48 lsrea Exp $
 
 */
 
@@ -14,8 +14,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.18 2006/0
 #include "GaudiKernel/SvcFactory.h"
 
 #include "GaudiKernel/SmartDataPtr.h"
-//#include "CalibData/CalibModel.h"
-//#include "CalibData/Tkr/TkrSplitsCalib.h"
 
 #include "idents/TowerId.h"
 #include "idents/TkrId.h"

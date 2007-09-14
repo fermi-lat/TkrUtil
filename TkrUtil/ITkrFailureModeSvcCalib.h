@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrFailureModeSvc, used by TkrCalibAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrFailureModeSvcCalib.h,v 1.3 2003/04/11 23:27:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrFailureModeSvcCalib.h,v 1.4 2006/11/02 19:34:47 lsrea Exp $
 */
 
 
@@ -15,7 +15,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrFailureModeSvcCalib.h,
 
 #include "TkrUtil/ITkrFailureModeSvc.h"
 
-#include "CalibData/CalibModel.h"
 #include "CalibData/Tkr/BadStrips.h"
 
 #include <map>

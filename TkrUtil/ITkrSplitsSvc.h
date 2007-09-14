@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrSplitsSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.6 2005/08/17 18:38:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.7 2005/12/20 02:35:57 lsrea Exp $
 */
 
 #ifndef ITkrSplitsSvc_H
@@ -11,7 +11,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrSplitsSvc.h,v 1.6 2005
 // Include files
 #include "GaudiKernel/IInterface.h"
 
-#include "CalibData/CalibModel.h"
 #include "CalibData/Tkr/TkrSplitsCalib.h"
 #include "Event/Digi/TkrDigi.h"
 
