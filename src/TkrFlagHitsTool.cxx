@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFlagHitsTool.cxx,v 1.1 2007/09/05 00:00:47 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFlagHitsTool.cxx,v 1.2 2007/09/07 05:42:17 lsrea Exp $
 
 // Include files
 
@@ -235,7 +235,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
 
     //don't bother if not truncated
 
-    if (truncInfo->isTruncated()) {
+    if (truncInfo!=NULL&&truncInfo->isTruncated()) {
         TkrTruncationInfo::TkrTruncationMap*  truncMap = truncInfo->getTruncationMap();
         SortId id(tower, tray, face, view);
         TkrTruncationInfo::TkrTruncationMap::iterator iter = truncMap->find(id);
