@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.41 2007/08/08 20:49:34 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.42 2007/08/09 18:48:44 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -41,6 +41,12 @@ const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
 // Service parameters which can be set at run time must be declared.
 // This should be done in the constructor.
 
+namespace{
+
+    AlignmentConsts nullConsts(0.,0.,0.,0.,0.,0.);
+
+}
+
 TkrAlignmentSvc::TkrAlignmentSvc(const std::string& name, 
                                  ISvcLocator* pSvcLocator) :
 Service(name, pSvcLocator)
@@ -50,6 +56,7 @@ Service(name, pSvcLocator)
     declareProperty("recFile", m_recFile="");
     declareProperty("testMode", m_testMode=0);
     declareProperty("maximumDelta", m_maxDelta=5.0);
+    declareProperty("printConsts",  m_printConsts=false);
 
     return;
 }
@@ -319,10 +326,11 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
         log << MSG::ERROR << "Failed to process constants" << endreq;
         return StatusCode::FAILURE;
     }
+  
+    ConstsVec* ptrConsts = (m_calibType==SIM ? &m_simConsts : &m_recConsts );
 
     log << MSG::DEBUG ;
     if (log.isActive()) {
-        ConstsVec* ptrConsts = (m_calibType==SIM ? &m_simConsts : &m_recConsts );
         log << "Debug output for alignment consts follows:" << endreq;
         AlignmentConsts alConsts;
         for (int tower = 0; tower < m_nTowers; ++tower) {
@@ -343,6 +351,14 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     }
     log << endreq;
 
+    if(m_printConsts) {
+        std::cout << "text file, m_calibType = " << m_calibType << std::endl;
+        int nElements = ptrConsts->getNumElements();
+        int i;
+        for (i=0; i<nElements;++i) {
+            std::cout << (*ptrConsts)[i] << std::endl;
+        }
+    }
     return sc;
 }
 
@@ -545,12 +561,11 @@ StatusCode TkrAlignmentSvc::fillTrayConsts()
     if(m_towerConsts.isNull()) return sc;
 
     // now do the rest, with null tray constants
-    AlignmentConsts null;
     int itry = m_nTrays;
     while (itry--) {
         if (!done[itry]) {
             m_tray = itry;
-            calculateTrayConsts(null);
+            calculateTrayConsts(nullConsts);
             if(fillFaceConsts().isFailure()) {return StatusCode::FAILURE;}
         }
     }
@@ -573,7 +588,6 @@ void TkrAlignmentSvc::calculateTrayConsts( AlignmentConsts& thisTray) const
     double rotX   = thisTray.getRotX()   + m_towerConsts.getRotX();
     double rotY   = thisTray.getRotY()   + m_towerConsts.getRotY();
     double rotZ   = thisTray.getRotZ()   + m_towerConsts.getRotZ();
-
     m_trayConsts = AlignmentConsts(deltaX, deltaY, deltaZ, rotX, rotY, rotZ);
     return;
 }
@@ -612,13 +626,12 @@ StatusCode TkrAlignmentSvc::fillFaceConsts()
     if (m_trayConsts.isNull()) return sc;
 
     // now do the rest
-    AlignmentConsts null;
     int itry = m_nFaces;
     while (itry--) {
         if (!done[itry]) {
             m_face = itry;
             if(m_tkrGeom->trayToPlane(m_tray, m_face)<0) continue;
-            calculateFaceConsts(null);
+            calculateFaceConsts(nullConsts);
             if(fillLadderConsts().isFailure()) {return StatusCode::FAILURE;}
         }
     }
@@ -681,12 +694,11 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
     if (m_faceConsts.isNull()) return sc;
 
     // now do the rest
-    AlignmentConsts null;
     int itry = m_nLadders;
     while (itry--) {
         if (!done[itry]) {
             m_ladder = itry;
-            calculateLadderConsts(null);
+            calculateLadderConsts(nullConsts);
             if(fillWaferConsts().isFailure()) {return StatusCode::FAILURE;}
         }
     }
@@ -763,7 +775,6 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
     if (m_ladderConsts.isNull()) return sc;
 
     // now do the rest
-    AlignmentConsts null;
     int itry = m_nWafers;
 
     while (itry--) {
@@ -771,7 +782,7 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
             m_wafer = itry;
             if( !ptrConsts->checkIndex(m_tower, layer, view, m_ladder, m_wafer)) continue;
             AlignmentConsts thisWafer = item.getConsts();
-            calculateWaferConsts(null);
+            calculateWaferConsts(nullConsts);
             // here are the final constants!
             index = ptrConsts->getIndex(m_tower, layer, view, m_ladder, m_wafer);
             (*ptrConsts)[index] = m_waferConsts;
@@ -954,8 +965,7 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
 
     double deltaPointX, deltaPointY;
 
-    AlignmentConsts null;
-    m_faceConsts = null;
+    m_faceConsts = nullConsts;
     if(task==FINDTOWERCONSTS) {
         // need to generate the "face" constants to apply to the "face" coordinates
         // first get tray and view
@@ -967,8 +977,8 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
         m_towerConsts = *consts;
         // this is for testing
         //m_towerConsts = AlignmentConsts(0.0, 0.0, 0.0, 0.0, 0.002, 0.0);
-        calculateTrayConsts(null);
-        calculateFaceConsts(null);
+        calculateTrayConsts(nullConsts);
+        calculateFaceConsts(nullConsts);
         //std::cout << "tower coord: " << localPoint << std::endl;
         //std::cout << "calculated face consts: " << m_faceConsts << std::endl;
     }
@@ -1121,6 +1131,94 @@ void TkrAlignmentSvc::applyDelta(double pointX, double pointY,
         + alphaX*rotTerm;
     deltaPointY = - deltaY - rotZ*pointX
         + alphaY*rotTerm;
+}
+
+void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign, 
+                             CalibData::TkrInternalAlignCalib* pInternalAlign) 
+{
+    // This fills the alignment arrays from the appropriate xml file
+    // It is called every time the event falls outside the current validity range
+    // At first I thought it would be really clever to modify the existing code
+    // so that the same structure would work for both .txt and .xml files.
+    // But then I decided that it wouldn't be that clever after all.
+
+    ConstsVec* ptrConsts = (m_calibType==SIM ? &m_simConsts : &m_recConsts );
+
+    int layer, view, index;
+    int nElements = ptrConsts->getNumElements();
+
+    //clear out the consts vector
+    for(index=0; index<nElements; ++index) {
+        (*ptrConsts)[index] = nullConsts;
+    }
+
+    CLHEP::Hep3Vector disp, rot;
+    AlignmentConsts thisTray, thisFace, thisLadder, thisWafer;
+    for(m_tower=0; m_tower<m_nTowers; ++m_tower) {
+        // get the tower constant
+        m_towerConsts = nullConsts;
+        if(pTowerAlign) {
+            StatusCode sc = pTowerAlign->getTowerAlign(m_tower, disp, rot);
+            m_towerConsts = makeConsts(disp, rot);
+        }
+        for(m_tray=0; m_tray<m_nTrays; ++m_tray) {
+            // then the tray
+            thisTray = nullConsts;
+            if(pInternalAlign) {
+                StatusCode sc = pInternalAlign->getTrayAlign(m_tower, m_tray, disp, rot);
+                thisTray = makeConsts(disp, rot);
+            }
+            calculateTrayConsts(thisTray);
+            for(m_face=0;m_face<m_nFaces;++m_face) {
+                // then face, if it exists
+                m_tkrGeom->trayToLayer(m_tray, m_face, layer, view);
+                if (layer<0) continue;
+                thisFace = nullConsts;
+                if(pInternalAlign) {
+                    StatusCode sc = pInternalAlign->getFaceAlign(
+                        m_tower, m_tray, m_face, disp, rot);
+                    thisFace = makeConsts(disp, rot);
+                }
+                calculateFaceConsts(thisFace);
+                for(m_ladder=0;m_ladder<m_nLadders;++m_ladder) {
+                    // next, ladder
+                    thisLadder = nullConsts;
+                    if(pInternalAlign) {
+                        StatusCode sc = pInternalAlign->getLadderAlign(
+                            m_tower, m_tray, m_face, m_ladder, disp, rot);
+                        thisLadder = makeConsts(disp, rot);
+                    }
+                    calculateLadderConsts(thisLadder);
+                    for(m_wafer=0;m_wafer<m_nWafers;++m_wafer) {
+                        // finally, wafer
+                        thisWafer = nullConsts;
+                        if(pInternalAlign) {
+                            StatusCode sc = pInternalAlign->getWaferAlign(
+                                m_tower, m_tray, m_face, m_ladder, m_wafer, disp, rot);
+                            thisWafer = makeConsts(disp, rot);
+                        }
+                        calculateWaferConsts(thisLadder);
+                        // store it!
+                        int index = ptrConsts->getIndex(
+                            m_tower, layer, view, m_ladder, m_wafer);
+                        (*ptrConsts)[index] = m_waferConsts;
+                    }
+                }
+            }
+        }
+    }
+
+    m_fileFlag = m_fileFlag | (1 << (m_calibType==SIM? SIM_SHIFT : REC_SHIFT));
+
+    // print out the consts vector
+    if(m_printConsts) {
+        std::cout << "calibType = " << m_calibType << std::endl;
+        for(index=0; index<nElements; ++index) {
+            std::cout << (*ptrConsts)[index] << std::endl;
+        }
+    }
+
+    return;
 }
 
 IGeometry::VisitorRet TkrAlignmentGeomVisitor::pushShape(ShapeType /* s */, const UintVector& idvec, 

@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.19 2007/08/08 20:49:34 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.20 2007/08/09 18:48:44 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -132,6 +132,9 @@ public:
     
     enum {SIM_SHIFT = 0, REC_SHIFT = 1};
     
+    /// sets type to SIM or REC
+    void SetCalibType(calibType type) const {m_calibType = type;}
+
     /// Constructor of this form must be provided
     TkrAlignmentSvc(const std::string& name, ISvcLocator* pSvcLocator); 
     virtual ~TkrAlignmentSvc() {}
@@ -177,7 +180,12 @@ public:
         return ITkrAlignmentSvc::interfaceID(); 
     }
     /// returns the service type
-    const InterfaceID& type() const;    
+    const InterfaceID& type() const; 
+
+    /// update to latest pointer when calibration changes
+    void update(CalibData::TkrTowerAlignCalib* pTowerAlign, 
+        CalibData::TkrInternalAlignCalib* pInternalAlign);
+
     
 private:   
     
@@ -231,10 +239,15 @@ private:
     StatusCode processConstants();
     /// does some logic on the next item in the read-in list
     bool getNextItem(aType type, AlignmentItem& item);
+
+    AlignmentConsts makeConsts(CLHEP::Hep3Vector& disp, CLHEP::Hep3Vector& rot) {
+        return AlignmentConsts(0.001*disp.x(), 0.001*disp.y(), 0.001*disp.z(), 
+            0.001*rot.x(), 0.001*rot.y(), 0.001*rot.z());
+    }
     
-    /// File name for sim constants
+    /// File name for sim constants, old text file system
     std::string m_simFile;
-    /// File name for rec constants
+    /// File name for rec constants, old text file system
     std::string m_recFile;
     /// test mode flag
     int m_testMode;
@@ -284,7 +297,8 @@ private:
     mutable int m_wafer;
 
     std::string m_mode;
-    calibType m_calibType;
+    mutable calibType m_calibType;
+    bool m_printConsts;
     std::ifstream* m_dataFile;
 
     ITkrGeometrySvc* m_tkrGeom;
@@ -334,8 +348,9 @@ inline StreamBuffer& AlignmentConsts::serialize( StreamBuffer& s )       {
 
 //! Fill the ASCII output stream
 std::ostream& operator<<(std::ostream &s, AlignmentConsts consts) {
-        s << "AlignmentConsts: "
+    s << "AlignmentConsts: "
             << "delta(" 
+            << std::setprecision(6)
         << consts.getDeltaX() << ", "
         << consts.getDeltaY() << ", "
         << consts.getDeltaZ() << ") "

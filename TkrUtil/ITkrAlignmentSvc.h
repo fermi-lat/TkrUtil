@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.19 2007/08/08 20:49:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.20 2007/08/09 18:48:43 lsrea Exp $
 */
 
 
@@ -15,7 +15,10 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.19 
 #include "idents/VolumeIdentifier.h"
 #include "CLHEP/Geometry/Point3D.h"
 #include "CLHEP/Geometry/Vector3D.h"
+
 #include "Event/Recon/TkrRecon/TkrCluster.h"
+#include "CalibData/Tkr/TkrTowerAlignCalib.h"
+#include "CalibData/Tkr/TkrInternalAlignCalib.h"
 
 #include <string>
 #include <vector>
@@ -29,10 +32,9 @@ typedef HepGeom::Point3D<double> HepPoint3D;
 typedef HepGeom::Vector3D<double> HepVector3D;
 #endif
 
-static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 7, 0); 
+static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 8, 0); 
 
 namespace {
-    enum calibType {SIM=0, REC, NCALIBTYPES, UNKNOWN_TYPE};
     enum alignTask {NULLTASK= 0, APPLYCONSTS=1, FINDTOWERCONSTS=2, FINDWAFERCONSTS=3};
 }
 
@@ -54,7 +56,15 @@ public:
         m_rotX(rotX), m_rotY(rotY), m_rotZ(rotZ)
     {}
     
-    ~AlignmentConsts() {} 
+    /*
+    AlignmentConsts (CLHEP::Hep3Vector disp = CLHEP::Hep3Vector(0., 0., 0.),
+        CLHEP::Hep3Vector rot = CLHEP::Hep3Vector(0., 0., 0.)):
+        m_deltaX(disp.x()), m_deltaY(disp.y()), m_deltaZ(disp.z()),
+        m_rotX(rot.x()), m_rotY(rot.y()), m_rotZ(rot.z())
+    {}
+    */
+
+   ~AlignmentConsts() {} 
 
     /// get the displacement in X
     double getDeltaX()  const {return m_deltaX;}
@@ -111,6 +121,8 @@ public:
 
     static const InterfaceID& interfaceID() { return IID_ITkrAlignmentSvc; }
    
+    enum calibType {SIM=0, REC, NCALIBTYPES, UNKNOWN_TYPE};
+
     /// retrieve the alignment consts for element tower, layer, view, ladder, wafer
     virtual const AlignmentConsts* getConsts(calibType type, int tower, 
         int layer, int view, int ladder=0, int wafer=0) const = 0;
@@ -139,6 +151,13 @@ public:
     virtual bool alignSim() const = 0;
     /// true = perform alignment during reconstruction
     virtual bool alignRec() const = 0;
+
+    /// update to latest pointer when calibration changes
+    virtual void update(CalibData::TkrTowerAlignCalib* pTowerAlign, 
+        CalibData::TkrInternalAlignCalib* pInternalAlign) = 0;
+    /// set SIM/REC type
+    virtual void SetCalibType(calibType type) const = 0;
+
 };
 
 #endif

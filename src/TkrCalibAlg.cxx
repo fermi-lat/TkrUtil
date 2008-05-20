@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.14 2007/09/12 06:07:45 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.15 2007/09/14 18:04:38 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -16,11 +16,14 @@
 #include "CalibData/Tkr/TkrSplitsCalib.h"
 #include "CalibData/Tkr/TkrTot.h"
 #include "CalibData/Tkr/TkrScale.h"
+#include "CalibData/Tkr/TkrTowerAlignCalib.h"
+#include "CalibData/Tkr/TkrInternalAlignCalib.h"
 
 #include "TkrUtil/ITkrBadStripsSvcCalib.h"
 #include "TkrUtil/ITkrFailureModeSvcCalib.h"
 #include "TkrUtil/ITkrSplitsSvc.h"
 #include "TkrUtil/ITkrToTSvc.h"
+#include "TkrUtil/ITkrAlignmentSvc.h"
 
 #include <string>
 
@@ -65,6 +68,8 @@ private:
     ITkrSplitsSvc*           m_pTkrSplitsSvc;
     /// pointer to splits service
     ITkrToTSvc*              m_pTkrToTSvc;
+    /// pointer to alignment service
+    ITkrAlignmentSvc*        m_pTkrAlignmentSvc;
     /// serial number of the hot strips calibration
     int m_serHot;
     /// serial number of the dead strips calibration
@@ -75,6 +80,10 @@ private:
     int m_serInjection;
     /// serial number of the ToT muon calibration
     int m_serMuons;
+    /// serial number of the tower alignment calibration
+    int m_serTowerAlign;
+    /// serial number of the internal alignment calibration
+    int m_serInternalAlign;
 
     /// flavor of calibration required ("ideal" means: do nothing)
     std::string m_flavor;
@@ -89,6 +98,10 @@ private:
     std::string m_injectionFlavor;
     /// flavor of the ToT muon calibration
     std::string m_muonFlavor;
+    /// flavor of the tower alignment calibration
+    std::string m_towerAlignFlavor;
+    /// flavor of the internal alignment calibration
+    std::string m_internalAlignFlavor;
 
 };
 
@@ -110,6 +123,9 @@ TkrCalibAlg::TkrCalibAlg(const std::string&  name,
     declareProperty("chargeInjectionCalibFlavor",  
         m_injectionFlavor  = "notSet");
     declareProperty("muonCalibFlavor",       m_muonFlavor       = "notSet");
+
+    declareProperty("internalAlignmentCalibFlavor", m_internalAlignFlavor = "notSet");
+    declareProperty("towerAlignmentCalibFlavor",    m_towerAlignFlavor    = "notSet");
 }
 
 StatusCode TkrCalibAlg::initialize() 
@@ -183,6 +199,14 @@ StatusCode TkrCalibAlg::initialize()
         return sc;
     }
 
+    sc = service("TkrAlignmentSvc", m_pTkrAlignmentSvc, true);
+    if ( !sc.isSuccess() ) {
+        log << MSG::ERROR 
+            << "Could not get TkrAlignmentSvc" 
+            << endreq;
+        return sc;
+    }
+
     // go through the individual flavors... 
     // set them equal to the overall flavor unless they've been set
 
@@ -191,12 +215,16 @@ StatusCode TkrCalibAlg::initialize()
     if (m_splitsFlavor=="notSet")     m_splitsFlavor     = m_flavor;
     if (m_injectionFlavor=="notSet")  m_injectionFlavor  = m_flavor;
     if (m_muonFlavor=="notSet")       m_muonFlavor       = m_flavor;
+    if (m_internalAlignFlavor=="notSet")  m_internalAlignFlavor = m_flavor;
+    if (m_towerAlignFlavor=="notSet")     m_towerAlignFlavor    = m_flavor;
 
     m_serHot       = -1;
     m_serDead      = -1;
     m_serSplits    = -1;
     m_serInjection = -1;
     m_serMuons     = -1;
+    m_serInternalAlign = -1;
+    m_serTowerAlign    = -1;
 
     return StatusCode::SUCCESS;   
 }
@@ -212,9 +240,11 @@ StatusCode TkrCalibAlg::execute( ) {
     if(name().find("Rec")!=std::string::npos) {
         m_pTkrBadStripsSvc->SetCalibType(ITkrBadStripsSvcCalib::REC);
         m_pTkrFailureModeSvc->SetCalibType(ITkrFailureModeSvcCalib::REC);
+        m_pTkrAlignmentSvc->SetCalibType(ITkrAlignmentSvc::REC);
     } else {
         m_pTkrBadStripsSvc->SetCalibType(ITkrBadStripsSvcCalib::SIM);
         m_pTkrFailureModeSvc->SetCalibType(ITkrFailureModeSvcCalib::SIM);
+        m_pTkrAlignmentSvc->SetCalibType(ITkrAlignmentSvc::SIM);
     }
 
     std::string fullPath;
@@ -340,6 +370,57 @@ StatusCode TkrCalibAlg::execute( ) {
         }
     }
     m_pTkrToTSvc->update(pScale);
+
+    // now tower alignment calibration
+    type = "tower alignment";
+    bool updateAlign = false;
+    CalibData::TkrTowerAlignCalib* pTowerAlign = 0;
+
+    if(m_towerAlignFlavor!="ideal" && m_towerAlignFlavor!="") {
+
+        fullPath = m_pCalibPathSvc->getCalibPath(
+            ICalibPathSvc::Calib_TKR_TowerAlign, m_towerAlignFlavor );
+        m_pCalibDataSvc->retrieveObject(fullPath, pObject);
+        pTowerAlign = dynamic_cast<CalibData::TkrTowerAlignCalib*> (pObject);
+        if (!pTowerAlign) { return failedAccess(type); }
+
+        m_pCalibDataSvc->updateObject(pObject);
+        pTowerAlign = dynamic_cast<CalibData::TkrTowerAlignCalib*> (pObject);
+        if (!pTowerAlign) { return failedUpdate(type); }
+
+        int newSerNo = pTowerAlign->getSerNo();
+        if (newSerNo!=m_serTowerAlign) {
+            m_serTowerAlign = newSerNo;
+            showCalibrationInfo(type, fullPath, pTowerAlign);
+            updateAlign = true;
+        }
+    }
+
+    // now internal alignment calibration
+    type = "internal alignment";
+    CalibData::TkrInternalAlignCalib* pInternalAlign = 0;
+
+    if(m_towerAlignFlavor!="ideal" && m_towerAlignFlavor!="") {
+
+        fullPath = m_pCalibPathSvc->getCalibPath(
+            ICalibPathSvc::Calib_TKR_InternalAlign, m_towerAlignFlavor );
+        m_pCalibDataSvc->retrieveObject(fullPath, pObject);
+        pInternalAlign = dynamic_cast<CalibData::TkrInternalAlignCalib*> (pObject);
+        if (!pInternalAlign) { return failedAccess(type); }
+
+        m_pCalibDataSvc->updateObject(pObject);
+        pInternalAlign = dynamic_cast<CalibData::TkrInternalAlignCalib*> (pObject);
+        if (!pInternalAlign) { return failedUpdate(type); }
+
+        int newSerNo = pInternalAlign->getSerNo();
+        if (newSerNo!=m_serInternalAlign) {
+            m_serInternalAlign = newSerNo;
+            showCalibrationInfo(type, fullPath, pInternalAlign);
+            updateAlign = true;
+        }
+    }
+
+    if(updateAlign) m_pTkrAlignmentSvc->update(pTowerAlign, pInternalAlign);
 
     return StatusCode::SUCCESS;
 }
