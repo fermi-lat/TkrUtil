@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.4 2005/08/17 00:41:30 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.5 2006/11/02 19:34:48 lsrea Exp $
 */
 
 // Include files
@@ -236,7 +236,7 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     //}
                     pClus->push_back(cl);
                     nclusters++;
-                    (*clusMap)[hitId].push_back(cl);
+                    if(clusMap!=0) (*clusMap)[hitId].push_back(cl);
                     // for tests
                     //std::cout << rawToT << " " << ToT << std::endl;
                 } 
