@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Track/TkrGhostTool.h,v 1.1 2008/09/10 01:33:13 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.1 2008/11/07 18:44:10 lsrea Exp $
  */
 #ifndef ITkrGhostTool_h
 #define ITkrGhostTool_h
@@ -36,9 +36,9 @@ public:
           (view==0 ? setXBit(layer) : setYBit(layer));
       }
 
-      int setXBit(int layer)  {m_xBits |= (1<<layer);}
+      void setXBit(int layer)  {m_xBits |= (1<<layer);}
 
-      int setYBit(int layer)  {m_yBits |= (1<<layer);}
+      void setYBit(int layer)  {m_yBits |= (1<<layer);}
 
       bool isTriggered() {
           bool ret = true;
