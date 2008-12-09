@@ -293,7 +293,7 @@ StatusCode TkrGeometrySvc::getConsts()
 
     double siWaferActiveSide;
 
-    if (service("GlastDetSvc", m_pDetSvc).isSuccess() &&
+    if (service("GlastDetSvc", m_pDetSvc, true).isSuccess() &&
         m_pDetSvc->getNumericConstByName("xNum", &m_numX).isSuccess() &&
         m_pDetSvc->getNumericConstByName("yNum", &m_numY).isSuccess() &&    
         m_pDetSvc->getNumericConstByName("nWaferAcross", &m_nWaferAcross).isSuccess() &&   
