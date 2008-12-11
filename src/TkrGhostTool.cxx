@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Track/TkrGhostTool.cxx,v 1.3 2008/10/06 19:08:10 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.1 2008/11/07 18:44:11 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -49,7 +49,7 @@ public:
     StatusCode calculateTkrVector(
         Event::TkrDigiCol* pCol, unsigned short& towerBits);
     StatusCode flagSingles();
-    StatusCode flagEarlyHits(Event::TkrClusterCol* col);
+    StatusCode flagEarlyHits(Event::TkrClusterCol* col=0);
     StatusCode flagEarlyTracks();
 
     /// @brief Tool for identifying and flagging ghost clusters
