@@ -9,6 +9,8 @@
 
   On main branch
   ------------------------------
+  v3r16p5  18-Dec-08 LSR TkrSplitsSvc: set default RC buffer size to 14
+                         TkrMakeClustersTool: fix ToT calculation
   v3r16p4  11-Dec-08 LSR Fix optional argument in TkrGhostTool::flagEarlyHits()
   v3r16p3  09-Dec-08 LSR Fix TkrGeometrySvc for test_TkrUtil
   v3r16p2  01-Dec-08 LSR Change set[X/Y]bit from int to void
