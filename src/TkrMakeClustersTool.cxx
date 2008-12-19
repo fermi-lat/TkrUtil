@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.5 2006/11/02 19:34:48 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.6 2008/11/07 18:44:11 lsrea Exp $
 */
 
 // Include files
@@ -60,7 +60,7 @@ private:
         int view) const;
     /// makes a first guess at the corrected ToT for a cluster
     float calculateMips(Event::TkrDigi* pDigi, int strip0, int stripf, 
-        int& rawToT, int& end) const;
+        int nBad, int& rawToT, int& end) const;
 
     /// Keep pointer to the geometry service
     ITkrGeometrySvc*  m_tkrGeom;  
@@ -124,7 +124,28 @@ StatusCode TkrMakeClustersTool::makeClusters(
 
     unsigned int defaultStatus = m_tkrGeom->getDefaultClusterStatus();
 
-
+    // keep this handy to do ToT plots
+    //bool debugToT = false;
+    //if(debugToT) {
+    //    int i,j,k,l;
+    //    int rawToT = 250;
+    //    for(i=0;i<16;++i) {
+    //        for(j=0;j<18;++j) {
+    //            for(k=0;k<2;++k) {
+    //                for(l=0;l<1536;++l) {
+    //                    bool isBad = m_pBadStrips->isBadStrip(i,j,(idents::GlastAxis::axis)k,l);
+    //                    double eDep = 0.5;
+    //                    //int rawToT = m_pToT->getGain(eDep, i,j,k,l);
+    //                    float x = m_pToT->getMuonScale(i,j,k,l);
+    //                    if(!isBad) {
+    //                        std::cout << x << " " ;
+    //                        if((l+1)%64==0) std::cout << std::endl;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 
     //Initialize the cluster lists...
     pClus->clear();
@@ -220,7 +241,7 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     int rawToT = 0;
                     float ToT = 0.0;
                     if(m_type!=ITkrBadStripsSvc::BADCLUSTERS) {
-                        ToT = calculateMips(pDigi, strip0, stripf, rawToT, end);
+                        ToT = calculateMips(pDigi, strip0, stripf, nBad, rawToT, end);
                     }
                     unsigned int status = defaultStatus | 
                         ((end<<Event::TkrCluster::shiftEND)&Event::TkrCluster::maskEND);
@@ -251,10 +272,10 @@ StatusCode TkrMakeClustersTool::makeClusters(
 }
 
 float TkrMakeClustersTool::calculateMips(Event::TkrDigi* pDigi, 
-                                     int strip0, int stripf, int& rawToT, int& end) const
+                                     int strip0, int stripf, int nBad, int& rawToT, int& end) const
 {
     int layer      =  pDigi->getBilayer();
-    int view       =  pDigi->getView();
+    idents::GlastAxis::axis view       =  pDigi->getView();
     int tower      = (pDigi->getTower()).id();
 
     int lastStrip = pDigi->getLastController0Strip();
@@ -266,39 +287,75 @@ float TkrMakeClustersTool::calculateMips(Event::TkrDigi* pDigi,
         rawToT = pDigi->getToT(end);
     } else {
         // bit of a kludge for when the cluster overlaps the splitPoint
-        rawToT = (pDigi->getToT(0)*(lastStrip-strip0+1)
-            + pDigi->getToT(1)*(stripf-lastStrip))/(stripf-strip0+1);
+        int tot0 = pDigi->getToT(0);
+        int tot1 = pDigi->getToT(1);
+        if(tot0<255&&tot1<255) {
+            rawToT = (pDigi->getToT(0)*(lastStrip-strip0+1)
+                + pDigi->getToT(1)*(stripf-lastStrip))/(stripf-strip0+1);
+        } else {
+            rawToT = 255;
+        }
     }
 
-    typedef std::vector<double> mipsVec;
-    typedef mipsVec::const_iterator mIter;
-    unsigned int size = stripf-strip0+1;
-    mipsVec totVec(size);                   
-    double mips;
-    int strip, i=0;                   
-    // what is the flag for an invalid ToT?
-    // could use bad strip, but ToTSvc should know too
-
-    for (strip=strip0; strip<=stripf; ++strip, ++i) {
-        int rawToT = pDigi->getToTForStrip(strip);
-        mips = m_pToT->getMipsFromToT(rawToT, 
-            tower, layer, view, strip);              
-        totVec[i] = mips;
-    }
-
-    // now pick the answer
-    // 1 strip is easy, for 2, pick the lowest, otherwise pick lowest of 
-    // the interior strips
-    // We'll do better when we do this for real
-
+    // 255 is not a real ToT; it just says that no ToT was measured
     double ToT;
-    if (stripf==strip0) {
-        ToT = totVec[0];
-    } else if (stripf-strip0==1) {                       
-        ToT = std::min(totVec[0], totVec[1] );
-    } else {
-        ToT = *std::min_element(++totVec.begin(), --totVec.end() );
+    if(rawToT==255) { ToT = -1.;}
+    else {
+        typedef std::vector<double> mipsVec;
+        typedef mipsVec::const_iterator mIter;
+        unsigned int size = stripf-strip0+1;
+        mipsVec totVec(size);                   
+        double mips;
+        int strip, i=0;                   
+        // what is the flag for an invalid ToT?
+        // Set the ToT to -1.
+        // could use bad strip, but ToTSvc should know too?
+
+        // Possibility:
+        // if the strip is bad, set ToT to 1000.,
+        // then it will be effectively skipped
+        // if there are no stips left, ToT = -1;
+
+        for (strip=strip0; strip<=stripf; ++strip, ++i) {
+            int localRawToT = pDigi->getToTForStrip(strip);
+            //localRawToT = 250; // for "heavy ion" test
+            if(nBad>0 && m_pBadStrips->isBadStrip(tower, layer, view, strip)) {
+                mips = 1000.0; 
+            } else {
+                mips = m_pToT->getMipsFromToT(localRawToT, 
+                    tower, layer, view, strip);
+            }
+
+            totVec[i] = mips;
+        }
+
+        // now pick the answer
+        // 1 strip is easy, for 2, pick the lowest, otherwise pick lowest of 
+        // the interior strips
+        // We'll do better when we do this for real
+        //
+        // Why the lowest?
+        // Because: The same amount of energy (ToT) deposited in two strips
+        // with different gain will give a lower rawTot in the strip
+        // with the lower gain, so it will be swamped by the rawTot from 
+        // the other strip. The strip with the higher gain generates
+        // the lower ToT.
+        //
+
+        // if the strip is bad, set ToT to 1000.,
+        // then it will be effectively skipped
+        // if there are no strips left, ToT = -1;
+        if (stripf==strip0) {
+            ToT = totVec[0];
+        } else if (stripf-strip0==1) {                       
+            ToT = std::min(totVec[0], totVec[1] );
+        } else {
+            ToT = *std::min_element(++totVec.begin(), --totVec.end() );
+        }
     }
+
+    if(ToT==1000.) ToT = -1.;
+
     return ToT;
 }
 
