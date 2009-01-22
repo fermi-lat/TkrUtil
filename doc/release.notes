@@ -9,6 +9,8 @@
 
   On main branch
   ------------------------------
+  v3r17    21-Jan-09 LSR TkrGhostTool: set a flag in vertex status word 
+                           if there is a ghost track in the vertex
   v3r16p5  18-Dec-08 LSR TkrSplitsSvc: set default RC buffer size to 14
                          TkrMakeClustersTool: fix ToT calculation
   v3r16p4  11-Dec-08 LSR Fix optional argument in TkrGhostTool::flagEarlyHits()

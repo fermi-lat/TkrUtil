@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.1 2008/11/07 18:44:10 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.2 2008/12/01 19:44:34 lsrea Exp $
  */
 #ifndef ITkrGhostTool_h
 #define ITkrGhostTool_h
@@ -95,6 +95,7 @@ public:
     virtual StatusCode flagSingles()   = 0;
     virtual StatusCode flagEarlyHits(Event::TkrClusterCol* col=0) = 0;
     virtual StatusCode flagEarlyTracks() = 0;
+    virtual StatusCode flagEarlyVertices() = 0;
 
 };
 
