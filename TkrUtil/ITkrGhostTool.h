@@ -6,14 +6,14 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.2 2008/12/01 19:44:34 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.3 2009/01/22 01:39:14 lsrea Exp $
  */
 #ifndef ITkrGhostTool_h
 #define ITkrGhostTool_h
 
 #include "GaudiKernel/IAlgTool.h"
 
-static const InterfaceID IID_ITkrGhostTool("ITkrGhostTool", 2 , 0);
+static const InterfaceID IID_ITkrGhostTool("ITkrGhostTool", 3 , 0);
 
 class TkrTowerBits
 {
