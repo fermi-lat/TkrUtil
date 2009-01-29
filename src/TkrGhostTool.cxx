@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.2 2008/12/11 22:05:30 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.3 2009/01/22 01:39:14 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -312,15 +312,16 @@ StatusCode TkrGhostTool::flagEarlyHits(Event::TkrClusterCol* clusterCol)
     int i;
     for (i=0;i<clusSize;++i) {
         Event::TkrCluster* clus = (*clusterCol)[i];
+        // flat the ToT225s
+        if(clus->getRawToT()==255) clus->setStatusBits(Event::TkrCluster::mask255);
         idents::TkrId tkrid = clus->getTkrId();
         idents::TowerId twrid = idents::TowerId(tkrid.getTowerX(), tkrid.getTowerY());
         int tower = twrid.id();
-        // we only look at towers with software trigger but no hardware trigger
+        // we only look for ghosts in towers with software trigger but no hardware trigger
         if((tkrVector&(1<<tower))!=0) continue;
         if((trigBits&(1<<tower))==0) continue;
 
         int layer = clus->getLayer();
-        if(clus->getRawToT()==255) clus->setStatusBits(Event::TkrCluster::mask255);
         if(towerBits[tower]&(1<<layer)) {
             clus->setStatusBits(Event::TkrCluster::maskGHOST);
 
