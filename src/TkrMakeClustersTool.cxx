@@ -3,12 +3,13 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.6 2008/11/07 18:44:11 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.7 2008/12/19 06:13:47 lsrea Exp $
 */
 
 // Include files
 
 #include "GaudiKernel/MsgStream.h"
+#include "GaudiKernel/DataSvc.h"
 #include "GaudiKernel/IDataProviderSvc.h"
 #include "GaudiKernel/SmartDataPtr.h"
 #include "GaudiKernel/AlgTool.h"
@@ -44,6 +45,7 @@ public:
         Event::TkrClusterCol* pClus, Event::TkrIdClusterMap* clusMap,
         Event::TkrDigiCol* pTkrDigiCol,
         ITkrBadStripsSvc::clusterType clType=ITkrBadStripsSvc::STANDARDCLUSTERS);
+    StatusCode calculateToT();
 
 private:
 
@@ -68,9 +70,13 @@ private:
     ITkrBadStripsSvc* m_pBadStrips;
     /// Keep pointer to the ToT service
     ITkrToTSvc* m_pToT;
+    /// Data service
+    DataSvc* m_dataSvc;
     /// if STANDARDCLUSTERS, usual clustering; if BADCLUSTERS, construct bad-cluster list
     ITkrBadStripsSvc::clusterType m_type;
     TaggedStrip m_lastStrip;
+    ///
+    bool m_test250;
 };
 
 // Static factory for instantiation of algtool objects
@@ -85,6 +91,7 @@ TkrMakeClustersTool::TkrMakeClustersTool(const std::string& type,
 {    
     // Declare additional interface
     declareInterface<ITkrMakeClustersTool>(this); 
+    declareProperty("test250", m_test250 = false);
 }
 
 StatusCode TkrMakeClustersTool::initialize()
@@ -92,6 +99,7 @@ StatusCode TkrMakeClustersTool::initialize()
     StatusCode sc = StatusCode::SUCCESS;
 
     MsgStream log(msgSvc(), name());
+    setProperties();
 
     m_tkrGeom = 0;
     if( serviceLocator() ) {
@@ -101,6 +109,15 @@ StatusCode TkrMakeClustersTool::initialize()
             return sc;
         }
     }
+    m_pBadStrips = m_tkrGeom->getTkrBadStripsSvc();
+    m_pToT       = m_tkrGeom->getTkrToTSvc();
+    IService* iService = 0;
+    if ((sc = serviceLocator()->getService("EventDataSvc", iService)).isFailure())
+    {
+        log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
+        return sc;
+    }
+    m_dataSvc = dynamic_cast<DataSvc*>(iService);
 
     log << MSG::INFO << "TkrMakeClustersTool successfully initialized" << endreq;
     return sc;
@@ -117,8 +134,6 @@ StatusCode TkrMakeClustersTool::makeClusters(
     // Dependencies: None
     // Restrictions and Caveats:  None
 
-    m_pBadStrips = m_tkrGeom->getTkrBadStripsSvc();
-    m_pToT       = m_tkrGeom->getTkrToTSvc();
     m_type       = type;
     m_lastStrip  = TaggedStrip::makeLastStrip();
 
@@ -318,7 +333,8 @@ float TkrMakeClustersTool::calculateMips(Event::TkrDigi* pDigi,
 
         for (strip=strip0; strip<=stripf; ++strip, ++i) {
             int localRawToT = pDigi->getToTForStrip(strip);
-            //localRawToT = 250; // for "heavy ion" test
+            // for "heavy ion" test
+            if(m_test250) localRawToT = 250; 
             if(nBad>0 && m_pBadStrips->isBadStrip(tower, layer, view, strip)) {
                 mips = 1000.0; 
             } else {
@@ -456,4 +472,54 @@ const stripCol* TkrMakeClustersTool::getBadStrips(int tower, int digiLayer,
     }
     return badStrips;
 }
-
+StatusCode TkrMakeClustersTool::calculateToT()
+{
+    StatusCode sc = StatusCode::SUCCESS;
+    MsgStream log(msgSvc(), name());
+    //get the clusters
+    SmartDataPtr<Event::TkrClusterCol> 
+        clusterCol(m_dataSvc, EventModel::TkrRecon::TkrClusterCol);
+    // Recover a pointer to the raw digi objects
+    SmartDataPtr<Event::TkrDigiCol> digiCol(m_dataSvc,
+        EventModel::Digi::TkrDigiCol);
+    if(digiCol==0) return StatusCode::SUCCESS;
+    // map the clusters
+    std::map<int, Event::TkrDigi*> digiMap;
+    int index;
+    Event::TkrDigi* digi;
+    int tower, layer, view;
+    Event::TkrDigiCol::const_iterator digiIter;
+    for(digiIter=digiCol->begin();digiIter!=digiCol->end();++digiIter) {
+        digi = *(digiIter);
+        idents::TowerId towerId = digi->getTower();
+        tower = towerId.id();
+        layer = digi->getBilayer();
+        view  = digi->getView();      
+        index = 1000*tower + 10*layer + view;
+        digiMap[index] = digi;
+    }
+    if(clusterCol==0||digiCol==0) return sc;
+    int clusSize = clusterCol->size();
+    int i;
+    int end;
+    int lastIndex = -1;
+    for (i=0;i<clusSize;++i) {
+        Event::TkrCluster* clus = (*clusterCol)[i];
+        int strip0 = clus->firstStrip();
+        int stripf = clus->lastStrip();
+        int rawToT = clus->getRawToT();
+        int nBad   = clus->getNBad();
+        tower = clus->tower();
+        layer  = clus->getLayer();
+        int plane  = clus->getPlane();
+        view   = m_tkrGeom->getView(plane);
+        index = 1000*tower + 10*layer + view;
+        if(index!=lastIndex) {
+            digi = digiMap[index];
+            lastIndex = index;
+        }
+        double ToT = calculateMips(digi, strip0, stripf, nBad, rawToT, end);
+        clus->setMips(ToT);
+    }
+    return sc;
+}
