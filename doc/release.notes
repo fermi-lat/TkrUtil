@@ -9,7 +9,7 @@
 
   On main branch
   ------------------------------
-  v3r18    31-Jan-09 LSR TkrMakeClustersTool: add method to recalculate ToTs,
+  v3r18p1  31-Jan-09 LSR TkrMakeClustersTool: add method to recalculate ToTs,
                             add a test option for saturation
   v3r17p1  28-Jan-09 LSR TkrGhostTool: fix bug in flagging ToT255s 
   v3r17    21-Jan-09 LSR TkrGhostTool: set a flag in vertex status word 
