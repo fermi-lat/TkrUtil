@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.42 2007/08/09 18:48:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.43 2008/05/20 01:14:20 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -133,10 +133,10 @@ StatusCode TkrAlignmentSvc::initialize()
     m_recConsts.setValue(alConsts);
 
     if(!m_testMode) {        
-        // If there are no alignment files, service will do nothing
+        // If there are no alignment files, the constructor does not get initial alignment constants.
+        // However, constants can be received later through the update() method from the data base.
         if (m_simFile=="" && m_recFile=="") {        
-            log << MSG::INFO << "No alignment was requested." << endreq;
-            log << MSG::INFO << "  No alignment will be done." << endreq;
+            log << MSG::INFO << "no text style alignment files specified in job options" << endreq;
             return sc;
         }
     } else {
@@ -1144,6 +1144,8 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
 
     ConstsVec* ptrConsts = (m_calibType==SIM ? &m_simConsts : &m_recConsts );
 
+    MsgStream log(msgSvc(), name());
+
     int layer, view, index;
     int nElements = ptrConsts->getNumElements();
 
@@ -1160,7 +1162,15 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
         if(pTowerAlign) {
             StatusCode sc = pTowerAlign->getTowerAlign(m_tower, disp, rot);
             m_towerConsts = makeConsts(disp, rot);
+            log << MSG::INFO << "inter-tower constants for calib type " << m_calibType << " loaded" << endreq;
         }
+        else
+            log << MSG::WARNING << "inter-tower constants for calib type " << m_calibType << " not loaded" << endreq;
+        // log internal align only once!
+        if ( pInternalAlign )
+            log << MSG::INFO << "intra-tower constants for calib type " << m_calibType << " loaded" << endreq;
+        else
+            log << MSG::WARNING << "intra-tower constants for calib type " << m_calibType << " not loaded" << endreq;
         for(m_tray=0; m_tray<m_nTrays; ++m_tray) {
             // then the tray
             thisTray = nullConsts;
