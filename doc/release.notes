@@ -9,6 +9,8 @@
 
   On main branch
   ------------------------------
+  v3r18p3  28-Jun-09 LSR TkrAlignmentSvc: Fixed bug that showed up when Michael started
+                            using non-zero ladder and wafer corrections
   v3r18p2  03-Apr-09 MK  TkrAlignmentSvc: improved log statements
   v3r18p1  31-Jan-09 LSR TkrMakeClustersTool: add method to recalculate ToTs,
                             add a test option for saturation
