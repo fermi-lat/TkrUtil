@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.43 2008/05/20 01:14:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.44 2009/04/03 09:44:49 kuss Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -333,19 +333,31 @@ StatusCode TkrAlignmentSvc::getData(std::string fileName)
     if (log.isActive()) {
         log << "Debug output for alignment consts follows:" << endreq;
         AlignmentConsts alConsts;
-        for (int tower = 0; tower < m_nTowers; ++tower) {
-            bool first = true;
-            for (int layer=0; layer<m_nLayers; ++layer) {
-
-                alConsts = (*ptrConsts)(tower, layer, 1, 0, 0);
-                if ( !alConsts.isNull() ) {
-                    if (first) log << m_mode <<" consts for tower " << tower 
-                        << ", view 1, ladder 0, wafer 0" << endreq;
-                    first = false;
-                    log << "layer " << layer << " ";
-                    log.stream() << alConsts;
-                    log << endreq; 
+        int tower, layer, view, ladder, wafer;
+        bool first = true;
+        for (tower = 0; tower < m_nTowers; ++tower) {
+            for (layer=0; layer<m_nLayers; ++layer) {
+                if(first) {
+                    log << m_mode 
+                        << " consts for tower " << tower
+                        << ", layer " << layer;
                 }
+                for(view=0;view<2;++view) {
+                    if(first) log << endreq << "view " << view ;
+                    for(ladder=0;ladder<m_nLadders;++ladder) {
+                        if(first) log << endreq << " ladder " << ladder << endreq;
+                        for(wafer=0;wafer<m_nWafers;++wafer) {
+                            if(first) log << "  wafer " << wafer << ": ";
+                            alConsts = 
+                                (*ptrConsts)(tower, layer, view, ladder, wafer);
+                            if ( !alConsts.isNull() ) {
+                                log.stream() << alConsts;
+                                log << endreq;
+                            }
+                        }
+                    }
+                }
+                first = false;
             }
         }
     }
@@ -688,7 +700,7 @@ StatusCode TkrAlignmentSvc::fillLadderConsts()
         AlignmentConsts thisLadder = item.getConsts();
         calculateLadderConsts(thisLadder);
         if(fillWaferConsts().isFailure()) {return StatusCode::FAILURE;}
-        done[m_tray] = true;
+        done[m_ladder] = true;
     }
 
     if (m_faceConsts.isNull()) return sc;
@@ -769,7 +781,7 @@ StatusCode TkrAlignmentSvc::fillWaferConsts()
         // here are the final constants!
         index = ptrConsts->getIndex(m_tower, layer, view, m_ladder, m_wafer);
         (*ptrConsts)[index] = m_waferConsts;
-        done[m_tray] = true;
+        done[m_wafer] = true;
     }
 
     if (m_ladderConsts.isNull()) return sc;
