@@ -1,7 +1,7 @@
 # -*- python -*-
-# $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/SConscript,v 1.12 2009/01/23 00:07:20 ecephas Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/SConscript,v 1.16 2009/06/29 03:30:30 glastrm Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
-# Version: TkrUtil-03-15-00-gr1
+# Version: TkrUtil-03-15-00
 Import('baseEnv')
 Import('listFiles')
 Import('packages')
