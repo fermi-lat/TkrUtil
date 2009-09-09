@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.3 2009/01/22 01:39:14 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.4 2009/01/22 01:40:34 lsrea Exp $
  */
 #ifndef ITkrGhostTool_h
 #define ITkrGhostTool_h
@@ -41,13 +41,13 @@ public:
       void setYBit(int layer)  {m_yBits |= (1<<layer);}
 
       bool isTriggered() {
-          bool ret = true;
+          //bool ret = true;
           // make up layer bits, loop, return true if true
           unsigned int layerBits = m_xBits&m_yBits;
           int i;
-          int mask0 = 7;
+          unsigned int mask0 = 7;
           for(i=0;i<16;++i) {
-              int mask = (mask0<<i);
+              unsigned int mask = (mask0<<i);
               //std::cout << i << std::hex << (mask<<i) << std::dec << std::endl;
               if((layerBits&mask)==mask) return true;
           }
@@ -63,9 +63,9 @@ public:
           unsigned int layerBits = m_xBits&m_yBits;
           unsigned int trigBits  = 0;
           int i;
-          int mask0 = 7;
+          unsigned int mask0 = 7;
           for(i=0;i<16;++i) {
-              int mask = (mask0<<i);
+              unsigned int mask = (mask0<<i);
               //std::cout << i << std::hex << (mask<<i) << std::dec << std::endl;
               if((layerBits&mask)==mask) trigBits |=mask;
           }

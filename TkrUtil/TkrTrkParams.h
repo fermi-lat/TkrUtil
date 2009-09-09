@@ -5,7 +5,7 @@
  *
  * @author Tracy Usher
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrTrkParams.h,v 1.2 2004/10/04 16:15:29 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrTrkParams.h,v 1.3 2006/03/21 01:15:47 usher Exp $
  */
 
 #ifndef TkrTrkParams_h
@@ -30,7 +30,7 @@ public:
     TkrTrkParams(int p) : CLHEP::HepVector(p) {}
     TkrTrkParams(int p, int i) : CLHEP::HepVector(p, i) {}
 
-    TkrTrkParams(const TkrTrkParams &m1) : CLHEP::HepVector(m1) {}
+    TkrTrkParams(const TkrTrkParams &m1) : ITkrTrackParamsAccess(), CLHEP::HepVector(m1) {}
     // Constructor. Gives vector of length p.
 
 #ifdef HEP_USE_RANDOM
