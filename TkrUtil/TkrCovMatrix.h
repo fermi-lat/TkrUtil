@@ -6,7 +6,7 @@
  *
  * @author Tracy Usher
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrCovMatrix.h,v 1.2 2004/10/04 16:15:29 usher Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrCovMatrix.h,v 1.3 2006/03/21 01:15:47 usher Exp $
  */
 
 #ifndef TkrCovMatrix_h
@@ -28,7 +28,7 @@ public:
     TkrCovMatrix(int p, int q, int i) : CLHEP::HepMatrix(p,q,i) {}
     TkrCovMatrix(int p, int q, CLHEP::HepRandom &r) : CLHEP::HepMatrix(p,q,r) {}
     TkrCovMatrix(const CLHEP::HepMatrix &m1) : CLHEP::HepMatrix(m1) {}
-    TkrCovMatrix(const TkrCovMatrix &m1) : CLHEP::HepMatrix(m1) {}
+    TkrCovMatrix(const TkrCovMatrix &m1) : ITkrTrackParamsAccess(), CLHEP::HepMatrix(m1) {}
     // Copy constructor.
 
     TkrCovMatrix(const CLHEP::HepSymMatrix &m1) : CLHEP::HepMatrix(m1) {}
