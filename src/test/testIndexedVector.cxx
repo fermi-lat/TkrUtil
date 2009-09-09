@@ -6,7 +6,7 @@
 #include "TkrUtil/IndexedVector.h"
 using namespace std;
 
-int main(int argc, char* argv[])
+int main(int /* argc*/, char* /*argv[]*/)
 {
     typedef IndexedVector<int> intVec;
     intVec myVec;
