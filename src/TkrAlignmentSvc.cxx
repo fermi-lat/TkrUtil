@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.44 2009/04/03 09:44:49 kuss Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.45 2009/06/29 02:42:30 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -1166,13 +1166,15 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
         (*ptrConsts)[index] = nullConsts;
     }
 
+    StatusCode sc = StatusCode::SUCCESS;
+
     CLHEP::Hep3Vector disp, rot;
     AlignmentConsts thisTray, thisFace, thisLadder, thisWafer;
     for(m_tower=0; m_tower<m_nTowers; ++m_tower) {
         // get the tower constant
         m_towerConsts = nullConsts;
         if(pTowerAlign) {
-            StatusCode sc = pTowerAlign->getTowerAlign(m_tower, disp, rot);
+            sc = pTowerAlign->getTowerAlign(m_tower, disp, rot);
             m_towerConsts = makeConsts(disp, rot);
             log << MSG::INFO << "inter-tower constants for calib type " << m_calibType << " loaded" << endreq;
         }
@@ -1187,7 +1189,7 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
             // then the tray
             thisTray = nullConsts;
             if(pInternalAlign) {
-                StatusCode sc = pInternalAlign->getTrayAlign(m_tower, m_tray, disp, rot);
+                sc = pInternalAlign->getTrayAlign(m_tower, m_tray, disp, rot);
                 thisTray = makeConsts(disp, rot);
             }
             calculateTrayConsts(thisTray);
@@ -1197,7 +1199,7 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
                 if (layer<0) continue;
                 thisFace = nullConsts;
                 if(pInternalAlign) {
-                    StatusCode sc = pInternalAlign->getFaceAlign(
+                    sc = pInternalAlign->getFaceAlign(
                         m_tower, m_tray, m_face, disp, rot);
                     thisFace = makeConsts(disp, rot);
                 }
@@ -1206,7 +1208,7 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
                     // next, ladder
                     thisLadder = nullConsts;
                     if(pInternalAlign) {
-                        StatusCode sc = pInternalAlign->getLadderAlign(
+                        sc = pInternalAlign->getLadderAlign(
                             m_tower, m_tray, m_face, m_ladder, disp, rot);
                         thisLadder = makeConsts(disp, rot);
                     }
@@ -1215,7 +1217,7 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
                         // finally, wafer
                         thisWafer = nullConsts;
                         if(pInternalAlign) {
-                            StatusCode sc = pInternalAlign->getWaferAlign(
+                            sc = pInternalAlign->getWaferAlign(
                                 m_tower, m_tray, m_face, m_ladder, m_wafer, disp, rot);
                             thisWafer = makeConsts(disp, rot);
                         }
@@ -1239,8 +1241,8 @@ void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign,
             std::cout << (*ptrConsts)[index] << std::endl;
         }
     }
-
-    return;
+   
+    if(sc.isFailure()||!sc.isFailure()) return;
 }
 
 IGeometry::VisitorRet TkrAlignmentGeomVisitor::pushShape(ShapeType /* s */, const UintVector& idvec, 

@@ -6,7 +6,7 @@
 First version 3-Jun-2001
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.23 2006/03/21 01:15:48 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.24 2006/11/02 19:34:48 lsrea Exp $
 */
 
 
@@ -289,7 +289,7 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
         int layer, view;
         m_tkrGeom->planeToLayer(plane, layer, view);
 
-        stripCol* v;
+        stripCol* v = 0;
         // my private use of getBadStrips requires non-const pointer
         // to build the vector of bad strips...
         // but public uses should return const pointer, so...

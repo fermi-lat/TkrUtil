@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.3 2009/01/22 01:39:14 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.4 2009/01/29 05:16:40 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -346,9 +346,9 @@ StatusCode TkrGhostTool::flagEarlyTracks()
     SmartDataPtr<Event::TkrTrackCol> 
         trackCol(m_dataSvc, EventModel::TkrRecon::TkrTrackCol);
 
-    int trackCount = 0;
+    //int trackCount = 0;
     Event::TkrTrackColConPtr tcolIter = trackCol->begin();
-    for(tcolIter; tcolIter!=trackCol->end();++tcolIter,++trackCount) {
+    for(; tcolIter!=trackCol->end(); ++tcolIter) {
         Event::TkrTrack* track = *tcolIter;
         track->clearStatusBits(Event::TkrTrack::GHOST);
         Event::TkrTrackHitVecItr pHit = track->begin();
@@ -361,7 +361,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
             if(!pClus) continue;
             bool is255      = pClus->isSet(Event::TkrCluster::mask255);
             bool isGhost    = pClus->isSet(Event::TkrCluster::maskGHOST);
-            bool isAlone    = pClus->isSet(Event::TkrCluster::maskALONE);
+            //bool isAlone    =  pClus->isSet(Event::TkrCluster::maskALONE);
             bool isAloneEnd = pClus->isSet(Event::TkrCluster::maskALONEEND);
             if(is255&&isAloneEnd) _255Count++;
             if(isGhost)           ghostCount++;
@@ -381,8 +381,8 @@ StatusCode TkrGhostTool::flagEarlyTracks()
             if(_255Count>0||ghostCount>0) {
                 bool is255   = pClus->isSet(Event::TkrCluster::mask255);
                 bool isGhost = pClus->isSet(Event::TkrCluster::maskGHOST);
-                bool isAlone = pClus->isSet(Event::TkrCluster::maskALONE);
-                bool isAloneEnd = pClus->isSet(Event::TkrCluster::maskALONEEND);
+                // bool isAlone =  pClus->isSet(Event::TkrCluster::maskALONE);
+                // bool isAloneEnd = pClus->isSet(Event::TkrCluster::maskALONEEND);
                 if(!is255&&!isGhost) {
                     pClus->setStatusBits(Event::TkrCluster::maskSAMETRACK);
                 }
@@ -403,10 +403,10 @@ StatusCode TkrGhostTool::flagEarlyVertices()
     SmartDataPtr<Event::TkrVertexCol> 
         vertexCol(m_dataSvc, EventModel::TkrRecon::TkrVertexCol);
 
-    int vertexCount = 0;
+    //int vertexCount = 0;
     Event::TkrVertexConPtr tcolIter = vertexCol->begin();
-    for(tcolIter; tcolIter!=vertexCol->end();++tcolIter,++vertexCount) {
-        Event::TkrVertex* vertex = *tcolIter;
+    for(; tcolIter!=vertexCol->end(); ++tcolIter) {
+        Event::TkrVertex* vertex = *tcolIter; 
         vertex->clearStatusBits(Event::TkrVertex::GHOST);
         SmartRefVector<Event::TkrTrack>::const_iterator trackIter;
         SmartRefVector<Event::TkrTrack>::const_iterator trackBegin = vertex->getTrackIterBegin();
@@ -417,8 +417,8 @@ StatusCode TkrGhostTool::flagEarlyVertices()
             if((track->getStatusBits())&Event::TkrTrack::GHOST) {
                 vertex->setStatusBit(Event::TkrVertex::GHOST);
                 continue;
-            }
-        }
-    }
+            } 
+        } 
+    } 
     return sc;
 }

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFlagHitsTool.cxx,v 1.2 2007/09/07 05:42:17 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFlagHitsTool.cxx,v 1.3 2008/02/27 22:44:15 lsrea Exp $
 
 // Include files
 
@@ -235,7 +235,7 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
 
     //don't bother if not truncated
 
-    if (truncInfo!=NULL&&truncInfo->isTruncated()) {
+    if (truncInfo!=0&&truncInfo->isTruncated()) {
         TkrTruncationInfo::TkrTruncationMap*  truncMap = truncInfo->getTruncationMap();
         SortId id(tower, tray, face, view);
         TkrTruncationInfo::TkrTruncationMap::iterator iter = truncMap->find(id);
@@ -250,8 +250,8 @@ int TkrFlagHitsTool::flagHits(idents::TkrId tkrId,
                 int status = item.getStatus();
                 //const intVector&  stripNum = item.getStripNumber();
                 int splitPoint  = m_splitsSvc->getSplitPoint(tower, layer, view);
-                double stripPitch = m_tkrGeom->siStripPitch();
-                int nStrips = m_tkrGeom->ladderNStrips()*m_tkrGeom->nWaferAcross();
+                //double stripPitch = m_tkrGeom->siStripPitch();
+                //int nStrips = m_tkrGeom->ladderNStrips()*m_tkrGeom->nWaferAcross();
                 double splitPos = m_detSvc->stripLocalX(splitPoint);
                 //double splitPos = (splitPoint - (nStrips-1)*0.5)/stripPitch;             
                 bool lowSet  = ((status & TkrTruncatedPlane::END0SET)!=0);
