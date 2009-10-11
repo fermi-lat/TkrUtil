@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.30 2006/07/18 20:09:30 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.31 2006/11/02 19:34:48 lsrea Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -347,6 +347,8 @@ private:
     StatusCode getTestTower();
     /// find the legal volumes and store the info
     StatusCode getVolumeInfo();
+    /// print out some mass statistics
+    StatusCode printMassStatistics();
 
     /// pointer to the detector service
     IGlastDetSvc * m_pDetSvc;
@@ -380,6 +382,8 @@ private:
     idents::VolumeIdentifier m_testTowerId;
     /// pointer to the ToT service
     ITkrToTSvc*         m_tkrToT;
+    
+    bool                m_doXray;
 
 };
 

@@ -31,7 +31,7 @@ Service(name, pSvcLocator)
     declareProperty("layerSeparation", m_layerSeparation = 8.0);
     declareProperty("radLenCut", m_radLenCut = 0.10);
     declareProperty("activeOffset", m_activeOffset = 40.0);
-
+    declareProperty("doXray", m_doXray = false);
     return; 
 }
 
@@ -94,6 +94,9 @@ StatusCode TkrGeometrySvc::initialize()
         log << MSG::ERROR << "Failed to fill rad len arrays"<< endreq;
         return sc;
     }
+
+    // some summary statistics to check the mass of the Tracker
+    sc = printMassStatistics();
 
     // now we know what the layers are, so:
     makeLayerIds();
@@ -604,7 +607,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             break;
         }
     }
-
+    
     maxLayerNum++;
     maxTrayNum++;
 
@@ -650,7 +653,54 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         << " aveConv " << m_aveRadLenConv[ind] << " aveRest " << m_aveRadLenRest[ind]
         << endreq;
     }  
+    log << MSG::INFO << "Radiation Lengths in tracker:" << endreq;
+    log << " All converters: " << m_aveRadLenConv[(int)ALL]*m_numLayers[(int)ALL] 
+        << " All Passive: " << m_aveRadLenRest[(int)ALL]*m_numLayers[(int)ALL]
+        << " Total: " << (m_aveRadLenConv[(int)ALL]+m_aveRadLenRest[(int)ALL])*m_numLayers[(int)ALL]
+        << endreq;
+            
     log<< MSG::INFO << endreq;
+
+    if(!m_doXray) return sc;
+    
+    // do Xray
+    std::cout << std::endl << "Diagnostic Xray of Tracker requested:" << std::endl;
+    std::cout << std::endl << std::right
+        << std::setw(5) << "Step"
+        << std::setw(5) << "Id"
+        << std::setw(1) << " "
+        << std::setw(20) << std::left  << "IdName"
+        << std::setw(13) << std::right << "arclength" 
+        << std::setw(13) << "Z" 
+        << std::setw(13) << "RadLength" 
+        << std::endl;
+
+    startCount = false;
+    for (istep=numSteps-1; istep>=0; --istep) {
+        Point stepPoint = track->getStepPosition(istep);
+        id = track->getStepVolumeId(istep);
+        id.prepend(prefix);
+        std::string idName = id.name();
+        radlen = track->getStepRadLength(istep);
+
+        if(!(id[0]==0&&id[3]==1)) continue;
+        //check if in a layer
+        int item = -1;
+            int tray = id[4];
+            if(id.size()>6) item = id[6];
+       
+        double arclen = track->getStepArcLen(istep);
+        std::cout << std::right
+            << std::setw(5)  << istep
+            << std::setw(5)  << item
+            << std::setw(1)  << " "
+            << std::setw(20) << std::left  << idName
+            << std::setw(13) << std::right << arclen
+            << std::setw(13) << stepPoint.z()
+            << std::setw(13) << radlen 
+            << std::endl;
+    }
+    std::cout << std::endl;
 
     return sc;
 }
@@ -817,6 +867,7 @@ bool TkrGeometrySvc::isInActiveLAT(Point pos) const
 StatusCode TkrGeometrySvc::getVolumeInfo()
 {
     StatusCode sc = StatusCode::SUCCESS;
+    MsgStream log(msgSvc(), name());
 
     HepGeom::Transform3D T;
     bool found = false;
@@ -904,6 +955,14 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
     m_isTopPlaneInLayer[lastPlane] = (m_planeToLayer[lastPlane]==m_planeToLayer[lastPlane-1]);
 
     m_numLayers[ALL]  = ++layer;
+
+    log << MSG::INFO << "Z of Layers ( layer, view 0/1, average)" << endreq;
+    for (layer=0; layer<m_numLayers[ALL]; ++layer) {
+        log << "  " << layer << "  " << getLayerZ(layer, 0) << "  "
+            << getLayerZ(layer, 1) << "  " << getLayerZ(layer,-1) << endreq;
+    }
+    log << endreq;
+
     return StatusCode::SUCCESS;
 }
 
@@ -1074,4 +1133,69 @@ bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower
         }
     }
     return isInTower;
+}
+
+StatusCode TkrGeometrySvc::printMassStatistics()
+{
+    MsgStream log(msgSvc(), name());
+    StatusCode sc= StatusCode::SUCCESS;
+
+    double wallMass, bottomTrayMass, noConvTrayMass, superTrayMass,
+        regularTrayMass, topTrayMass, totalTrackerMass;
+    double wallMeas, bottomTrayMeas, noConvTrayMeas, superTrayMeas,
+        regularTrayMeas, topTrayMeas, totalTrackerMeas;
+    double wallDiff, bottomTrayDiff, noConvTrayDiff, superTrayDiff,
+        regularTrayDiff, topTrayDiff, totalTrackerDiff;
+    if( m_pDetSvc->getNumericConstByName("WallMass", &wallMass).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("BottomTrayMass", &bottomTrayMass).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("NoConvTrayMass", &noConvTrayMass).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("SuperTrayMass", &superTrayMass).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("RegularTrayMass", &regularTrayMass).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("TopTrayMass", &topTrayMass).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("TotalTrackerMass", &totalTrackerMass).isSuccess() &&
+
+        m_pDetSvc->getNumericConstByName("WallMass", &wallMeas).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("BottomTrayMassMeas", &bottomTrayMeas).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("NoConvTrayMassMeas", &noConvTrayMeas).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("SuperTrayMassMeas", &superTrayMeas).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("RegularTrayMassMeas", &regularTrayMeas).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("TopTrayMassMeas", &topTrayMeas).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("TotalTrackerMassMeas", &totalTrackerMeas).isSuccess()) 
+    {
+        wallDiff        = wallMeas - wallMass;
+        bottomTrayDiff  = bottomTrayMass  - bottomTrayMeas;
+        noConvTrayDiff  = noConvTrayMass  - noConvTrayMeas;
+        superTrayDiff   = superTrayMass   - superTrayMeas;
+        regularTrayDiff = regularTrayMass - regularTrayMeas;
+        topTrayDiff     = topTrayMass     - topTrayMeas;
+        totalTrackerDiff = totalTrackerMass - totalTrackerMeas;
+        log<< MSG::INFO << endreq << "Tracker masses for verification: " << endreq 
+        << endreq
+        << " Component   " << std::setw(11) << " Calc    "  
+            << std::setw(11) << " Meas    " 
+                << std::setw(11) << " Diff    " << endreq
+        << "Wall         " << std::setw(11) << wallMass  
+            << std::setw(11) << wallMeas 
+                << std::setw(11) << wallDiff << endreq
+        << "Bottom Tray  " << std::setw(11) << bottomTrayMass 
+             << std::setw(11) << bottomTrayMeas 
+                 << std::setw(11) << bottomTrayDiff << endreq
+        << "NoConv Tray  " << std::setw(11)  
+            << noConvTrayMass  << std::setw(11) << noConvTrayMeas     
+                 << std::setw(11) << noConvTrayDiff << endreq
+        << "Super Tray   " << std::setw(11)  
+            << superTrayMass  << std::setw(11) << superTrayMeas 
+                 << std::setw(11) << superTrayDiff << endreq
+        << "Regular Tray " << std::setw(11)  
+            << regularTrayMass  << std::setw(11) << regularTrayMeas 
+                 << std::setw(11) << regularTrayDiff << endreq
+        << "Top Tray     " << std::setw(11)  
+            << topTrayMass  << std::setw(11) << topTrayMeas 
+                 << std::setw(11) << topTrayDiff << endreq
+        << "Total Mass   " << std::setw(11)  << totalTrackerMass 
+             << std::setw(11) << totalTrackerMeas 
+                 << std::setw(11) << totalTrackerDiff << endreq
+        << endreq;
+    }
+    return sc;
 }
