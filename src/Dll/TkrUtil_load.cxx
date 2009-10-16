@@ -3,7 +3,7 @@
 * @brief This is needed for forcing the linker to load all components
 * of the library.
 *
-*  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/Dll/TkrUtil_load.cxx,v 1.16 2007/09/05 00:00:47 lsrea Exp $
+*  $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/Dll/TkrUtil_load.cxx,v 1.17 2008/11/07 18:44:11 lsrea Exp $
 */
 
 #include "GaudiKernel/DeclareFactoryEntries.h"
@@ -24,6 +24,7 @@ DECLARE_FACTORY_ENTRIES(TkrUtil) {
 
     DECLARE_TOOL(    TkrFlagHitsTool     );
     DECLARE_TOOL(    TkrGhostTool        );
+    DECLARE_TOOL(    TkrDiagnosticTool   );
 } 
 
 

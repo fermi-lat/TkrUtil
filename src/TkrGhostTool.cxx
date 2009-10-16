@@ -1,12 +1,11 @@
 /**
 * @class TkrGhostTool
 *
-* @brief Implements a Gaudi Tool for setting the candidate track energies before 
-*        the track fit
+* @brief Tool for setting the ghost attributes of hits and tracks
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.4 2009/01/29 05:16:40 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.5 2009/09/09 00:25:54 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -17,16 +16,19 @@
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/Recon/TkrRecon/TkrTrack.h"
-#include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrEventParams.h"
+#include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/TopLevel/DigiEvent.h"
 #include "Event/Digi/TkrDigi.h"
 
 #include "LdfEvent/Gem.h"
+#include "LdfEvent/DiagnosticData.h"
+
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
 #include "TkrUtil/ITkrGhostTool.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
+#include "TkrUtil/ITkrDiagnosticTool.h"
 
 #include <iomanip>
 #include <map>
@@ -38,13 +40,12 @@ public:
     TkrGhostTool(const std::string& type, const std::string& name, const IInterface* parent);
     virtual ~TkrGhostTool() {}
 
-    /// @brief Method to fit a single candidate track. Will retrieve any extra info 
-    ///        needed from the TDS, then create and use a new KalFitTrack object to 
-    ///        fit the track via a Kalman Filter. Successfully fit tracks are then 
-    ///        added to the collection in the TDS.
+    /// @brief 
+
     StatusCode initialize();
 
     StatusCode getTkrVector(unsigned short& tkrVector);
+    StatusCode getTkrGemDataCondArrivalTime(unsigned short& tkrTime);
     StatusCode calculateTkrVector(
         Event::TkrClusterCol* pCol, unsigned short& towerBits);
     StatusCode calculateTkrVector(
@@ -54,9 +55,10 @@ public:
     StatusCode flagEarlyTracks();
     StatusCode flagEarlyVertices();
 
-    /// @brief Tool for identifying and flagging ghost clusters
-
 private:
+    int elecToGeo(int gtcc, int gtrc);
+    int flagHitsFromDiag( Event::TkrClusterCol* clusterCol);
+    void flagToT255Hits(Event::TkrClusterCol* clusterCol);
 
     Event::DigiEvent*      m_digiEvent;
 
@@ -64,10 +66,20 @@ private:
     DataSvc*               m_dataSvc;
     IGlastDetSvc*          m_pDetSvc;
     ITkrGeometrySvc*       m_tkrGeom;
+    ITkrDiagnosticTool*    m_pDiagTool;
 
     int m_numTowers;
     int m_numLayers;
-    std::vector<unsigned int> towerBits;
+    std::vector<unsigned int> m_towerBits;
+
+    std::map< int, int>  m_tkrMap;
+    std::map< int, bool> m_triggerMap;
+    std::vector<unsigned int> m_diagBits;
+
+    towerVec m_clusterTrigger;
+    towerVec m_digiTrigger;
+
+    bool m_useDiagInfo;
 };
 
 static ToolFactory<TkrGhostTool> s_factory;
@@ -80,24 +92,25 @@ AlgTool(type, name, parent)
 {
     //Declare the additional interface
     declareInterface<ITkrGhostTool>(this);
+    
+    declareProperty("UseDiagnosticInfo", m_useDiagInfo=false);
 
     return;
 }
 
 StatusCode TkrGhostTool::initialize()
 {
-    // Purpose and Method: finds the "Global Event Energy" and constrains the
-    //                     first two track energies to sum to it.
-    // Inputs:  Calorimeter Energy
-    // Outputs: Sets the "constrained" energy for all Candidates
-    //          Note: This is the energy that will be used for the 
-    //          final track fit. 
+    // Purpose and Method: 
+    // Inputs:  
+    // Outputs: 
     // Dependencies: None
     // Restrictions and Caveats:  None.
 
     //Always believe in success
     StatusCode sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
+
+    setProperties();
 
     //Locate and store a pointer to the data service
     IService* iService = 0;
@@ -118,6 +131,13 @@ StatusCode TkrGhostTool::initialize()
         return sc;
     }
 
+    m_pDiagTool = 0;
+    if (toolSvc()->retrieveTool("TkrDiagnosticTool", m_pDiagTool).isFailure()) {
+        log << MSG::ERROR << "Couldn't retrieve TkrDiagnosticTool" << endreq;
+        return StatusCode::FAILURE;
+    }
+
+
     int numX, numY;
     m_pDetSvc->getNumericConstByName("xNum", &numX);
     m_pDetSvc->getNumericConstByName("yNum", &numY);  
@@ -125,7 +145,19 @@ StatusCode TkrGhostTool::initialize()
 
     m_numLayers = m_tkrGeom->numLayers();
 
-    towerBits.resize(m_numTowers,0);
+    m_towerBits.resize(m_numTowers,0);
+    m_diagBits.resize(m_numTowers,0);
+
+        //set up the tower bits vector
+    m_clusterTrigger.resize(m_numTowers);
+    m_digiTrigger.resize(m_numTowers);
+
+    int i;
+    for(i=0;i<m_numTowers;++i) {
+        m_clusterTrigger[i] = new TkrTowerBits();
+        m_digiTrigger[i]    = new TkrTowerBits();
+    }
+
 
     return sc;
 }
@@ -137,7 +169,6 @@ StatusCode TkrGhostTool::getTkrVector(unsigned short& tkrVector)
     tkrVector = 0;
 
     //get the tkrVector
-    // Retrieve the Event Summary data for this event
     SmartDataPtr<LdfEvent::Gem> gem(m_dataSvc, "/Event/Gem");
 
     if (!gem) {
@@ -149,31 +180,48 @@ StatusCode TkrGhostTool::getTkrVector(unsigned short& tkrVector)
     return StatusCode::SUCCESS;
 }
 
-StatusCode TkrGhostTool::calculateTkrVector(
+StatusCode TkrGhostTool::getTkrGemDataCondArrivalTime(unsigned short& tkrTime)
+{
+    MsgStream log(msgSvc(), name());
+
+    tkrTime = 0;
+
+    //get the GemDataCondArrivalTime
+    SmartDataPtr<LdfEvent::Gem> 
+        gem(m_dataSvc, "/Event/Gem");
+
+    if (!gem) {
+        log << MSG::DEBUG << "No Gem found on TDS" << endreq;
+        return StatusCode::FAILURE;
+    }
+
+    tkrTime = gem->condArrTime().tkr();
+    return StatusCode::SUCCESS;
+}
+
+StatusCode TkrGhostTool::calculateTkrVector( 
     Event::TkrClusterCol* clusterCol,
     unsigned short& trigBits)
 {
     //set up the tower bits vector
-    towerVec clusterTrigger(m_numTowers);
     int i;
     for(i=0;i<m_numTowers;++i) {
-        clusterTrigger[i] = new TkrTowerBits();
+        m_clusterTrigger[i]->clear();
     }
 
     //fill the bits vector
     int clusSize = clusterCol->size();
     for (i=0;i<clusSize;++i) {
         Event::TkrCluster* clus = (*clusterCol)[i];
-        clus->clearStatusBits(Event::TkrCluster::maskZAPGHOSTS);
         int tower = clus->tower();
-        clusterTrigger[tower]->setBit(clus);
+        m_clusterTrigger[tower]->setBit(clus);
     }
 
     //generate the tower trigger word
     trigBits = 0;
     for(i=0;i<m_numTowers;++i) {
-        towerBits[i] = clusterTrigger[i]->getTriggeredBits();
-        if(towerBits[i]>0) {trigBits |= (1<<i);}
+        m_towerBits[i] = m_clusterTrigger[i]->getTriggeredBits();
+        if(m_towerBits[i]>0) {trigBits |= (1<<i);}
     }
     return StatusCode::SUCCESS;
 }
@@ -183,11 +231,9 @@ StatusCode TkrGhostTool::calculateTkrVector(
     unsigned short& trigBits)
 {
     //set up the tower bits vector
-    towerVec digiTrigger(m_numTowers);
-
     int i;
     for(i=0;i<m_numTowers;++i) {
-        digiTrigger[i] = new TkrTowerBits();
+        m_digiTrigger[i]->clear();
     }
 
     trigBits = 0;
@@ -198,22 +244,20 @@ StatusCode TkrGhostTool::calculateTkrVector(
         Event::TkrDigi* digi = (*digiCol)[i];
         if (digi->getNumHits()==0) continue;
         int tower = (digi->getTower()).id();
-        digiTrigger[tower]->setBit(digi);
+        m_digiTrigger[tower]->setBit(digi);
     }
 
     //generate the tower trigger word
     trigBits = 0;
     for(i=0;i<m_numTowers;++i) {
-        towerBits[i] = digiTrigger[i]->getTriggeredBits();
-        if(towerBits[i]>0) {trigBits |= (1<<i);}
+        m_towerBits[i] = m_digiTrigger[i]->getTriggeredBits();
+        if(m_towerBits[i]>0) {trigBits |= (1<<i);}
     }
     return StatusCode::SUCCESS;
 }
 
-
 StatusCode TkrGhostTool::flagSingles() 
 {
-
     MsgStream log(msgSvc(), name());
     StatusCode sc = StatusCode::SUCCESS;
 
@@ -222,6 +266,8 @@ StatusCode TkrGhostTool::flagSingles()
     //get the clusters
     SmartDataPtr<Event::TkrClusterCol> 
         clusterCol(m_dataSvc, EventModel::TkrRecon::TkrClusterCol);
+
+    log << MSG::DEBUG << "****************New Event****************" << endreq;
 
     int clusSize = clusterCol->size();
     int i;
@@ -234,7 +280,7 @@ StatusCode TkrGhostTool::flagSingles()
         int layer = clus->getLayer();
         int view  = tkrid.getView();
         int end   = clus->getEnd();
-        int index = 1000*tower + 2*layer + view ;
+        int index = towerMult*tower + layerMult*layer + viewMult*view ;
 
         if(hC[end].find(index)==hC[end].end()) hC[end][index] = 0;
         hC[end][index]++;
@@ -249,7 +295,7 @@ StatusCode TkrGhostTool::flagSingles()
         int end   = clus->getEnd();
         idents::TkrId id = clus->getTkrId();
         int view = id.getView();
-        int index = 1000*tower + 2*layer + view;
+        int index = towerMult*tower + layerMult*layer + viewMult*view ;
 
         int totCount;
         int endCount[2] = {0,0};
@@ -277,11 +323,7 @@ StatusCode TkrGhostTool::flagSingles()
 StatusCode TkrGhostTool::flagEarlyHits(Event::TkrClusterCol* clusterCol)
 {
     MsgStream log(msgSvc(), name());
-    StatusCode sc = StatusCode::SUCCESS;
-
-    unsigned short tkrVector;
-    sc = getTkrVector(tkrVector);
-    if(sc.isFailure()) return sc;
+    StatusCode sc;
 
     //get the clusters
     if(clusterCol==0) {
@@ -289,6 +331,37 @@ StatusCode TkrGhostTool::flagEarlyHits(Event::TkrClusterCol* clusterCol)
             pClusterCol(m_dataSvc, EventModel::TkrRecon::TkrClusterCol);
         clusterCol = pClusterCol;
     }
+
+    // clear the bits to start
+    int clusSize = clusterCol->size();
+    int i;
+    for (i=0;i<clusSize;++i) {
+        Event::TkrCluster* clus = (*clusterCol)[i];
+        clus->clearStatusBits(Event::TkrCluster::maskZAPGHOSTS);
+    }
+
+    // do the 255's
+    flagToT255Hits(clusterCol);
+
+    // try to use the diagnostic info
+    bool isDiagData = false;
+    int nDiagBits = 0;
+    unsigned short diagBits = 0;
+
+    if(m_useDiagInfo) {
+        sc = m_pDiagTool->getTkrDiagnosticData();
+        if(sc.isSuccess()) {
+            isDiagData = true;
+            m_pDiagTool->calculateTkrVector(diagBits);
+            nDiagBits = flagHitsFromDiag(clusterCol);
+        }
+    }
+
+
+    // get the tkrVector
+    unsigned short tkrVector;
+    sc = getTkrVector(tkrVector);
+    if(sc.isFailure()) return sc;
 
     unsigned short trigBits;
     sc = calculateTkrVector(clusterCol, trigBits);
@@ -298,9 +371,10 @@ StatusCode TkrGhostTool::flagEarlyHits(Event::TkrClusterCol* clusterCol)
         log << MSG::DEBUG;
         if (log.isActive()) {
             log <<"tkrVector and calculated tower trigger disagree:" << endreq 
-                << "tkrVector = " << std::hex << tkrVector 
-            << ", calculation = " << trigBits << std::dec << endreq;
+                << "tkrVector = " << std::oct << tkrVector 
+            << ", calculation = " << trigBits << std::dec; 
         }
+        log << endreq;
     }
 
     // Flag the hits that would have made the trigger
@@ -308,31 +382,120 @@ StatusCode TkrGhostTool::flagEarlyHits(Event::TkrClusterCol* clusterCol)
     //   missing hit would disable the trigger
     // Also, flag ToT==255
 
-    int clusSize = clusterCol->size();
-    int i;
+    clusSize = clusterCol->size();
+    bool isGhost = false;
     for (i=0;i<clusSize;++i) {
         Event::TkrCluster* clus = (*clusterCol)[i];
-        // flat the ToT225s
-        if(clus->getRawToT()==255) clus->setStatusBits(Event::TkrCluster::mask255);
         idents::TkrId tkrid = clus->getTkrId();
         idents::TowerId twrid = idents::TowerId(tkrid.getTowerX(), tkrid.getTowerY());
         int tower = twrid.id();
-        // we only look for ghosts in towers with software trigger but no hardware trigger
+        // we only look at towers with software trigger but no hardware trigger
         if((tkrVector&(1<<tower))!=0) continue;
         if((trigBits&(1<<tower))==0) continue;
 
         int layer = clus->getLayer();
-        if(towerBits[tower]&(1<<layer)) {
+        if(m_towerBits[tower]&(1<<layer)) {
             clus->setStatusBits(Event::TkrCluster::maskGHOST);
+            isGhost = true;
+            log << MSG::VERBOSE;
+            if(log.isActive()) {
+                int plane = clus->getPlane();
+                int end   = clus->getEnd();
+                int status = clus->getStatusWord();
+                log << "cluster " 
+                    << i << ", t/pl/end "  << tower << ", " << plane  << " " << end 
+                    << " " << std::hex << status <<endreq;
+                log << "tower bits " << std::oct << m_towerBits[tower] 
+                << " "  << (1<<layer) << std::dec << endreq;
+                log << "TowerBits: t/l = " << tower << " " << layer;
+            }
+            log << endreq;
+        }
+    }
+    log << MSG::DEBUG;
+    if(log.isActive()) {
+        unsigned short int tkrTime;
+        sc = getTkrGemDataCondArrivalTime(tkrTime);
+        log << "Ghost check: ghost = " << isGhost << ", nDiagBits = " << nDiagBits;
+        log << std::oct << ", tkrVector = " << tkrVector 
+            << ", diagBits = " << diagBits << std::dec;
+        log << " arrival time " << tkrTime;
+        if(isDiagData&&(diagBits!=tkrVector)) log << " ***";
+    }
+    log << endreq;
 
-            log << MSG::DEBUG << "Ghost bit set for cluster " 
-                << i << ", t/l "  << tower << ", " << layer  << ", isGhost "  
-                << clus->isSet(Event::TkrCluster::maskGHOST) <<endreq;
-            log << "tower bits " << std::hex << towerBits[tower] 
+
+    log << MSG::VERBOSE;
+    if(log.isActive()) {
+        for (i=0;i<clusSize;++i) {
+            Event::TkrCluster* clus = (*clusterCol)[i];
+            idents::TkrId tkrid = clus->getTkrId();
+            idents::TowerId twrid = idents::TowerId(tkrid.getTowerX(), tkrid.getTowerY());
+            int tower = twrid.id();
+            int plane = clus->getPlane();
+            int layer = clus->getLayer();
+            int end   = clus->getEnd();
+            int status = clus->getStatusWord();
+            log << "cluster " 
+                << i << ", t/pl/end "  << tower << ", " << plane  << " " << end 
+                << " " << std::hex << status <<endreq;
+            log << "tower bits " << std::oct << m_towerBits[tower] 
             << " "  << (1<<layer) << std::dec << endreq;
         }
     }
+    log << endreq;
+
     return sc;
+}
+
+void TkrGhostTool::flagToT255Hits(Event::TkrClusterCol* clusterCol)
+{
+    int clusSize = clusterCol->size();
+    int i;
+    for (i=0;i<clusSize;++i) {
+        Event::TkrCluster* clus = (*clusterCol)[i];
+        if(clus->getRawToT()==255) clus->setStatusBits(Event::TkrCluster::mask255);
+    }
+}
+
+int TkrGhostTool::flagHitsFromDiag(Event::TkrClusterCol* clusterCol)
+{
+    MsgStream log(msgSvc(), name());
+ 
+    int clusSize = clusterCol->size();
+    int nDiagBits = 0;
+    int tower;
+
+    int lastIndex = -1;
+    int i;
+    for (i=0;i<clusSize;++i) {
+        Event::TkrCluster* clus = (*clusterCol)[i];
+
+        idents::TkrId tkrid = clus->getTkrId();
+        idents::TowerId twrid = idents::TowerId(tkrid.getTowerX(), tkrid.getTowerY());
+        tower = twrid.id();
+        int plane = m_tkrGeom->getPlane(tkrid);
+        int layer = clus->getLayer();
+        int view  = tkrid.getView();
+        int end   = clus->getEnd();
+        int index = towerMult*tower + planeMult*plane + end;
+        // I would think we'd want to set the bit if the diagnostic trigger is set!!
+        if(!m_pDiagTool->isSetTrigger(tower, plane, end)) {
+            clus->setStatusBits(Event::TkrCluster::maskDIAGNOSTIC);
+            log << MSG::VERBOSE;
+            if(log.isActive()) {
+                log << "SetDiagGhosttBit for (t/p/e): " << tower << " " 
+                    << plane << " " << end  
+                    << " isSet " << clus->isSet(Event::TkrCluster::maskDIAGNOSTIC);
+            }
+            log << endreq;
+            if(lastIndex!=index) {
+                nDiagBits++;
+                lastIndex = index;
+            }
+        }
+    }
+    return nDiagBits;
 }
 
 StatusCode TkrGhostTool::flagEarlyTracks()
@@ -346,47 +509,84 @@ StatusCode TkrGhostTool::flagEarlyTracks()
     SmartDataPtr<Event::TkrTrackCol> 
         trackCol(m_dataSvc, EventModel::TkrRecon::TkrTrackCol);
 
-    //int trackCount = 0;
+    int trackCount = 0;
     Event::TkrTrackColConPtr tcolIter = trackCol->begin();
-    for(; tcolIter!=trackCol->end(); ++tcolIter) {
+    for(; tcolIter!=trackCol->end(); ++tcolIter,++trackCount) {
         Event::TkrTrack* track = *tcolIter;
         track->clearStatusBits(Event::TkrTrack::GHOST);
+        track->clearStatusBits(Event::TkrTrack::DIAGNOSTIC);
         Event::TkrTrackHitVecItr pHit = track->begin();
 
         int ghostCount = 0;
         int _255Count = 0;
+        int diagCount = 0;
         while(pHit != track->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             Event::TkrClusterPtr pClus = hit->getClusterPtr();
             if(!pClus) continue;
-            bool is255      = pClus->isSet(Event::TkrCluster::mask255);
-            bool isGhost    = pClus->isSet(Event::TkrCluster::maskGHOST);
-            //bool isAlone    =  pClus->isSet(Event::TkrCluster::maskALONE);
-            bool isAloneEnd = pClus->isSet(Event::TkrCluster::maskALONEEND);
-            if(is255&&isAloneEnd) _255Count++;
-            if(isGhost)           ghostCount++;
+            bool is255       = pClus->isSet(Event::TkrCluster::mask255);
+            bool isGhost     = pClus->isSet(Event::TkrCluster::maskGHOST);
+            bool isDiagGhost = pClus->isSet(Event::TkrCluster::maskDIAGNOSTIC); 
+            bool isAlone     = pClus->isSet(Event::TkrCluster::maskALONE);
+            bool isAloneEnd  = pClus->isSet(Event::TkrCluster::maskALONEEND);
+            bool isIdentified255 = (is255&&isAloneEnd);
+            if(isIdentified255) _255Count++;
+            if(isGhost)       ghostCount++;
+            if(isDiagGhost) {
+                diagCount++;
+            }
         }
 
-        if(_255Count==0&&ghostCount==0) continue;
+        if(_255Count==0&&ghostCount==0&&diagCount==0) continue;
 
-        // this is a ghost track!
+        // this is some kind of ghost track!
         track->setStatusBit(Event::TkrTrack::GHOST);
 
+    	log << MSG::DEBUG;
+        bool doDebug = (log.isActive());
+        log << endreq;
+        if(diagCount>0){
+            track->setStatusBit(Event::TkrTrack::DIAGNOSTIC);
+            if(doDebug) log << MSG::DEBUG << "Found " << diagCount << " diag ghosts in track # " << trackCount << endreq;
+       }
+        
+        //Add ??:
+        //  Event::TkrTrack::255GHOST  = 0x40000;
+        //  Event::TkrTrack::TRIGGHOST = 0x80000;
+        
+        if(_255Count>0){
+            track->setStatusBit(0x40000);
+            if(doDebug) log << "Found " << _255Count << " 255's in track # " 
+                << trackCount << endreq;
+        }
+        if(ghostCount>0){
+            track->setStatusBit(0x80000);
+            if(doDebug) log << "Found " << ghostCount 
+                << " trigger ghosts in track # " << trackCount << endreq;
+        }
+
         // flag the remaining clusters on this track
+        // we know that there are already some ghost hits
         pHit = track->begin();
         while(pHit!=track->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             Event::TkrClusterPtr pClus = hit->getClusterPtr();
             if(!pClus) continue;
-            if(_255Count>0||ghostCount>0) {
-                bool is255   = pClus->isSet(Event::TkrCluster::mask255);
-                bool isGhost = pClus->isSet(Event::TkrCluster::maskGHOST);
-                // bool isAlone =  pClus->isSet(Event::TkrCluster::maskALONE);
-                // bool isAloneEnd = pClus->isSet(Event::TkrCluster::maskALONEEND);
-                if(!is255&&!isGhost) {
+
+            bool is255       = pClus->isSet(Event::TkrCluster::mask255);
+            bool isGhost     = pClus->isSet(Event::TkrCluster::maskGHOST);
+            bool isDiagGhost = pClus->isSet(Event::TkrCluster::maskDIAGNOSTIC); 
+            bool isAlone     = pClus->isSet(Event::TkrCluster::maskALONE);
+            bool isAloneEnd  = pClus->isSet(Event::TkrCluster::maskALONEEND);
+            bool isIdentified255 = (is255&&isAloneEnd);
+            if(!isIdentified255) {
+                if(!isGhost) {
                     pClus->setStatusBits(Event::TkrCluster::maskSAMETRACK);
+                } 
+                if(!isDiagGhost) {
+                    pClus->setStatusBits(Event::TkrCluster::maskSAMETRACKD);
                 }
-            } 
+            }
         }
     }
     return sc;

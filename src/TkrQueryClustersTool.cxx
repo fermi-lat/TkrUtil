@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.17 2005/10/07 23:08:58 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.18 2005/11/13 00:55:31 lsrea Exp $
 
 // Include files
 
@@ -161,7 +161,6 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
     //   the unmeasured direction.
 
     declareProperty("towerFactor",              m_towerFactor = 0.55 );
-
 
     //m_pClus     = 0;
     m_idClusMap = 0;
@@ -543,4 +542,5 @@ double TkrQueryClustersTool::clusterWidth(Event::TkrCluster* cluster) const
     double width = size*m_tkrGeom->siStripPitch() 
         + nGaps*(2*m_tkrGeom->siDeadDistance() + m_tkrGeom->ladderGap());
     return width;
+
 }

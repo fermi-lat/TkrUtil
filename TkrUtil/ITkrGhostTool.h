@@ -6,81 +6,16 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.4 2009/01/22 01:40:34 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.5 2009/09/09 00:24:04 lsrea Exp $
  */
 #ifndef ITkrGhostTool_h
 #define ITkrGhostTool_h
 
 #include "GaudiKernel/IAlgTool.h"
 
+#include "TkrUtil/TkrTowerBits.h"
+
 static const InterfaceID IID_ITkrGhostTool("ITkrGhostTool", 3 , 0);
-
-class TkrTowerBits
-{
-public:
-    TkrTowerBits () :
-      m_xBits(0), m_yBits(0){}
-      virtual ~TkrTowerBits() {}
-
-      void setBit(Event::TkrCluster* clus) {
-          //get layer, view, set appropriate bit
-          int layer = clus->getLayer();
-          idents::TkrId id  = clus->getTkrId();
-          int view = id.getView();
-          (view==0 ? setXBit(layer) : setYBit(layer));
-      }
-      void setBit(Event::TkrDigi* digi) {
-          //get layer, view, set appropriate bit
-          int layer = digi->getBilayer();
-          int view = digi->getView();
-          (view==0 ? setXBit(layer) : setYBit(layer));
-      }
-
-      void setXBit(int layer)  {m_xBits |= (1<<layer);}
-
-      void setYBit(int layer)  {m_yBits |= (1<<layer);}
-
-      bool isTriggered() {
-          //bool ret = true;
-          // make up layer bits, loop, return true if true
-          unsigned int layerBits = m_xBits&m_yBits;
-          int i;
-          unsigned int mask0 = 7;
-          for(i=0;i<16;++i) {
-              unsigned int mask = (mask0<<i);
-              //std::cout << i << std::hex << (mask<<i) << std::dec << std::endl;
-              if((layerBits&mask)==mask) return true;
-          }
-          return false;
-      }
-
-      unsigned int getXBits() {return m_xBits;}
-      unsigned int getYBits() {return m_yBits;}
-      unsigned int getBits()  {return m_xBits&m_yBits;}
-
-      // these are the layers that participated in the software trigger
-      unsigned int getTriggeredBits() {
-          unsigned int layerBits = m_xBits&m_yBits;
-          unsigned int trigBits  = 0;
-          int i;
-          unsigned int mask0 = 7;
-          for(i=0;i<16;++i) {
-              unsigned int mask = (mask0<<i);
-              //std::cout << i << std::hex << (mask<<i) << std::dec << std::endl;
-              if((layerBits&mask)==mask) trigBits |=mask;
-          }
-          return trigBits;
-      }     
-   
-private:
-      int    m_xBits;
-      int    m_yBits;
-};
-
-typedef std::vector<TkrTowerBits*> towerVec;
-typedef towerVec::iterator towerIter;
-
-
 class ITkrGhostTool : virtual public IAlgTool
 {
 public:
