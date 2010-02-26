@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.45 2009/06/29 02:42:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.46 2009/09/09 00:25:54 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -51,12 +51,21 @@ TkrAlignmentSvc::TkrAlignmentSvc(const std::string& name,
                                  ISvcLocator* pSvcLocator) :
 Service(name, pSvcLocator)
 {
-    //Name of the file to get data from   
+    m_simScaleVec.assign(6,1.0);
+    m_recScaleVec.assign(6,1.0);
+   
+    // Name of the file to get data from 
+    // These constants ordinarily come from the calibration system now
     declareProperty("simFile", m_simFile="");
     declareProperty("recFile", m_recFile="");
     declareProperty("testMode", m_testMode=0);
     declareProperty("maximumDelta", m_maxDelta=5.0);
     declareProperty("printConsts",  m_printConsts=false);
+    // these scaling factors are for testing (for use with calibration system)
+    declareProperty("simScale",     m_simScale=1.0);
+    declareProperty("recScale",     m_recScale=1.0);
+    declareProperty("simScaleVec",  m_simScaleVec);
+    declareProperty("recScaleVec",  m_recScaleVec);
 
     return;
 }
@@ -468,8 +477,10 @@ StatusCode TkrAlignmentSvc::readFromFile()
             if (tokenCount==8) {
                 double a,b,c,d,e,f;       
                 mystream >> a >> b >> c >> d >> e >> f ;
-                consts = AlignmentConsts(0.001*a, 0.001*b, 0.001*c,
-                    0.001*d, 0.001*e, 0.001*f);
+                consts = AlignmentConsts(
+                    0.001*a, 0.001*b, 0.001*c,
+                    0.001*d, 0.001*e, 0.001*f
+                    );
             } else if(tokenCount!=2) {
                 log << MSG::ERROR << "Error in Alignment File: " << endreq 
                     << "Line No. " << lineNum << ": " << mystring0 << endreq
@@ -833,6 +844,27 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer) const
     double rotX = thisWafer.getRotX() + m_ladderConsts.getRotX();
     double rotY = thisWafer.getRotY() + m_ladderConsts.getRotY();
     double rotZ = thisWafer.getRotZ() + m_ladderConsts.getRotZ();
+
+    // apply scaling
+    // which scale?
+
+    double scale;
+    std::vector<double> scaleVec;
+
+    if(m_calibType==SIM) {
+        scale = m_simScale;
+        scaleVec = m_simScaleVec;
+    } else {
+        scale = m_recScale;
+        scaleVec = m_recScaleVec;
+    }
+
+    deltaX *= scale*scaleVec[0];
+    deltaY *= scale*scaleVec[1];
+    deltaZ *= scale*scaleVec[2];
+    rotX   *= scale*scaleVec[3];
+    rotY   *= scale*scaleVec[4];
+    rotZ   *= scale*scaleVec[5];
 
     m_waferConsts = AlignmentConsts(deltaX, deltaY, deltaZ,
         rotX, rotY, rotZ);

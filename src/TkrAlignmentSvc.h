@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.20 2007/08/09 18:48:44 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.21 2008/05/20 01:14:20 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -255,6 +255,13 @@ private:
     int m_fileFlag;
     /// maximum allowed delta (sqrt(deltaX**2 + sqrt(deltaY**2)
     double m_maxDelta;
+    /// scale for sim file (for testing)
+    double m_simScale;
+    /// scale for rec file (for testing)
+    double m_recScale;
+    /// same for each component;
+    std::vector<double> m_simScaleVec;
+    std::vector<double> m_recScaleVec;
         
     /* Although the information about the alignment is developed in terms of trays and faces,
        it's stored in the arrays by layer and view, since this is the preferred set of
