@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.14 2005/01/30 07:12:28 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.15 2005/11/13 00:55:30 lsrea Exp $
 */
 
 
@@ -27,6 +27,7 @@ static const InterfaceID IID_ITkrQueryClustersTool("ITkrQueryClustersTool", 3 , 
 class   ITkrQueryClustersTool : virtual public IAlgTool {
 public:
  
+    enum filterType {ALL, NORMAL, GHOSTS };
     /// Retrieve interface ID
     static const InterfaceID& interfaceID() { return IID_ITkrQueryClustersTool; }
 
@@ -65,12 +66,14 @@ public:
     /// Access clusters by view and layer or by TkrId
     virtual const Event::TkrClusterVec  getClustersReverseLayer(int view, int layer) const = 0;
     virtual const Event::TkrClusterVec  getClusters(int view, int layer) const = 0;
-    virtual const Event::TkrClusterVec& getClusters(const idents::TkrId& tkrId) const = 0;
+    virtual const Event::TkrClusterVec getClusters(const idents::TkrId& tkrId) const = 0;
     /// bad clusters
     virtual const Event::TkrClusterVec  getBadClusters(int view, int layer) const = 0;
-    virtual const Event::TkrClusterVec& getBadClusters(const idents::TkrId& tkrId) const = 0;
+    virtual const Event::TkrClusterVec getBadClusters(const idents::TkrId& tkrId) const = 0;
 
     virtual double clusterWidth(Event::TkrCluster* cluster) const = 0;
+
+    virtual const void setFilter( filterType type)    const = 0;
 };
 
 #endif  // _H_ITkrQueryClustersTool

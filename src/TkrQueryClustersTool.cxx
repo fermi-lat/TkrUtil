@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.18 2005/11/13 00:55:31 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.19 2009/10/16 18:47:31 lsrea Exp $
 
 // Include files
 
@@ -89,12 +89,28 @@ public:
 
     const Event::TkrClusterVec  getClustersReverseLayer(int view, int layer) const;
     const Event::TkrClusterVec  getClusters(int view, int layer) const;
-    const Event::TkrClusterVec& getClusters(const idents::TkrId& tkrId) const;
+    const Event::TkrClusterVec  getClusters(const idents::TkrId& tkrId) const;
     const Event::TkrClusterVec  getBadClusters(int view, int layer) const;
-    const Event::TkrClusterVec& getBadClusters(const idents::TkrId& tkrId) const;
+    const Event::TkrClusterVec  getBadClusters(const idents::TkrId& tkrId) const;
+
+    Event::TkrClusterVec getFilteredClusters(const Event::TkrClusterVec& inVec) const;
+
 
     /// actual width of a cluster, including gaps
     double clusterWidth(Event::TkrCluster* cluster) const;
+
+    const void setFilter(filterType type) const {
+        if (type==ALL) {
+            m_useGhostHits = true;
+            m_useNormalHits = true;
+        } else if (type==NORMAL) {
+            m_useGhostHits = false;
+            m_useNormalHits = true;
+        } else {
+            m_useGhostHits = true;
+            m_useNormalHits = false;
+        }
+    }
 
 private:
     Event::TkrCluster* nearestClusterOutsideX(int v, int layer, 
@@ -110,11 +126,14 @@ private:
 
 
     const Event::TkrClusterVec getClustersX(int view, int layer, clusterType type) const;
-    const Event::TkrClusterVec& getClustersX(const idents::TkrId& tkrId, clusterType type) const;
+    const Event::TkrClusterVec getClustersX(const idents::TkrId& tkrId, clusterType type) const;
 
     /// Checks that a layer number is in the correct range, and sets some variables
     bool validLayer(int layer, clusterType type=STANDARDCLUSTERS) const;
     void initIdMap() const;
+
+    mutable bool m_useGhostHits;
+    mutable bool m_useNormalHits;
 
     // some pointers to services
     
@@ -160,7 +179,10 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
     //   the active area of one tower will be matched with hits in another tower along
     //   the unmeasured direction.
 
-    declareProperty("towerFactor",              m_towerFactor = 0.55 );
+    declareProperty("towerFactor",       m_towerFactor = 0.55 );
+
+    declareProperty("useGhostHits",  m_useGhostHits  = true );
+    declareProperty("useNormalHits", m_useNormalHits = true );
 
     //m_pClus     = 0;
     m_idClusMap = 0;
@@ -302,28 +324,31 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
         clusVec.insert(clusVec.end(),newClus.begin(),newClus.end());
     }
 
-    return clusVec;
+    return (type==STANDARDCLUSTERS ? getFilteredClusters(clusVec) : clusVec);
 }
     
-const Event::TkrClusterVec& TkrQueryClustersTool::getClusters(
+const Event::TkrClusterVec TkrQueryClustersTool::getClusters(
     const idents::TkrId& tkrId) const
 {
     return getClustersX(tkrId, STANDARDCLUSTERS);
 }
 
-const Event::TkrClusterVec& TkrQueryClustersTool::getBadClusters(
+const Event::TkrClusterVec TkrQueryClustersTool::getBadClusters(
     const idents::TkrId& tkrId) const
 {
     return getClustersX(tkrId, BADCLUSTERS);
 }
 
-const Event::TkrClusterVec& TkrQueryClustersTool::getClustersX(
+const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
     const idents::TkrId& tkrId, clusterType type) const
 {
      if(type==STANDARDCLUSTERS) {
         m_idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
             EventModel::TkrRecon::TkrIdClusterMap);
-        return (*m_idClusMap)[tkrId];
+        //return (*m_idClusMap)[tkrId];
+        Event::TkrClusterVec outVec = getFilteredClusters((*m_idClusMap)[tkrId]);
+        return outVec;
+
      } else {
          if (m_pBadStrips->getBadIdClusterMap()){
              int size = (m_pBadStrips->getBadIdClusterMap())->size();
@@ -333,6 +358,40 @@ const Event::TkrClusterVec& TkrQueryClustersTool::getClustersX(
          }
      }
 }
+
+Event::TkrClusterVec TkrQueryClustersTool::getFilteredClusters( const Event::TkrClusterVec& inVec)
+ const {
+    // This method filters the clusters suppplied to the client, depending on the state of the
+    // member variables m_useGhostHits and m_useNormalHits (Defaut: true).
+    // the method (setFilter(filterType) with filterType = ALL, NORMAL or GHOSTS does the right thing.
+    //
+    // The test for ghost hits is to OR the status word with maskZAPGHOSTS, which has
+    // every ghost bit set.
+    
+
+    // a test
+    //setFilter(GHOSTS);
+
+    Event::TkrClusterVec outVec;
+
+    unsigned inVecSize = inVec.size();
+
+    if((m_useNormalHits&&m_useGhostHits) || inVecSize==0) { 
+        outVec = inVec; 
+    } else {
+        int i;
+        for (i=0;i<inVecSize;++i) {
+            int status = inVec[i]->getStatusWord();
+            if((m_useGhostHits && (status&Event::TkrCluster::maskZAPGHOSTS)!=0)
+                || (m_useNormalHits && (status&Event::TkrCluster::maskZAPGHOSTS)==0)) {
+                    outVec.push_back(inVec[i]);
+            }
+        }
+    }
+        
+    return outVec;
+}
+
 
 Point TkrQueryClustersTool::nearestHitOutside(
     int view, int layer, double inDistance, 
