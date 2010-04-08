@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.6 2009/10/16 18:47:31 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.7 2009/12/16 05:35:16 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -29,6 +29,7 @@
 #include "TkrUtil/ITkrGhostTool.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrDiagnosticTool.h"
+#include "TkrUtil/ItkrMapTool.h"
 
 #include <iomanip>
 #include <map>

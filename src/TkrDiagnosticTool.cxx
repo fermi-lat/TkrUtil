@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header$
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.1 2009/10/16 18:47:31 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -28,6 +28,7 @@
 
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrDiagnosticTool.h"
+#include "TkrUtil/ITkrMapTool.h"
 
 #include <iomanip>
 #include <map>
@@ -54,23 +55,23 @@ public:
 private:
     //int flagHitsFromDiag( Event::TkrClusterCol* clusterCol);
     void flagToT255Hits(Event::TkrClusterCol* clusterCol);
-    int elecToGeo(int gtcc, int gtrc);
-    int elecIndex(int gtcc, int gtrc) { return gtccMult*gtcc+gtrc; }
+    //int elecToGeo(int gtcc, int gtrc);
+    //int elecIndex(int gtcc, int gtrc) { return gtccMult*gtcc+gtrc; }
 
     Event::DigiEvent*      m_digiEvent;
 
     /// Pointer to the Gaudi data provider service
-    DataSvc*               m_dataSvc;
     IGlastDetSvc*          m_pDetSvc;
     ITkrGeometrySvc*       m_tkrGeom;
-
+    ITkrMapTool*           m_mapTool;
+    DataSvc*               m_dataSvc;
     int m_numTowers;
     int m_numLayers;
     std::vector<unsigned int> m_towerBits;
 
     towerVec m_diagTrigger;
 
-    std::map< int, int>  m_tkrMap;
+    //std::map< int, int>  m_tkrMap;
     std::map< int, bool> m_triggerMap;
     std::vector<unsigned int> m_layerBits;
 };
@@ -125,6 +126,22 @@ StatusCode TkrDiagnosticTool::initialize()
         return sc;
     }
 
+    IToolSvc* toolSvc = 0;
+    if (sc = service("ToolSvc",toolSvc, true).isSuccess() )
+    {
+        sc = toolSvc->retrieveTool("TkrMapTool", m_mapTool);
+        if (sc.isSuccess()) {
+            log << MSG::INFO << "Retrieved TrkMapTool" << endreq;
+        } else {
+            log << MSG::ERROR << "Couldn't retrieve TkrMapTool" << endreq;
+        }
+
+    } else { 
+        log << MSG::INFO << "ToolSvc not found" << endreq;
+        return sc; 
+    } 
+
+
     int numX, numY;
     m_pDetSvc->getNumericConstByName("xNum", &numX);
     m_pDetSvc->getNumericConstByName("yNum", &numY);  
@@ -139,44 +156,6 @@ StatusCode TkrDiagnosticTool::initialize()
     for(i=0; i<m_numTowers;++i) {
         m_diagTrigger[i] = new TkrTowerBits();
         m_diagTrigger[i]->setDebug(false);
-    }
-
-    //This maps the electronic space into the geometrical one
-    //Two cables map on to each plane, one at each end
-    //  Might want to refactor all this some day
-    //
-    // m_tkrMap[gtccMult*CC+RC] = PP; (gtccMult==10)
-    //   CC = gtcc
-    //   RC = gtrc
-    //   PP = plane
-
-    /*
-    m_tkrMap[ 0] = m_tkrMap[10] =  0;    m_tkrMap[20] = m_tkrMap[30] =  1;
-    m_tkrMap[60] = m_tkrMap[70] =  2;    m_tkrMap[40] = m_tkrMap[50] =  3;
-    m_tkrMap[ 1] = m_tkrMap[11] =  4;    m_tkrMap[21] = m_tkrMap[31] =  5;
-    m_tkrMap[61] = m_tkrMap[71] =  6;    m_tkrMap[41] = m_tkrMap[51] =  7;
-    m_tkrMap[ 2] = m_tkrMap[12] =  8;    m_tkrMap[22] = m_tkrMap[32] =  9;
-    m_tkrMap[62] = m_tkrMap[72] = 10;    m_tkrMap[42] = m_tkrMap[52] = 11;
-    m_tkrMap[13] = m_tkrMap[ 3] = 12;    m_tkrMap[23] = m_tkrMap[33] = 13;
-    m_tkrMap[63] = m_tkrMap[73] = 14;    m_tkrMap[43] = m_tkrMap[53] = 15;
-    m_tkrMap[14] = m_tkrMap[ 4] = 16;    m_tkrMap[24] = m_tkrMap[34] = 17;
-    m_tkrMap[74] = m_tkrMap[64] = 18;    m_tkrMap[44] = m_tkrMap[54] = 19;
-    m_tkrMap[15] = m_tkrMap[ 5] = 20;    m_tkrMap[25] = m_tkrMap[35] = 21;
-    m_tkrMap[75] = m_tkrMap[65] = 22;    m_tkrMap[45] = m_tkrMap[55] = 23;
-    m_tkrMap[ 6] = m_tkrMap[16] = 24;    m_tkrMap[26] = m_tkrMap[36] = 25;
-    m_tkrMap[76] = m_tkrMap[66] = 26;    m_tkrMap[46] = m_tkrMap[56] = 27;
-    m_tkrMap[17] = m_tkrMap[ 7] = 28;    m_tkrMap[37] = m_tkrMap[27] = 29;
-    m_tkrMap[77] = m_tkrMap[67] = 30;    m_tkrMap[57] = m_tkrMap[47] = 31;
-    m_tkrMap[ 8] = m_tkrMap[18] = 32;    m_tkrMap[28] = m_tkrMap[38] = 33;
-    m_tkrMap[68] = m_tkrMap[78] = 34;    m_tkrMap[58] = m_tkrMap[48] = 35;
-    */
-
-    // this is the same as the above
-    for(i=0;i<9;++i) {
-        m_tkrMap[i]    = m_tkrMap[10+i] = 4*i;
-        m_tkrMap[20+i] = m_tkrMap[30+i] = 4*i+1;
-        m_tkrMap[60+i] = m_tkrMap[70+i] = 4*i+2;
-        m_tkrMap[40+i] = m_tkrMap[50+i] = 4*i+3;
     }
 
     return sc;
@@ -223,6 +202,9 @@ StatusCode TkrDiagnosticTool::getTkrDiagnosticData()
                 LdfEvent::TkrDiagnosticData tkrDiagTds = diagTds->getTkrDiagnosticByIndex(ind);
                 int dataword = tkrDiagTds.dataWord();
                 if (dataword!=0) nNonZero++;
+                std::cout << "TkrDiagData: " << ind << " " 
+                    << tkrDiagTds.tower() << " " << tkrDiagTds.gtcc() << " " 
+                    << dataword << std::endl;
             }
         }
         log << numTkrDiag 
@@ -262,14 +244,14 @@ StatusCode TkrDiagnosticTool::getTkrDiagnosticData()
     return sc;
 }
 
-int TkrDiagnosticTool::elecToGeo(int gtcc, int gtrc)
-{
-    return m_tkrMap[elecIndex(gtcc, gtrc)];
-}
+//int TkrDiagnosticTool::elecToGeo(int gtcc, int gtrc)
+//{
+//    return m_tkrMap[elecIndex(gtcc, gtrc)];
+//}
 
 void TkrDiagnosticTool::setTriggerInfo(int tower, int gtcc, int gtrc)
 {
-    int geoIndex = towerMult*tower + planeMult*elecToGeo(gtcc, gtrc) + endArray[gtcc];
+    int geoIndex = towerMult*tower + planeMult*m_mapTool->elecToGeo(gtcc, gtrc) + endArray[gtcc];
     m_triggerMap[geoIndex] = true;
 }
 

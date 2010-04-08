@@ -6,10 +6,17 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.5 2009/09/09 00:24:04 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.6 2009/10/16 18:47:31 lsrea Exp $
  */
 #ifndef ITkrGhostTool_h
 #define ITkrGhostTool_h
+
+//namespace {
+//    // set the fields in the indices
+//    const int viewMult  = 1;
+//    const int layerMult = 2;
+//    const int towerMult = 1000;
+//}
 
 #include "GaudiKernel/IAlgTool.h"
 
