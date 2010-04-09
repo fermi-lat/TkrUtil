@@ -10,7 +10,7 @@
 *
 * @author Tracy Usher, Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/GaudiAlg/TkrFillTDInfoAlg.cxx,v 1.24 2009/01/31 17:10:00 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.1 2010/04/08 20:54:04 lsrea Exp $
 */
 
 #include "GaudiKernel/DataSvc.h"
@@ -150,6 +150,10 @@ StatusCode TkrFillTDInfoAlg::execute()
     // skip all this if mode==-1
     if(m_testMode==-1) return StatusCode::SUCCESS;
 
+    // Recover a pointer to the raw digi objects, if none, nothing to do
+    m_TkrDigiCol = SmartDataPtr<TkrDigiCol>(eventSvc(), EventModel::Digi::TkrDigiCol);
+    if(!m_TkrDigiCol) return StatusCode::SUCCESS;
+
     // Retrieve the Diagnostic data for this event
     // If it's already there, nothing to do
 
@@ -162,10 +166,6 @@ StatusCode TkrFillTDInfoAlg::execute()
         m_diagTds = new LdfEvent::DiagnosticData();
     }
 
-    // Recover a pointer to the raw digi objects, if none, nothing to do
-    m_TkrDigiCol = SmartDataPtr<TkrDigiCol>(eventSvc(), EventModel::Digi::TkrDigiCol);
-    if(!m_TkrDigiCol) return StatusCode::SUCCESS;
-
     int size = m_nTowers*nCc;
     // this is the order that I found the diag objects in real data... 
     // probably doesn't matter but might as well keep them that way
@@ -174,23 +174,21 @@ StatusCode TkrFillTDInfoAlg::execute()
     int inverseOrder[nCc] = { 5, 7, 3, 1, 6, 4, 0, 2 };
     int tower, i;
 
-    std::vector<LdfEvent::TkrDiagnosticData> tempTkr;
-    int vecSize = nCc*m_nTowers;
-    std::vector<int> tempDataWord(vecSize,0);
-
-    // prepare a vector of TkrDiagnosticData objects, in the correct order
-    // we will be adding the dataWords later
+    // prepare the vector of TkrDiagnosticData objects, in the correct order
+    // we will be filling in the dataWords later
     for (tower= 0; tower<m_nTowers; ++tower) {
         for (i=0; i<nCc; ++i) {
             LdfEvent::TkrDiagnosticData tkr = 
                 LdfEvent::TkrDiagnosticData(0, tower, order[i]);
-            tempTkr.push_back(tkr); 
+            m_diagTds->addTkrDiagnostic(tkr); 
         }
     }
 
     // here we collect the bits in the dataWords, based on the digis and the mode
+    // and add them to the existing words
+    // skip this step for testMode==1
 
-    if(m_testMode==0||m_testMode==2) {
+    if(m_testMode!=1) {
         Event::TkrDigiCol::const_iterator ppDigi = m_TkrDigiCol->begin();
         int count = 0;
         for (; ppDigi!= m_TkrDigiCol->end(); ppDigi++) {
@@ -215,31 +213,28 @@ StatusCode TkrFillTDInfoAlg::execute()
             // no controller0 hits, so they must be controller 1
             iEnd[ (lastStrip<0 ? 1 : 0) ] = true;
             // remaining case is "the last strip" > lastStrip, controller 1
-            if(numHits>1 && pDigi->getHit(numHits-1)>lastStrip) iEnd[1] = true;
+            if(iEnd[0] && numHits>1 && pDigi->getHit(numHits-1)>lastStrip) iEnd[1] = true;
 
             // if there's a hit, OR the bit into the correct dataWord
             for(indEnd=0;indEnd<2;++indEnd) {
                 if(iEnd[indEnd]){
+                    //set up the bit mask
                     int gtcc, gtrc;
-                    m_mapTool->geoToElec(plane, indEnd, gtcc, gtrc);                   
+                    m_mapTool->geoToElec(plane, indEnd, gtcc, gtrc); 
                     int dataWord = (1<<gtrc) ;
+                    // get the index for this digi
                     int index = tower*nCc + inverseOrder[gtcc];
+                    // mode 0 -> set all the bits
+                    // mode 1 -> set ~half of the bits
                     if(m_testMode==0 || (m_testMode==2&&count%2==0)) {
-                        tempDataWord[index] |= dataWord;
+                        dataWord 
+                            |= m_diagTds->getTkrDiagnosticByIndex(index).dataWord();
+                        m_diagTds->setTkrDataWordByIndex(index, dataWord);
                     }
                     count++;
                 }
             }
         }
-    }
-
-    // and load 'em up
-
-    for(i=0; i<vecSize; ++i) {
-        LdfEvent::TkrDiagnosticData tkr = 
-            LdfEvent::TkrDiagnosticData(tempDataWord[i], 
-            tempTkr[i].tower(), tempTkr[i].gtcc());
-        m_diagTds->addTkrDiagnostic(tkr);
     }
 
     // Register the object in the TDS
