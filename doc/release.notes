@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-20-00 12-Apr-2010  lsrea TkrFillTDInfoAlg: simulates the TEM Diagnostic Info
  TkrUtil-03-19-02 25-Feb-2010  lsrea add jO to scale alignment consts, really this time
  TkrUtil-03-19-01 25-Feb-2010  lsrea add jO to scale alignment consts
  TkrUtil-03-19-00 15-Dec-2009  lsrea Enable diagnostic info processing by default
