@@ -10,7 +10,7 @@
 *
 * @author Tracy Usher, Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.1 2010/04/08 20:54:04 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.2 2010/04/09 11:02:21 lsrea Exp $
 */
 
 #include "GaudiKernel/DataSvc.h"
@@ -166,7 +166,7 @@ StatusCode TkrFillTDInfoAlg::execute()
         m_diagTds = new LdfEvent::DiagnosticData();
     }
 
-    int size = m_nTowers*nCc;
+    //int size = m_nTowers*nCc;
     // this is the order that I found the diag objects in real data... 
     // probably doesn't matter but might as well keep them that way
     int order[nCc] =       { 6, 3, 7, 2, 5, 0, 4, 1 };

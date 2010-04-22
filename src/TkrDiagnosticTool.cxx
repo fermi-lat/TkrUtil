@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.1 2009/10/16 18:47:31 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.2 2010/04/08 20:54:04 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -193,7 +193,7 @@ StatusCode TkrDiagnosticTool::getTkrDiagnosticData()
 
     int ind;
     int numTkrDiag = diagTds->getNumTkrDiagnostic();
-    int numCalDiag = diagTds->getNumCalDiagnostic();
+    //int numCalDiag = diagTds->getNumCalDiagnostic();
     log << MSG::DEBUG;
     if(log.isActive()) {
         int nNonZero = 0;

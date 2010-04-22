@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.7 2009/12/16 05:35:16 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.8 2010/04/08 20:54:04 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -29,7 +29,7 @@
 #include "TkrUtil/ITkrGhostTool.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrDiagnosticTool.h"
-#include "TkrUtil/ItkrMapTool.h"
+#include "TkrUtil/ITkrMapTool.h"
 
 #include <iomanip>
 #include <map>
@@ -486,7 +486,7 @@ int TkrGhostTool::flagHitsFromDiag(Event::TkrClusterCol* clusterCol)
             log << MSG::VERBOSE;
             if(log.isActive()) {
                 log << "SetDiagGhosttBit for (t/p/e): " << tower << " " 
-                    << plane << " " << end  
+                    << plane << " " << layer << " " << view << " " << end  
                     << " isSet " << clus->isSet(Event::TkrCluster::maskDIAGNOSTIC);
             }
             log << endreq;
@@ -528,7 +528,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
             bool is255       = pClus->isSet(Event::TkrCluster::mask255);
             bool isGhost     = pClus->isSet(Event::TkrCluster::maskGHOST);
             bool isDiagGhost = pClus->isSet(Event::TkrCluster::maskDIAGNOSTIC); 
-            bool isAlone     = pClus->isSet(Event::TkrCluster::maskALONE);
+            //bool isAlone     = pClus->isSet(Event::TkrCluster::maskALONE);
             bool isAloneEnd  = pClus->isSet(Event::TkrCluster::maskALONEEND);
             bool isIdentified255 = (is255&&isAloneEnd);
             if(isIdentified255) _255Count++;
@@ -577,7 +577,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
             bool is255       = pClus->isSet(Event::TkrCluster::mask255);
             bool isGhost     = pClus->isSet(Event::TkrCluster::maskGHOST);
             bool isDiagGhost = pClus->isSet(Event::TkrCluster::maskDIAGNOSTIC); 
-            bool isAlone     = pClus->isSet(Event::TkrCluster::maskALONE);
+            //bool isAlone     = pClus->isSet(Event::TkrCluster::maskALONE);
             bool isAloneEnd  = pClus->isSet(Event::TkrCluster::maskALONEEND);
             bool isIdentified255 = (is255&&isAloneEnd);
             if(!isIdentified255) {

@@ -686,7 +686,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         if(!(id[0]==0&&id[3]==1)) continue;
         //check if in a layer
         int item = -1;
-            int tray = id[4];
+            //int tray = id[4];
             if(id.size()>6) item = id[6];
        
         double arclen = track->getStepArcLen(istep);

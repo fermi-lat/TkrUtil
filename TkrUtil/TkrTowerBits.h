@@ -4,7 +4,7 @@
 @brief handles the calculation of the TKR trigger
 
 @author Leon Rochester
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/TkrTowerBits.h,v 1.1 2009/10/16 18:47:31 lsrea Exp $
 */
 
 #ifndef TkrTowerBits_h
@@ -38,16 +38,17 @@ public:
 
       void setYBit(int layer)  {m_yBits |= (1<<layer);}
 
+      unsigned int mask, mask0;
+
       bool isTriggered() {
-          bool ret = true;
           // make up layer bits, loop, return true if true
           unsigned int layerBits = m_xBits&m_yBits;
           int i;
           if(m_debug) std::cout << "tower trigger/x/y/l " <<std::oct << m_xBits << " " 
               << m_yBits << " " << layerBits << std::dec << std::endl;
-          int mask0 = 7;
+          mask0 = 7;
           for(i=0;i<16;++i) {
-              int mask = (mask0<<i);
+              mask = (mask0<<i);
               //std::cout << i << std::hex << (mask<<i) << std::dec << std::endl;
               if((layerBits&mask)==mask) return true;
           }
@@ -63,9 +64,9 @@ public:
           unsigned int layerBits = m_xBits&m_yBits;
           unsigned int trigBits  = 0;
           int i;
-          int mask0 = 7;
+          mask0 = 7;
           for(i=0;i<16;++i) {
-              int mask = (mask0<<i);
+              mask = (mask0<<i);
               //std::cout << i << std::hex << (mask<<i) << std::dec << std::endl;
               if((layerBits&mask)==mask) trigBits |=mask;
           }

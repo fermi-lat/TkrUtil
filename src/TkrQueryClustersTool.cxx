@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.19 2009/10/16 18:47:31 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.20 2010/04/04 16:19:06 lsrea Exp $
 
 // Include files
 
@@ -379,7 +379,7 @@ Event::TkrClusterVec TkrQueryClustersTool::getFilteredClusters( const Event::Tkr
     if((m_useNormalHits&&m_useGhostHits) || inVecSize==0) { 
         outVec = inVec; 
     } else {
-        int i;
+        unsigned i;
         for (i=0;i<inVecSize;++i) {
             int status = inVec[i]->getStatusWord();
             if((m_useGhostHits && (status&Event::TkrCluster::maskZAPGHOSTS)!=0)
