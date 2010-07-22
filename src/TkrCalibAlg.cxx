@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.15 2007/09/14 18:04:38 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.16 2008/05/20 01:14:20 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -400,10 +400,10 @@ StatusCode TkrCalibAlg::execute( ) {
     type = "internal alignment";
     CalibData::TkrInternalAlignCalib* pInternalAlign = 0;
 
-    if(m_towerAlignFlavor!="ideal" && m_towerAlignFlavor!="") {
+    if(m_internalAlignFlavor!="ideal" && m_internalAlignFlavor!="") {
 
         fullPath = m_pCalibPathSvc->getCalibPath(
-            ICalibPathSvc::Calib_TKR_InternalAlign, m_towerAlignFlavor );
+            ICalibPathSvc::Calib_TKR_InternalAlign, m_internalAlignFlavor );
         m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pInternalAlign = dynamic_cast<CalibData::TkrInternalAlignCalib*> (pObject);
         if (!pInternalAlign) { return failedAccess(type); }

@@ -1146,6 +1146,7 @@ StatusCode TkrGeometrySvc::printMassStatistics()
         regularTrayMeas, topTrayMeas, totalTrackerMeas;
     double wallDiff, bottomTrayDiff, noConvTrayDiff, superTrayDiff,
         regularTrayDiff, topTrayDiff, totalTrackerDiff;
+    double alignHDWMass;
     if( m_pDetSvc->getNumericConstByName("WallMass", &wallMass).isSuccess() &&
         m_pDetSvc->getNumericConstByName("BottomTrayMass", &bottomTrayMass).isSuccess() &&
         m_pDetSvc->getNumericConstByName("NoConvTrayMass", &noConvTrayMass).isSuccess() &&
@@ -1160,8 +1161,18 @@ StatusCode TkrGeometrySvc::printMassStatistics()
         m_pDetSvc->getNumericConstByName("SuperTrayMassMeas", &superTrayMeas).isSuccess() &&
         m_pDetSvc->getNumericConstByName("RegularTrayMassMeas", &regularTrayMeas).isSuccess() &&
         m_pDetSvc->getNumericConstByName("TopTrayMassMeas", &topTrayMeas).isSuccess() &&
-        m_pDetSvc->getNumericConstByName("TotalTrackerMassMeas", &totalTrackerMeas).isSuccess()) 
+        m_pDetSvc->getNumericConstByName("TotalTrackerMassMeas", &totalTrackerMeas).isSuccess() &&
+        m_pDetSvc->getNumericConstByName("TKR_AlignHDWMass", &alignHDWMass).isSuccess()) 
     {
+
+        bottomTrayMeas += alignHDWMass;
+
+        double totalMeas = wallMeas + bottomTrayMeas + 2*noConvTrayMeas +
+            4*superTrayMeas + 11*regularTrayMeas + topTrayMeas;
+        double totalMass = wallMass + bottomTrayMass + 2*noConvTrayMass +
+            4*superTrayMass + 11*regularTrayMass + topTrayMass;
+        double totalDiff = totalMass - totalMeas;
+
         wallDiff        = wallMeas - wallMass;
         bottomTrayDiff  = bottomTrayMass  - bottomTrayMeas;
         noConvTrayDiff  = noConvTrayMass  - noConvTrayMeas;
@@ -1192,6 +1203,12 @@ StatusCode TkrGeometrySvc::printMassStatistics()
         << "Top Tray     " << std::setw(11)  
             << topTrayMass  << std::setw(11) << topTrayMeas 
                  << std::setw(11) << topTrayDiff << endreq
+        << "Sum          " << std::setw(11)  << totalMass 
+             << std::setw(11) << totalMeas 
+                 << std::setw(11) << totalDiff << endreq
+        << "X16          " << std::setw(11)  << totalMass*16
+             << std::setw(11) << totalMeas*16 
+                 << std::setw(11) << totalDiff*16 << endreq
         << "Total Mass   " << std::setw(11)  << totalTrackerMass 
              << std::setw(11) << totalTrackerMeas 
                  << std::setw(11) << totalTrackerDiff << endreq
