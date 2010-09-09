@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFlagHitsTool.cxx,v 1.3 2008/02/27 22:44:15 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFlagHitsTool.cxx,v 1.4 2009/09/09 00:25:54 lsrea Exp $
 
 // Include files
 
@@ -81,8 +81,9 @@ namespace {
 }
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<TkrFlagHitsTool> s_factory;
-const IToolFactory& TkrFlagHitsToolFactory = s_factory;
+//static ToolFactory<TkrFlagHitsTool> s_factory;
+//const IToolFactory& TkrFlagHitsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrFlagHitsTool);
 
 // Standard Constructor
 TkrFlagHitsTool::TkrFlagHitsTool(const std::string& type, 

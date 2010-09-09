@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMapTool.cxx,v 1.1 2009/10/16 18:47:31 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMapTool.cxx,v 1.1 2010/04/08 20:54:04 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -42,8 +42,9 @@ private:
     std::map< int, int>  m_tkrInverseMap;
 };
 
-static ToolFactory<TkrMapTool> s_factory;
-const IToolFactory& TkrMapToolFactory = s_factory;
+//static ToolFactory<TkrMapTool> s_factory;
+//const IToolFactory& TkrMapToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrMapTool);
 
 TkrMapTool::TkrMapTool(const std::string& type, 
                        const std::string& name, 

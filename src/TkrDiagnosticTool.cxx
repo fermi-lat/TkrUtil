@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.2 2010/04/08 20:54:04 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.3 2010/04/22 09:08:40 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -76,8 +76,9 @@ private:
     std::vector<unsigned int> m_layerBits;
 };
 
-static ToolFactory<TkrDiagnosticTool> s_factory;
-const IToolFactory& TkrDiagnosticToolFactory = s_factory;
+//static ToolFactory<TkrDiagnosticTool> s_factory;
+//const IToolFactory& TkrDiagnosticToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrDiagnosticTool);
 
 TkrDiagnosticTool::TkrDiagnosticTool(const std::string& type, 
                            const std::string& name, 

@@ -10,7 +10,7 @@
 *
 * @author Tracy Usher, Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.2 2010/04/09 11:02:21 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.3 2010/04/22 09:08:41 lsrea Exp $
 */
 
 #include "GaudiKernel/DataSvc.h"
@@ -63,8 +63,9 @@ private:
 
 };
 
-static const AlgFactory<TkrFillTDInfoAlg>  Factory;
-const IAlgFactory& TkrFillTDInfoAlgFactory = Factory;
+//static const AlgFactory<TkrFillTDInfoAlg>  Factory;
+//const IAlgFactory& TkrFillTDInfoAlgFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(TkrFillTDInfoAlg);
 
 TkrFillTDInfoAlg::TkrFillTDInfoAlg(const std::string& name, 
                                    ISvcLocator* pSvcLocator) :

@@ -11,11 +11,11 @@
 MessageSvc.OutputLevel = 2;
 
 ApplicationMgr.ExtSvc = { 
-//    "GlastEventSelector/EventSelector" , 
-    "EventCnvSvc"
+    "DbEvtSelector/EventSelector" 
     };
 EventPersistencySvc.CnvServices = {"EventCnvSvc"};
-EventSelector.Input = "NONE";
+//EventSelector.Input = "NONE";
+ApplicationMgr.HistogramPersistency = "NONE";
 
 // ----------------------------
 //  Geometry definition
