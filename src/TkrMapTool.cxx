@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMapTool.cxx,v 1.1 2009/10/16 18:47:31 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMapTool.cxx,v 1.1 2010/04/08 20:54:04 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -120,7 +120,7 @@ StatusCode TkrMapTool::initialize()
             int plane = m_tkrMap[ind];
             int end   = endArray[j];
             m_tkrInverseMap[planeMult*plane+end] = ind;
-            std::cout << plane << " " << end << " " << ind << std::endl;
+            //std::cout << plane << " " << end << " " << ind << std::endl;
         }
     }
 
