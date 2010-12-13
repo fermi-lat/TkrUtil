@@ -37,13 +37,13 @@ ApplicationMgr.DLLs+= {"CalibSvc"};
 TkrFailureModeSvc.towerList= {"10", "11"};  
 TkrFailureModeSvc.layerList= {"5_3_0", "5_4_1"};
 
-TkrBadStripsSvc.badStripsFile = "$(TKRUTILROOT)/src/test/badStrips.txt";
+TkrBadStripsSvc.badStripsFile = "$(TKRUTILJOBOPTIONSPATH)/test/badStrips.txt";
 
-TkrAlignmentSvc.simFile = "$(TKRUTILROOT)/src/test/Tower6_rotX_deltaX.txt";
-TkrAlignmentSvc.recFile = "$(TKRUTILROOT)/src/test/Tower6_rotY_deltaY.txt";
+TkrAlignmentSvc.simFile = "$(TKRUTILJOBOPTIONSPATH)/test/Tower6_rotX_deltaX.txt";
+TkrAlignmentSvc.recFile = "$(TKRUTILJOBOPTIONSPATH)/test/Tower6_rotY_deltaY.txt";
 
-TkrSplitsSvc.splitsFile = "$(TKRUTILROOT)/src/test/splits.xml";
-TkrSplitsSvc.maxStripsFile = "$(TKRUTILROOT)/src/test/defaultMaxStrips.xml";
+TkrSplitsSvc.splitsFile = "$(TKRUTILJOBOPTIONSPATH)/test/splits.xml";
+TkrSplitsSvc.maxStripsFile = "$(TKRUTILJOBOPTIONSPATH)/test/defaultMaxStrips.xml";
 
 ApplicationMgr.DLLs += {"G4Propagator", "G4Generator"};
 
