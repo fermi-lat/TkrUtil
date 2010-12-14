@@ -1,5 +1,5 @@
 # -*- python -*-
-# $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/SConscript,v 1.39 2010/12/14 17:26:59 lsrea Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/SConscript,v 1.40 2010/12/14 17:30:58 lsrea Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 # Version: TkrUtil-03-21-06
 Import('baseEnv')
@@ -26,7 +26,7 @@ progEnv.Tool('registerTargets', package = 'TkrUtil',
              testAppCxts = [[test_TkrUtil, progEnv],
                             [test_IndexedVector, progEnv]],
              includes = listFiles(['TkrUtil/*.h']),
-             jo = listFiles(['src/test/*.txt', 'src/test/*.xml'])
+             jo = listFiles(['src/test/*.txt', 'src/test/*.xml']))
 
 
 
