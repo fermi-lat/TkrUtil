@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrTrackVecTool.cxx,v 1.9 2010/04/22 09:08:41 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrTrackVecTool.cxx,v 1.1 2011/02/24 22:04:50 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -42,13 +42,13 @@ static ToolFactory<TkrTrackVecTool> s_factory;
 const IToolFactory& TkrTrackVecToolFactory = s_factory;
 
 TkrTrackVecTool::TkrTrackVecTool(const std::string& type, 
-                           const std::string& name, 
-                           const IInterface* parent) :
+                                 const std::string& name, 
+                                 const IInterface* parent) :
 AlgTool(type, name, parent)
 {
     //Declare the additional interface
     declareInterface<ITkrTrackVecTool>(this);
-    
+
     return;
 }
 
@@ -64,7 +64,7 @@ StatusCode TkrTrackVecTool::initialize()
         return sc;
     }
     m_dataSvc = dynamic_cast<DataSvc*>(iService);
-    
+
     return sc;
 }
 
@@ -78,33 +78,37 @@ std::vector<Event::TkrTrack*> TkrTrackVecTool::getTrackVec()
 
     SmartDataPtr<Event::TkrTrackCol> 
         trackCol(m_dataSvc, EventModel::TkrRecon::TkrTrackCol);
+    int size;
 
     SmartDataPtr<Event::TkrTrackCol> 
         cRTrackCol(m_dataSvc, EventModel::TkrRecon::TkrCRTrackCol);
 
-    Event::TkrTrackColConPtr tcolIter = trackCol->begin();
+    Event::TkrTrackColConPtr tcolIter;
 
     int trackCount = 0;
     if(trackCol) {
-    tcolIter = trackCol->begin();
-    for(; tcolIter!=trackCol->end(); ++tcolIter,++trackCount) {
-        Event::TkrTrack* track = *tcolIter;
-        trackVec.push_back(track);
+        size = trackCol->size();
+        tcolIter = trackCol->begin();
+        for(; tcolIter!=trackCol->end(); ++tcolIter,++trackCount) {
+            Event::TkrTrack* track = *tcolIter;
+            trackVec.push_back(track);
+        }
     }
-    }
-    
-    std::cout << trackCol->size() << " normal tracks, trackCount = " << trackCount<< std::endl;
-    
+
+    //std::cout << trackCol->size() << " normal tracks, trackCount = " << trackCount<< std::endl;
+
     if(cRTrackCol) {
-    tcolIter = cRTrackCol->begin();
-    for(; tcolIter!=cRTrackCol->end(); ++tcolIter,++trackCount) {
-        Event::TkrTrack* track = *tcolIter;
-        trackVec.push_back(track);
+        size = cRTrackCol->size();
+        tcolIter = cRTrackCol->begin();
+        for(; tcolIter!=cRTrackCol->end(); ++tcolIter,++trackCount) {
+            Event::TkrTrack* track = *tcolIter;
+            trackVec.push_back(track);
+        }
+    //std::cout << cRTrackCol->size() << " CR tracks, trackCount = " << trackCount<< std::endl;
     }
-    }
-    
-    std::cout << cRTrackCol->size() << " CR tracks, trackCount = " << trackCount<< std::endl;
-    std::cout << "final size: " << trackVec.size() << std::endl;
+
+    //std::cout << "final size: " << trackVec.size() << std::endl;
+    size = trackVec.size();
 
     return trackVec;
 }
