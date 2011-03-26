@@ -77,6 +77,7 @@ public:
 
     /// Find out if object is marked Failed
     bool isFailed(int towerId, int layer, int view) const;
+    bool isFailed(const idents::TkrId& tkrId) const;
 
     std::vector<int>& getLayers( int tower);
     std::vector<int>& getTowers ();

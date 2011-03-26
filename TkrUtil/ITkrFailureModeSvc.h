@@ -2,7 +2,7 @@
 @brief Abstract interface to TkrFailureModeSvc (q.v.)
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrFailureModeSvc.h,v 1.4 2003/04/11 23:27:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrFailureModeSvc.h,v 1.5 2004/08/24 23:45:44 lsrea Exp $
 */
 
 
@@ -12,6 +12,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrFailureModeSvc.h,v 1.4
 
 // Include files
 #include "GaudiKernel/IInterface.h"
+
+#include "idents/TkrId.h"
 
 // Declaration of the interface ID ( interface id, major version,
 // minor version)
@@ -35,6 +37,7 @@ public:
 
     /// look for object in list of failed objects
     virtual bool isFailed(int towerId, int layer = -1, int view = -1) const = 0;
+    virtual bool isFailed(const idents::TkrId& tkrId ) const = 0;
     virtual bool empty() const = 0;
 };
 

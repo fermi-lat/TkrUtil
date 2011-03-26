@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.19 2006/03/21 01:15:48 usher Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.20 2006/11/02 19:34:48 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -273,8 +273,18 @@ bool TkrFailureModeSvc::towerFailed(int tower) const {
     return (loc != m_towerList[m_calibType].end());
 }
 
+bool TkrFailureModeSvc::isFailed(const idents::TkrId& tkrId)const
+{
+    idents::TowerId twrId = idents::TowerId(tkrId.getTowerX(), tkrId.getTowerY());
+    int tower = twrId.id();
+    int layer = m_tkrGeom->getLayer(tkrId);
+    int view  = tkrId.getView();
+    return isFailed(tower, layer, view);
+    return true;
+}
 
-bool TkrFailureModeSvc::isFailed(int tower, int layer, int view) const {
+bool TkrFailureModeSvc::isFailed(int tower, int layer, int view) const 
+{
     // Purpose and Method: check whether given id is in any of the identified lists
     //                     
 
