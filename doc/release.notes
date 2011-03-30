@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-22-02 30-Mar-2011  lsrea TkrMakeClusterTool: leave at most one leading and one trailing bad strip in a cluster
  TkrUtil-03-22-01 29-Mar-2011  lsrea tag some bug fixes
  TkrUtil-03-22-00 26-Mar-2011  lsrea add method to TkrFailureModeSvc; move TkrHitTruncationTool from TkrRecon; add TkrReasonsTool
  TkrUtil-03-21-08 18-Mar-2011  lsrea new TkrTrackVecTool, used in TkrGhostTool and TkrRecon
