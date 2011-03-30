@@ -6,7 +6,7 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Track/TkrHitTruncationTool.cxx,v 1.6 2011/01/19 00:44:22 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.1 2011/03/26 22:32:12 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -221,7 +221,7 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
         localX[2] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch +
             (stripNumber[2]==_nStrips ? _stripPitch : 0);
 
-        strip = std::max(stripNumber[3], -1);
+        strip = std::max(stripNumber[3], 0);
         localX[3] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
             (stripNumber[3]==-1 ? _stripPitch : 0);
 
@@ -230,6 +230,10 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
         float planeZ = m_tkrGeom->getPlaneZ(plane);
         // make and store the TkrTruncatedPlane
         TkrTruncatedPlane item(status, stripCount, stripNumber, localX, planeZ);
+        //std::cout << "number " << stripNumber[0] << " " << stripNumber[1] << " "
+        //    << stripNumber[2] << " " << stripNumber[3] << std::endl;
+        //std::cout << "localx " << localX[0] << " " << localX[1] << " "
+        //    << localX[2] << " " << localX[3] << std::endl;
         truncationInfo->addItem(tower, tray, face, view, item);
     }
 

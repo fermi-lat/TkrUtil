@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.8 2009/01/31 17:04:09 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.9 2009/09/09 00:25:54 lsrea Exp $
 */
 
 // Include files
@@ -25,6 +25,13 @@
 #include <vector>
 #include <map>
 #include "geometry/Point.h"  
+
+namespace {
+    int _iFirst;
+    int _iLast;
+    int _iFirstBad;
+    int _iLastBad;
+}
 
 
 class TkrMakeClustersTool : public AlgTool, virtual public ITkrMakeClustersTool 
@@ -77,6 +84,8 @@ private:
     TaggedStrip m_lastStrip;
     ///
     bool m_test250;
+    int  m_maxTrailingHits;
+    int m_maxInternalBadHits;
 };
 
 // Static factory for instantiation of algtool objects
@@ -92,6 +101,8 @@ TkrMakeClustersTool::TkrMakeClustersTool(const std::string& type,
     // Declare additional interface
     declareInterface<ITkrMakeClustersTool>(this); 
     declareProperty("test250", m_test250 = false);
+    declareProperty("maxTrailingHits", m_maxTrailingHits = 3);
+    declareProperty("maxInternalBadHits", m_maxInternalBadHits = 3);
 }
 
 StatusCode TkrMakeClustersTool::initialize()
@@ -221,6 +232,15 @@ StatusCode TkrMakeClustersTool::makeClusters(
         // the next strip
         TaggedStrip nextStrip = lowStrip;       
         int nBad = 0;
+        _iFirst = _iFirstBad = -1;
+        _iLast  = _iLastBad  = TaggedStrip::BIG;
+
+        // Let's keep track of the first and last good and bad strips
+        // in the current candidate cluster.
+        // trailing strips: terminate this cluster if there are >="3"
+        // after finding a cluster, truncate to no more than 1
+        // leading or trailing strip
+
         bool kept;  // for debugging
 
         // Loop over the rest of the strips building clusters enroute.
@@ -232,7 +252,15 @@ StatusCode TkrMakeClustersTool::makeClusters(
         stripCol_it itLast = mergedHits.end();
         itLast--;
         for( stripCol_it it = mergedHits.begin(); it!=itLast; ) {
-            if(nextStrip.isTaggedBad()) nBad++;
+            if(nextStrip.isTaggedBad()) {
+                nBad++;
+                if(_iFirstBad==-1) _iFirst = nextStrip;
+                _iLastBad = nextStrip;
+            } else {
+                if(_iFirst== -1) _iFirst = nextStrip;
+                _iLast = nextStrip;
+            }
+
             // here we get the next hit, and increment the iterator
             // at the same time!
             // debug: std::cout << "this pointer " << it <<" next " << it+1 << " end " << mergedHits.end() << std::endl;
@@ -278,7 +306,9 @@ StatusCode TkrMakeClustersTool::makeClusters(
                 } 
                 lowStrip = nextStrip;  // start a new cluster with this strip
                 nBad = 0;
-            }
+                _iFirst = _iFirstBad = -1;
+                _iLast  = _iLastBad  = TaggedStrip::BIG;
+           }
             // debug: std::cout << "on to next strip..." << std::endl;
             highStrip = nextStrip; // add strip to this cluster
         }
@@ -414,15 +444,26 @@ bool TkrMakeClustersTool::isGapBetween(const TaggedStrip &lowStrip,
     int lowHit  = lowStrip.getStripNumber();
     int highHit = highStrip.getStripNumber();
 
+    // check for too many trailing bad hits
+    // if so, declare a "gap"
+    if(_iLast<TaggedStrip::BIG&&(_iLastBad-_iLast)>=m_maxTrailingHits) {
+        return true;
+    }
+
     // gap between hits
-    if (highHit > (lowHit + 1)) { return true; }
+    if (highHit > (lowHit + 1)) { 
+        return true; 
+    }
 
     // edge of chip
     int nStrips = m_tkrGeom->ladderNStrips();
-    if(m_type==ITkrBadStripsSvc::STANDARDCLUSTERS 
-        && (lowHit/nStrips) < (highHit/nStrips)) {return true; }
+    if(m_type==ITkrBadStripsSvc::STANDARDCLUSTERS
+        && (lowHit/nStrips) < (highHit/nStrips)) 
+    {
+            return true; 
+    }
 
-        return false;
+    return false;
 }
 
 
@@ -432,6 +473,7 @@ bool TkrMakeClustersTool::isGoodCluster(const TaggedStrip &lowStrip,
 {
     // Purpose and Method: Finds out if a cluster is "good"
     // Inputs: first and last strip, and number of bad strips
+    // and local info about first and last good and bad strips
     // Outputs:  yes or no
     // Dependencies: None
     // Restrictions and Caveats:  None
@@ -443,12 +485,21 @@ bool TkrMakeClustersTool::isGoodCluster(const TaggedStrip &lowStrip,
     //Get the actual hit strip number from the tagged strips
     int lowHit  = lowStrip.getStripNumber();
     int highHit = highStrip.getStripNumber();
+    
+    // we're already there if there are no bad hits (normal case)
+    if(nBad==0) return true;
 
     // Require at least 1 good hit in the cluster    
     if ((highHit-lowHit+1)<=nBad) return false;
 
-    // Require 10 or fewer bad hits in the cluster
-    if (nBad>10)    return false;
+    // at this point there are at least one good and one bad hit
+    // Require "3" or fewer bad hits "within" the cluster
+    // Otherwise, kill it; TkrReasonsTool will call it a badCluster
+    int nFirstBad = std::max(0, (_iFirst-_iFirstBad));
+    int nLastBad  = std::max(0, (_iLastBad-_iLast));
+    int nBadInternal = nBad - nFirstBad - nLastBad;
+    if (nBadInternal>m_maxInternalBadHits) return false;
+
     return true;
 }
 
