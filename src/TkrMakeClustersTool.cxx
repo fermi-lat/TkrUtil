@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.9 2009/09/09 00:25:54 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.10 2011/03/30 03:07:41 lsrea Exp $
 */
 
 // Include files
@@ -31,6 +31,8 @@ namespace {
     int _iLast;
     int _iFirstBad;
     int _iLastBad;
+    int _nFirstBad;
+    int _nLastBad;
 }
 
 
@@ -232,6 +234,7 @@ StatusCode TkrMakeClustersTool::makeClusters(
         // the next strip
         TaggedStrip nextStrip = lowStrip;       
         int nBad = 0;
+        _nFirstBad = _nLastBad = 0;
         _iFirst = _iFirstBad = -1;
         _iLast  = _iLastBad  = TaggedStrip::BIG;
 
@@ -277,6 +280,9 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     // it's good... make a new cluster
                     int strip0 = lowStrip.getStripNumber();
                     int stripf = highStrip.getStripNumber();
+                    // leave at most one leading and one trailing bad strip
+                    if (_nFirstBad>1) strip0 += (_nFirstBad - 1);
+                    if (_nLastBad>1)  stripf -= (_nLastBad - 1);
                     Point pos = position(tower, layer, view, strip0, stripf);
 
                     // code to generate 1st order corrected ToT
@@ -306,6 +312,7 @@ StatusCode TkrMakeClustersTool::makeClusters(
                 } 
                 lowStrip = nextStrip;  // start a new cluster with this strip
                 nBad = 0;
+                _nFirstBad = _nLastBad = 0;
                 _iFirst = _iFirstBad = -1;
                 _iLast  = _iLastBad  = TaggedStrip::BIG;
            }
@@ -495,9 +502,9 @@ bool TkrMakeClustersTool::isGoodCluster(const TaggedStrip &lowStrip,
     // at this point there are at least one good and one bad hit
     // Require "3" or fewer bad hits "within" the cluster
     // Otherwise, kill it; TkrReasonsTool will call it a badCluster
-    int nFirstBad = std::max(0, (_iFirst-_iFirstBad));
-    int nLastBad  = std::max(0, (_iLastBad-_iLast));
-    int nBadInternal = nBad - nFirstBad - nLastBad;
+    _nFirstBad = std::max(0, (_iFirst-_iFirstBad));
+    _nLastBad  = std::max(0, (_iLastBad-_iLast));
+    int nBadInternal = nBad - _nFirstBad - _nLastBad;
     if (nBadInternal>m_maxInternalBadHits) return false;
 
     return true;
