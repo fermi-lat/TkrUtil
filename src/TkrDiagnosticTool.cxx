@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.2 2010/04/08 20:54:04 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.3 2010/04/22 09:08:40 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -16,6 +16,7 @@
 #include "GaudiKernel/GaudiException.h" 
 
 #include "Event/TopLevel/EventModel.h"
+#include "Event/TopLevel/Event.h"
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrEventParams.h"
 #include "Event/TopLevel/DigiEvent.h"
@@ -50,6 +51,10 @@ public:
     void setTriggerInfo(int tower, int gtcc, int gtrc);
     bool isSetTrigger(int tower, int plane, int end);
     void clearTriggerInfo();
+    bool doDiagnosticInfo();
+    //void setDiagnosticFlag(const bool doDiagFlag);
+    //bool getDiagnosticFlag() const;
+
 
 
 private:
@@ -74,6 +79,9 @@ private:
     //std::map< int, int>  m_tkrMap;
     std::map< int, bool> m_triggerMap;
     std::vector<unsigned int> m_layerBits;
+
+    bool m_diagnosticFlag;
+    double m_diagEnabledTime;
 };
 
 static ToolFactory<TkrDiagnosticTool> s_factory;
@@ -86,6 +94,8 @@ AlgTool(type, name, parent)
 {
     //Declare the additional interface
     declareInterface<ITkrDiagnosticTool>(this);
+
+    declareProperty("diagnosticsEnabledTime", m_diagEnabledTime = 277320102.0);
 
     return;
 }
@@ -342,3 +352,35 @@ bool TkrDiagnosticTool::isSetTrigger(int tower, int plane, int end)
     if(m_triggerMap.find(index)!=m_triggerMap.end()) return true;
     return false;
 }
+
+//namespace {
+//    const double diagEnabledTime = 277320102.0;
+//}
+
+bool TkrDiagnosticTool::doDiagnosticInfo() {
+    // ordinarily want full diagnostic info, so if there is no timestamp just do it!
+    // otherwise check against the time when the diagnostic stuff was enabled.
+    // return the information, and the calling program can decide what to do with it.
+
+    bool doDiagInfo = true;
+    Event::EventHeader* header;
+    header = SmartDataPtr<Event::EventHeader>(m_dataSvc, EventModel::EventHeader);
+    if(header) {
+        double eventTime = header->time();
+        if(eventTime<m_diagEnabledTime) doDiagInfo = false;
+    }
+
+    return doDiagInfo;
+}
+
+/*
+void TkrDiagnosticTool::setDiagnosticFlag(const bool doDiagFlag)
+{
+    m_diagnosticFlag = doDiagFlag;
+}
+
+bool TkrDiagnosticTool::getDiagnosticFlag() const 
+{
+    return m_diagnosticFlag;
+}
+*/

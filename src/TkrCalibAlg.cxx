@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.16 2008/05/20 01:14:20 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.17 2010/07/22 03:23:20 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -24,6 +24,11 @@
 #include "TkrUtil/ITkrSplitsSvc.h"
 #include "TkrUtil/ITkrToTSvc.h"
 #include "TkrUtil/ITkrAlignmentSvc.h"
+#include "TkrUtil/ITkrDiagnosticTool.h"
+
+#include "Event/TopLevel/EventModel.h"
+
+#include "Event/Recon/TkrRecon/TkrDiagnosticFlag.h"
 
 #include <string>
 
@@ -39,6 +44,9 @@ the services of the appearance of a new calibration.
 @class TkrCalibAlg
 Algorithm that handles updating the calibrations
 */
+
+//using namespace Event;
+
 class TkrCalibAlg : public Algorithm {
 
 public:
@@ -70,6 +78,8 @@ private:
     ITkrToTSvc*              m_pTkrToTSvc;
     /// pointer to alignment service
     ITkrAlignmentSvc*        m_pTkrAlignmentSvc;
+    /// pointer to the diagnostic tool
+    ITkrDiagnosticTool*       m_pTkrDiagnosticTool;
     /// serial number of the hot strips calibration
     int m_serHot;
     /// serial number of the dead strips calibration
@@ -102,6 +112,12 @@ private:
     std::string m_towerAlignFlavor;
     /// flavor of the internal alignment calibration
     std::string m_internalAlignFlavor;
+    /// "flavor" of the doDiagInfo setting... either "ideal" or anything else = vanilla
+    std::string m_doDiagnosticInfoFlavor;
+
+    bool m_doDiagInfo;
+
+    Event::TkrDiagnosticFlag* m_tkrDiagnosticFlag;
 
 };
 
@@ -126,6 +142,7 @@ TkrCalibAlg::TkrCalibAlg(const std::string&  name,
 
     declareProperty("internalAlignmentCalibFlavor", m_internalAlignFlavor = "notSet");
     declareProperty("towerAlignmentCalibFlavor",    m_towerAlignFlavor    = "notSet");
+    declareProperty("doDiagnosticInfoFlavor",       m_doDiagnosticInfoFlavor = "notSet");
 }
 
 StatusCode TkrCalibAlg::initialize() 
@@ -207,6 +224,14 @@ StatusCode TkrCalibAlg::initialize()
         return sc;
     }
 
+    sc = toolSvc()->retrieveTool("TkrDiagnosticTool", m_pTkrDiagnosticTool);
+    if ( !sc.isSuccess() ) {
+        log << MSG::INFO 
+            << "Could not get DiagnosticTool, will always do diagnostic info" 
+            << endreq;
+    }
+
+
     // go through the individual flavors... 
     // set them equal to the overall flavor unless they've been set
 
@@ -217,6 +242,16 @@ StatusCode TkrCalibAlg::initialize()
     if (m_muonFlavor=="notSet")       m_muonFlavor       = m_flavor;
     if (m_internalAlignFlavor=="notSet")  m_internalAlignFlavor = m_flavor;
     if (m_towerAlignFlavor=="notSet")     m_towerAlignFlavor    = m_flavor;
+
+    // unfortunately, doDiagnosticInfo is a special case
+    // we handle it by a call to TkrDiagnosticTool:doDiagnosticInfo()
+    if(m_doDiagnosticInfoFlavor=="notSet") {
+        if(m_flavor =="ideal") {
+            m_doDiagnosticInfoFlavor = m_flavor;
+        } else {
+            m_doDiagnosticInfoFlavor = "vanilla";
+        }       
+    }
 
     m_serHot       = -1;
     m_serDead      = -1;
@@ -233,6 +268,7 @@ StatusCode TkrCalibAlg::initialize()
 StatusCode TkrCalibAlg::execute( ) {
 
     MsgStream log(msgSvc(), name());
+    StatusCode sc = StatusCode::SUCCESS;
 
     // set service for SIM or REC
 
@@ -421,6 +457,29 @@ StatusCode TkrCalibAlg::execute( ) {
     }
 
     if(updateAlign) m_pTkrAlignmentSvc->update(pTowerAlign, pInternalAlign);
+
+    //diagnostic info stuff
+    m_doDiagInfo = true;
+    if(m_doDiagnosticInfoFlavor != "ideal") {
+        if(m_pTkrDiagnosticTool) {
+            m_doDiagInfo = m_pTkrDiagnosticTool->doDiagnosticInfo();
+        }
+    }
+
+    // Recover a pointer to the diagnostic flag
+    SmartDataPtr<Event::TkrDiagnosticFlag> diagFlag(eventSvc(),
+        EventModel::TkrRecon::TkrDiagnosticFlag);
+    if(!diagFlag){
+    // Create the TkrDiagnosticFlag TDS object
+        diagFlag = new Event::TkrDiagnosticFlag();
+    // Register the object in the TDS
+        sc = eventSvc()->registerObject(EventModel::TkrRecon::TkrDiagnosticFlag,
+            diagFlag);
+    }
+    diagFlag->setDiagnosticFlag(m_doDiagInfo);
+
+
+    
 
     return StatusCode::SUCCESS;
 }

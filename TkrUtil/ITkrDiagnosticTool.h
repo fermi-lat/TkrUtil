@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrDiagnosticTool.h,v 1.1 2009/10/16 18:47:30 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrDiagnosticTool.h,v 1.2 2010/04/08 20:54:04 lsrea Exp $
  */
 #ifndef ITkrDiagnosticTool_h
 #define ITkrDiagnosticTool_h
@@ -38,6 +38,9 @@ public:
     virtual void setTriggerInfo(int tower, int gtcc, int gtrc) = 0;
     virtual bool isSetTrigger(int tower, int plane, int end) = 0;
     virtual void clearTriggerInfo() = 0;
+    virtual bool doDiagnosticInfo() = 0;
+    //virtual void setDiagnosticFlag(const bool doDiagFlag) = 0;
+    //virtual bool getDiagnosticFlag() const = 0;
 };
 
 #endif
