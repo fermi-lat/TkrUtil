@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.9 2010/04/22 09:08:41 lsrea Exp $
+* $Header: /usr/local/CVS/SLAC/TkrUtil/src/TkrGhostTool.cxx,v 1.10.6.1 2011/06/03 22:15:53 kadrlica Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -18,6 +18,7 @@
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrEventParams.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
+#include "Event/Recon/CalRecon/CalCluster.h"
 #include "Event/TopLevel/DigiEvent.h"
 #include "Event/Digi/TkrDigi.h"
 
@@ -31,6 +32,8 @@
 #include "TkrUtil/ITkrDiagnosticTool.h"
 #include "TkrUtil/ITkrMapTool.h"
 #include "TkrUtil/ITkrTrackVecTool.h"
+
+#include "Doca.h"
 
 #include <iomanip>
 #include <map>
@@ -56,6 +59,7 @@ public:
     StatusCode flagEarlyHits(Event::TkrClusterCol* col=0);
     StatusCode flagEarlyTracks();
     StatusCode flagEarlyVertices();
+    StatusCode flagEarlyCalClusters();
 
 private:
     int elecToGeo(int gtcc, int gtrc);
@@ -521,7 +525,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
     //    trackCol(m_dataSvc, EventModel::TkrRecon::TkrTrackCol);
 
     int trackCount = 0;
-    int itk;
+    uint itk;
     
     //Event::TkrTrackColConPtr tcolIter = trackCol->begin();
     //for(; tcolIter!=trackCol->end(); ++tcolIter,++trackCount) {
@@ -561,7 +565,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
         log << endreq;
         if(diagCount>0){
             track->setStatusBit(Event::TkrTrack::DIAGNOSTIC);
-            if(doDebug) log << MSG::DEBUG << "Found " << diagCount << " diag ghosts in track # " << trackCount << endreq;
+            if(doDebug) log << "Found " << diagCount << " diag ghosts in track # " << trackCount << endreq;
        }
         
         //Add ??:
@@ -575,7 +579,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
         }
         if(ghostCount>0){
             track->setStatusBit(0x80000);
-            if(doDebug) log << "Found " << ghostCount 
+            if(doDebug) log  << "Found " << ghostCount 
                 << " trigger ghosts in track # " << trackCount << endreq;
         }
 
@@ -634,5 +638,53 @@ StatusCode TkrGhostTool::flagEarlyVertices()
             } 
         } 
     } 
+    return sc;
+}
+
+StatusCode TkrGhostTool::flagEarlyCalClusters()
+{
+    // Compute the minimum DOCA from all the ghost tracks
+    // to all the CalClusters.  Eventually flag the ghost 
+    // clusters (prescription yet to be developed).
+    MsgStream log(msgSvc(), name());
+    StatusCode sc = StatusCode::SUCCESS;
+
+    // Get the Cal Clusters
+    Event::CalClusterCol* calClusterCol = 
+        SmartDataPtr<Event::CalClusterCol>(m_dataSvc,EventModel::CalRecon::CalClusterCol);
+
+    // No Cal Clusters, don't do anything
+    if (!calClusterCol) return sc;
+
+    // Get all the tracks from the tracker.
+    std::vector<Event::TkrTrack*> trackVec = m_trackVecTool->getTrackVec();
+    uint trackCount, itk;
+    double minDoca;
+
+    // Loop over the clusters an find the min DOCA to a ghost track
+    Event::CalClusterCol::const_iterator cluster ;
+    for ( cluster = calClusterCol->begin() ;          
+          cluster != calClusterCol->end() ;          
+          cluster++) {          
+        
+        trackCount = 0;
+        minDoca = 999999.;
+
+        for(itk=0; itk<trackVec.size(); ++itk, ++trackCount) {
+            Event::TkrTrack* track = trackVec[itk];;
+            if( (track->getStatusBits())&Event::TkrTrack::GHOST ) {
+                // Find the distance between Cal "centroid" and ghost track axis
+                Doca trackDoca(track->getInitialPosition(), 
+                               track->getInitialDirection());
+                float tmpDoca = (float)trackDoca.docaOfPoint((*cluster)->getPosition());
+                if ( tmpDoca < minDoca ) minDoca = tmpDoca;
+            }
+        }
+        // If minDoca, unchanged set it with an unphysical value
+        if (minDoca > 900000) minDoca = -1.;
+        (*cluster)->getMomParams().setMinGhostDoca(minDoca);
+        log << MSG::DEBUG << "Found CalCluster minGhostDoca of: " 
+            << minDoca << endreq;
+    }
     return sc;
 }
