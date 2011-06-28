@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.10 2011/03/30 03:07:41 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.11 2011/03/30 17:32:13 lsrea Exp $
 */
 
 // Include files
@@ -23,6 +23,7 @@
 #include "TkrUtil/ITkrMakeClustersTool.h"
 
 #include <vector>
+#include <exception>
 #include <map>
 #include "geometry/Point.h"  
 
@@ -257,11 +258,11 @@ StatusCode TkrMakeClustersTool::makeClusters(
         for( stripCol_it it = mergedHits.begin(); it!=itLast; ) {
             if(nextStrip.isTaggedBad()) {
                 nBad++;
-                if(_iFirstBad==-1) _iFirst = nextStrip;
-                _iLastBad = nextStrip;
+                if(_iFirstBad==-1) _iFirstBad = nextStrip.getStripNumber();
+                _iLastBad = nextStrip.getStripNumber();
             } else {
-                if(_iFirst== -1) _iFirst = nextStrip;
-                _iLast = nextStrip;
+                if(_iFirst== -1) _iFirst = nextStrip.getStripNumber();
+                _iLast = nextStrip.getStripNumber();
             }
 
             // here we get the next hit, and increment the iterator
@@ -289,15 +290,17 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     int end;
                     int rawToT = 0;
                     float ToT = 0.0;
+                    try
+		    {
                     if(m_type!=ITkrBadStripsSvc::BADCLUSTERS) {
                         ToT = calculateMips(pDigi, strip0, stripf, nBad, rawToT, end);
                     }
                     unsigned int status = defaultStatus | 
                         ((end<<Event::TkrCluster::shiftEND)&Event::TkrCluster::maskEND);
 
+                    // See if we can capture the st9 bad alloc error
                     Event::TkrCluster* cl = new Event::TkrCluster(hitId, strip0, stripf, 
                         pos, rawToT, ToT, status, nBad);
-
 
                     // for tests
                     //if(m_type == ITkrBadStripsSvc::BADCLUSTERS) {
@@ -309,6 +312,15 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     if(clusMap!=0) (*clusMap)[hitId].push_back(cl);
                     // for tests
                     //std::cout << rawToT << " " << ToT << std::endl;
+                    }
+                    catch( std::exception& e)
+		    {
+                        throw e;
+		    } 
+                    catch(...)
+		    {
+                        throw;
+		    }
                 } 
                 lowStrip = nextStrip;  // start a new cluster with this strip
                 nBad = 0;
