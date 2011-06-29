@@ -23,7 +23,6 @@
 #include "TkrUtil/ITkrMakeClustersTool.h"
 
 #include <vector>
-#include <exception>
 #include <map>
 #include "geometry/Point.h"  
 
@@ -290,17 +289,15 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     int end;
                     int rawToT = 0;
                     float ToT = 0.0;
-                    try
-		    {
                     if(m_type!=ITkrBadStripsSvc::BADCLUSTERS) {
                         ToT = calculateMips(pDigi, strip0, stripf, nBad, rawToT, end);
                     }
                     unsigned int status = defaultStatus | 
                         ((end<<Event::TkrCluster::shiftEND)&Event::TkrCluster::maskEND);
 
-                    // See if we can capture the st9 bad alloc error
                     Event::TkrCluster* cl = new Event::TkrCluster(hitId, strip0, stripf, 
                         pos, rawToT, ToT, status, nBad);
+
 
                     // for tests
                     //if(m_type == ITkrBadStripsSvc::BADCLUSTERS) {
@@ -312,15 +309,6 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     if(clusMap!=0) (*clusMap)[hitId].push_back(cl);
                     // for tests
                     //std::cout << rawToT << " " << ToT << std::endl;
-                    }
-                    catch( std::exception& e)
-		    {
-                        throw e;
-		    } 
-                    catch(...)
-		    {
-                        throw;
-		    }
                 } 
                 lowStrip = nextStrip;  // start a new cluster with this strip
                 nBad = 0;
@@ -465,7 +453,7 @@ bool TkrMakeClustersTool::isGapBetween(const TaggedStrip &lowStrip,
 
     // check for too many trailing bad hits
     // if so, declare a "gap"
-    if(_iLast<TaggedStrip::BIG&&(_iLastBad-_iLast)>=m_maxTrailingHits) {
+    if(_iLastBad<TaggedStrip::BIG&&(_iLastBad-_iLast)>=m_maxTrailingHits) {
         return true;
     }
 
