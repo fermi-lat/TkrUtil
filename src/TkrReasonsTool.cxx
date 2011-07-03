@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrReasonsTool.cxx,v 1.2 2011/02/27 01:13:35 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrReasonsTool.cxx,v 1.1 2011/03/26 22:32:12 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -67,8 +67,6 @@ namespace {
     double _planeZ;
     int    _plane;
 
-    double _xPitch, _yPitch;
-    double _xSiGap, _ySiGap;
     Point  _end_pos;
 }
 
@@ -252,23 +250,23 @@ Vector TkrReasonsTool::getEdgeDistance() const
 
     double xActiveDistTower = 0;
     double yActiveDistTower = 0;
-    _xPitch = _ladderPitch;
-    _yPitch = _waferPitch;
-    _xSiGap = _ladderGap;
-    _ySiGap = _ladderInnerGap;
+    double xPitch = _ladderPitch;
+    double yPitch = _waferPitch;
+    double xSiGap = _ladderGap;
+    double ySiGap = _ladderInnerGap;
     if (_view==idents::TkrId::eMeasureX) {
-        std::swap(_xPitch, _yPitch);
-        std::swap(_xSiGap, _ySiGap);
+        std::swap(xPitch, yPitch);
+        std::swap(xSiGap, ySiGap);
     }
 
     // if these are negative, track misses active area of tower
     // probably no point in constraining hit in this plane
-    double xGap = _xSiGap + 2*_deadGap;
-    xActiveDistTower = 0.5*(_nWafer*_xPitch - xGap) - fabs(_xTower);
+    double xGap = xSiGap + 2*_deadGap;
+    xActiveDistTower = 0.5*(_nWafer*xPitch - xGap) - fabs(_xTower);
     //double xError = sqrt(next_params(xPosIdx,xPosIdx));
 
-    double yGap = _ySiGap + 2*_deadGap;
-    yActiveDistTower = 0.5*(_nWafer*_yPitch - yGap) - fabs(_yTower);
+    double yGap = ySiGap + 2*_deadGap;
+    yActiveDistTower = 0.5*(_nWafer*yPitch - yGap) - fabs(_yTower);
     //double yError = sqrt(next_params(yPosIdx,yPosIdx));
 
     Vector vec = Vector(xActiveDistTower, yActiveDistTower, 0);
@@ -278,12 +276,22 @@ Vector TkrReasonsTool::getEdgeDistance() const
 
 Vector TkrReasonsTool::getGapDistance() const 
 {
+    double xPitch = _ladderPitch;
+    double yPitch = _waferPitch;
+    double xSiGap = _ladderGap;
+    double ySiGap = _ladderInnerGap;
+    if (_view==idents::TkrId::eMeasureX) {
+        std::swap(xPitch, yPitch);
+        std::swap(xSiGap, ySiGap);
+    }
+
+
     int iXWafer;
-    double xWafer = m_tkrGeom->truncateCoord(_xTower, _xPitch, _nWafer, iXWafer);
+    double xWafer = m_tkrGeom->truncateCoord(_xTower, xPitch, _nWafer, iXWafer);
     double xActiveDistWafer = 0.5*_activeWaferSide - fabs(xWafer);
 
     int iYWafer;
-    double yWafer = m_tkrGeom->truncateCoord(_yTower, _yPitch, _nWafer, iYWafer);
+    double yWafer = m_tkrGeom->truncateCoord(_yTower, yPitch, _nWafer, iYWafer);
     double yActiveDistWafer = 0.5*_activeWaferSide - fabs(yWafer);
 
     Vector vec = Vector(xActiveDistWafer, yActiveDistWafer, 0);
