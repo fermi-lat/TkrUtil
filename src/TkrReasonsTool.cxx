@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrReasonsTool.cxx,v 1.1 2011/03/26 22:32:12 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrReasonsTool.cxx,v 1.2 2011/07/03 17:31:56 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -68,6 +68,13 @@ namespace {
     int    _plane;
 
     Point  _end_pos;
+
+    double getXPitch() { return (_view==idents::TkrId::eMeasureX ? _ladderPitch : _waferPitch); }
+    double getYPitch() { return (_view!=idents::TkrId::eMeasureX ? _ladderPitch : _waferPitch); }
+    double getXGap()   { return (_view==idents::TkrId::eMeasureX ? _ladderGap : _ladderInnerGap); }
+    double getYGap()   { return (_view!=idents::TkrId::eMeasureX ? _ladderGap : _ladderInnerGap); }
+
+
 }
 
 class TkrReasonsTool : public AlgTool, virtual public ITkrReasonsTool
@@ -250,14 +257,10 @@ Vector TkrReasonsTool::getEdgeDistance() const
 
     double xActiveDistTower = 0;
     double yActiveDistTower = 0;
-    double xPitch = _ladderPitch;
-    double yPitch = _waferPitch;
-    double xSiGap = _ladderGap;
-    double ySiGap = _ladderInnerGap;
-    if (_view==idents::TkrId::eMeasureX) {
-        std::swap(xPitch, yPitch);
-        std::swap(xSiGap, ySiGap);
-    }
+    double xPitch = getXPitch();
+    double yPitch = getYPitch();
+    double xSiGap = getXGap();
+    double ySiGap = getYGap();
 
     // if these are negative, track misses active area of tower
     // probably no point in constraining hit in this plane
@@ -276,15 +279,8 @@ Vector TkrReasonsTool::getEdgeDistance() const
 
 Vector TkrReasonsTool::getGapDistance() const 
 {
-    double xPitch = _ladderPitch;
-    double yPitch = _waferPitch;
-    double xSiGap = _ladderGap;
-    double ySiGap = _ladderInnerGap;
-    if (_view==idents::TkrId::eMeasureX) {
-        std::swap(xPitch, yPitch);
-        std::swap(xSiGap, ySiGap);
-    }
-
+    double xPitch = getXPitch();
+    double yPitch = getYPitch();
 
     int iXWafer;
     double xWafer = m_tkrGeom->truncateCoord(_xTower, xPitch, _nWafer, iXWafer);
