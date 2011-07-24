@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.11 2011/06/03 23:06:45 kadrlica Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.12 2011/06/09 04:09:02 heather Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -532,7 +532,9 @@ StatusCode TkrGhostTool::flagEarlyTracks()
     for(itk=0; itk<trackVec.size(); ++itk, ++trackCount) {
         Event::TkrTrack* track = trackVec[itk];;
         track->clearStatusBits(Event::TkrTrack::GHOST);
+        track->clearStatusBits(Event::TkrTrack::TRIGGHOST);
         track->clearStatusBits(Event::TkrTrack::DIAGNOSTIC);
+        track->clearStatusBits(Event::TkrTrack::GHOST255);
         Event::TkrTrackHitVecItr pHit = track->begin();
 
         int ghostCount = 0;
@@ -566,19 +568,15 @@ StatusCode TkrGhostTool::flagEarlyTracks()
         if(diagCount>0){
             track->setStatusBit(Event::TkrTrack::DIAGNOSTIC);
             if(doDebug) log << "Found " << diagCount << " diag ghosts in track # " << trackCount << endreq;
-       }
-        
-        //Add ??:
-        //  Event::TkrTrack::255GHOST  = 0x40000;
-        //  Event::TkrTrack::TRIGGHOST = 0x80000;
-        
+        }
+                
         if(_255Count>0){
-            track->setStatusBit(0x40000);
+            track->setStatusBit(Event::TkrTrack::GHOST255);
             if(doDebug) log << "Found " << _255Count << " 255's in track # " 
                 << trackCount << endreq;
         }
         if(ghostCount>0){
-            track->setStatusBit(0x80000);
+            track->setStatusBit(Event::TkrTrack::TRIGGHOST);
             if(doDebug) log  << "Found " << ghostCount 
                 << " trigger ghosts in track # " << trackCount << endreq;
         }
@@ -594,17 +592,11 @@ StatusCode TkrGhostTool::flagEarlyTracks()
             bool is255       = pClus->isSet(Event::TkrCluster::mask255);
             bool isGhost     = pClus->isSet(Event::TkrCluster::maskGHOST);
             bool isDiagGhost = pClus->isSet(Event::TkrCluster::maskDIAGNOSTIC); 
-            //bool isAlone     = pClus->isSet(Event::TkrCluster::maskALONE);
             bool isAloneEnd  = pClus->isSet(Event::TkrCluster::maskALONEEND);
             bool isIdentified255 = (is255&&isAloneEnd);
-            if(!isIdentified255) {
-                if(!isGhost) {
-                    pClus->setStatusBits(Event::TkrCluster::maskSAMETRACK);
-                } 
-                if(!isDiagGhost) {
-                    pClus->setStatusBits(Event::TkrCluster::maskSAMETRACKD);
-                }
-            }
+            if(!isIdentified255&&!isGhost&&!isDiagGhost) {
+                pClus->setStatusBits(Event::TkrCluster::maskSAMETRACK);
+            } 
         }
     }
     return sc;
