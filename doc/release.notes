@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-23-00 19-Oct-2011  lsrea 1) fix truncateCoord to handle outside edges of wafer/ladder 2 ) fix TkrHitTruncationTool to handle alternating readout configs
  TkrUtil-03-22-10 24-Jul-2011  lsrea fixed the collision in the ghost status bits
  TkrUtil-03-22-09 14-Jul-2011  lsrea Tracy's fix to my fix
  TkrUtil-03-22-08 10-Jul-2011  lsrea fix bug I introduced in TkrMakeClustersTool
