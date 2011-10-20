@@ -1058,11 +1058,17 @@ double TkrGeometrySvc::truncateCoord( double x, double pitch,
     double delta = 0.5*(numElements%2);
     double xMod = xScaled + delta;
     int theFloor = (int) floor(xMod);
-    elementNumber = theFloor + numElements/2;
+    int elementNumber0 = theFloor + numElements/2;
+    // we need to truncate to the actual number of elements, and adjust theFloor accordingly
+    elementNumber = std::max(std::min(elementNumber0, numElements-1),0);
+    int deltaN = elementNumber - elementNumber0;
+    if(deltaN!=0) {
+        theFloor += deltaN;
+    }
+ 
     // if it's outside the actual element, assign the closest
     // this will not happen for real hits, but may for extrapolated hits
     // or transformed hits.
-    elementNumber = std::max(std::min(elementNumber, numElements-1),0);
     if (reverse) elementNumber = numElements - 1 - elementNumber;
     return pitch*(xMod - theFloor - 0.5);
 }

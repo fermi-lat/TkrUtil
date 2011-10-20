@@ -6,7 +6,7 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.1 2011/03/26 22:32:12 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.2 2011/03/30 03:07:41 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -180,6 +180,7 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
         int status = 0;
         int end;
         int hit;
+        int thisStripCount;
         bool firstHigh = true;
         for (hit=0; hit<nHits; ++hit) {
             int strip = pDigi->getHit(hit);
@@ -193,37 +194,50 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
                 }
             }
             stripCount[end]++;
+            thisStripCount = stripCount[end];
         }
         for(end=0; end<2; ++end) {
             // fill some stuff for the cable test
             if (stripCount[end]<maxStrips[end]) {
-                //skip it
+                // do nothing
             } else if (stripCount[end]>maxStrips[end]) {
                 TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RCOVER);
             } else  {
-                TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RC);
+                // if maxStrips is zero, this will always be satified! so check for that
+                if(maxStrips[end]>0) TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RC);
             }
         }
+
+        // debug:
+        //if(status>0) {
+        //    std::cout << stripCount[0] << " " << maxStrips[0] <<  " "
+        //        << stripCount[1] << " " << maxStrips[1] << " " << status << std::endl;
+        //}
    
         floatVector localX(4,0);
+        float loc0, loc1, loc2, loc3;
 
         // get the limits for the dead regions
         // tricky for -1 and nStrips (no limits) because neither is a legal strip number
         int strip = std::max(stripNumber[0], 0);
-        localX[0] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
+        loc0 = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
             (stripNumber[0]==-1 ? _stripPitch : 0);
+        localX[0] = loc0;
 
         strip = std::min(stripNumber[1], _nStrips-1);
-        localX[1] = m_detSvc->stripLocalX(strip) - 0.5*_stripPitch +
+        loc1 = m_detSvc->stripLocalX(strip) - 0.5*_stripPitch +
             (stripNumber[1]==_nStrips ? _stripPitch : 0);
+        localX[1] = loc1;
 
         strip = std::min(stripNumber[2], _nStrips-1);
-        localX[2] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch +
+        loc2 = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch +
             (stripNumber[2]==_nStrips ? _stripPitch : 0);
+        localX[2] = loc2;
 
         strip = std::max(stripNumber[3], 0);
-        localX[3] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
+        loc3 = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
             (stripNumber[3]==-1 ? _stripPitch : 0);
+        localX[3] = loc3;
 
         //std::cout << localX[0] << " " << localX[1] << " "  << localX[2] << " "  
         //  << localX[3] << std::endl;
@@ -267,7 +281,8 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
             } else if (numHits > cableBufferSize) {
                 trunc.setStatusBit(end, TkrTruncatedPlane::CCOVER);
             } else {
-                trunc.setStatusBit(end, TkrTruncatedPlane::CC);
+                // "if" probably never needed, but easy to do
+                if(cableBufferSize>0) trunc.setStatusBit(end, TkrTruncatedPlane::CC);
             }
         }
     }
@@ -294,6 +309,7 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
    
     // remove the TruncatedPlanes with status==0
     unsigned int i;
+    int foo = iterVec.size();
     for(i=0; i<iterVec.size(); ++i) {
         truncMap->erase(iterVec[i]);
     }
