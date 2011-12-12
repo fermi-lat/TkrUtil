@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGeometrySvc.h,v 1.31 2006/11/02 19:34:48 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrGeometrySvc.h,v 1.32.20.1 2010/09/09 14:03:22 heather Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -185,15 +185,31 @@ public:
     IPropagator* getG4PropagationTool()  const {return m_G4PropTool;}
 
     /// Provide access to the failure mode service
-    ITkrFailureModeSvc* getTkrFailureModeSvc() const { return m_tkrFail;}
+    //ITkrFailureModeSvc* getTkrFailureModeSvc() const { return m_tkrFail;}
+    // HMK Hack to get around circular init of TkrGeomSvc and TkrFailureModeSvc
+    ITkrFailureModeSvc* getTkrFailureModeSvc() { 
+        if (!m_tkrFail) setupTkrFailureModeSvc(); 
+        return m_tkrFail;}
     /// Provide access to the bad strips service
-    ITkrBadStripsSvc*   getTkrBadStripsSvc()   const { return m_badStrips;}
+    //ITkrBadStripsSvc*   getTkrBadStripsSvc()   const { return m_badStrips;}
+    ITkrBadStripsSvc*   getTkrBadStripsSvc()   { 
+        if (m_badStrips) setupTkrBadStripsSvc();
+        return m_badStrips;}
     /// Provide access to the alignment service
-    ITkrAlignmentSvc*   getTkrAlignmentSvc()   const { return m_tkrAlign;}
+    //ITkrAlignmentSvc*   getTkrAlignmentSvc()  const { return m_tkrAlign;}
+    ITkrAlignmentSvc*   getTkrAlignmentSvc()  { 
+        if (!m_tkrAlign) setupTkrAlignmentSvc();
+        return m_tkrAlign;}
     /// Provide access to splits service
-    ITkrSplitsSvc*      getTkrSplitsSvc()      const { return m_tkrSplits;}
+    //ITkrSplitsSvc*      getTkrSplitsSvc()      const { return m_tkrSplits;}
+    ITkrSplitsSvc*      getTkrSplitsSvc()     { 
+        if (!m_tkrSplits) setupTkrSplitsSvc();
+        return m_tkrSplits;}
     /// Provide access to ToT service
-    ITkrToTSvc*         getTkrToTSvc()         const { return m_tkrToT;}
+    //ITkrToTSvc*         getTkrToTSvc()         const { return m_tkrToT;}
+    ITkrToTSvc*         getTkrToTSvc()        { 
+        if (!m_tkrToT) setupTkrToTSvc();
+        return m_tkrToT;}
 
     /// calculate the tray number, botTop from layer, view
     void layerToTray (int layer, int view, int& tray, int& botTop) const;
@@ -239,6 +255,12 @@ public:
         double& xActiveDist, double& yActiveDist, double& xGap, double &yGap) const;
 
 private:
+
+    bool setupTkrFailureModeSvc();
+    bool setupTkrBadStripsSvc();
+    bool setupTkrAlignmentSvc();
+    bool setupTkrSplitsSvc();
+    bool setupTkrToTSvc();
     
     /// number of Towers in X
     int    m_numX; 

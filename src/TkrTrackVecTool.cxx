@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrTrackVecTool.cxx,v 1.1 2011/02/24 22:04:50 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrTrackVecTool.cxx,v 1.2 2011/02/27 01:13:35 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -38,8 +38,9 @@ private:
     DataSvc*               m_dataSvc;
 };
 
-static ToolFactory<TkrTrackVecTool> s_factory;
-const IToolFactory& TkrTrackVecToolFactory = s_factory;
+//static ToolFactory<TkrTrackVecTool> s_factory;
+//const IToolFactory& TkrTrackVecToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrTrackVecTool);
 
 TkrTrackVecTool::TkrTrackVecTool(const std::string& type, 
                                  const std::string& name, 

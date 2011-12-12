@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.18 2006/03/21 01:15:48 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrToTSvc.cxx,v 1.19.618.1 2010/09/09 14:03:23 heather Exp $
 
 */
 
@@ -23,8 +23,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.cxx,v 1.18 2006/03/2
 #include "CLHEP/Random/RandGauss.h"
 
 // declare the service factories for the TkrToTSvc
-static SvcFactory<TkrToTSvc> a_factory;
-const ISvcFactory& TkrToTSvcFactory = a_factory; 
+//static SvcFactory<TkrToTSvc> a_factory;
+//const ISvcFactory& TkrToTSvcFactory = a_factory; 
+DECLARE_SERVICE_FACTORY(TkrToTSvc);
 
 using namespace idents;
 

@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.20 2007/09/14 18:04:38 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrSplitsSvc.cxx,v 1.21.140.1 2010/09/09 14:03:23 heather Exp $
 
 */
 
@@ -24,9 +24,11 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.20 2007/0
 #include "xmlBase/IFile.h"
 
 // declare the service factories for the TkrSplitsSvc
-static SvcFactory<TkrSplitsSvc> a_factory;
-const ISvcFactory& TkrSplitsSvcFactory = a_factory; 
+//static SvcFactory<TkrSplitsSvc> a_factory;
+//const ISvcFactory& TkrSplitsSvcFactory = a_factory; 
+DECLARE_SERVICE_FACTORY(TkrSplitsSvc);
 
+//
 TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc) 
 : Service(name,svc)
 {

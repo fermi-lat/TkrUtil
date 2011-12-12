@@ -1,7 +1,7 @@
 # -*- python -*-
-# $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/SConscript,v 1.54 2011/07/24 20:23:44 lsrea Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/SConscript,v 1.55 2011/10/20 00:27:34 lsrea Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
-# Version: TkrUtil-03-23-00
+# Version: TkrUtil-03-24-00
 Import('baseEnv')
 Import('listFiles')
 Import('packages')
@@ -16,7 +16,6 @@ progEnv.Tool('TkrUtilLib')
 progEnv.Tool('EventLib')
 test_TkrUtil = progEnv.GaudiProgram('test_TkrUtil',
                                     ['src/test/test_TkrUtil.cxx',
-                                     'src/test/test_TkrUtil_load.cxx'],
                                     test = 1, package='TkrUtil')
 test_IndexedVector = progEnv.Program('test_IndexedVector',
                                      ['src/test/testIndexedVector.cxx'])

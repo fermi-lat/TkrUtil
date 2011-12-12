@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.11 2011/03/30 17:32:13 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.13 2011/06/29 02:17:50 usher Exp $
 */
 
 // Include files
@@ -91,8 +91,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<TkrMakeClustersTool> s_factory;
-const IToolFactory& TkrMakeClustersToolFactory = s_factory;
+//static ToolFactory<TkrMakeClustersTool> s_factory;
+//const IToolFactory& TkrMakeClustersToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrMakeClustersTool);
 
 // Standard Constructor
 TkrMakeClustersTool::TkrMakeClustersTool(const std::string& type, 

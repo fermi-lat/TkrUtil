@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.20 2010/04/04 16:19:06 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.21.8.1 2010/09/09 14:03:23 heather Exp $
 
 // Include files
 
@@ -159,8 +159,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<TkrQueryClustersTool> s_factory;
-const IToolFactory& TkrQueryClustersToolFactory = s_factory;
+//static ToolFactory<TkrQueryClustersTool> s_factory;
+//const IToolFactory& TkrQueryClustersToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrQueryClustersTool);
 
 // Standard Constructor
 TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type, 

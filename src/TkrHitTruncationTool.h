@@ -7,7 +7,7 @@
 * @brief This tool analyzes the digis to infer truncation
 *        
 * File and Version Information:
-*      $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Track/TkrHitTruncationTool.h,v 1.3 2011/01/19 00:44:22 lsrea Exp $
+*      $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrHitTruncationTool.h,v 1.1 2011/03/26 22:32:12 lsrea Exp $
 */
 
 
@@ -66,7 +66,8 @@ private:
 
 };
 
-static ToolFactory<TkrHitTruncationTool> s_factory;
-const IToolFactory& TkrHitTruncationToolFactory = s_factory;
+//static ToolFactory<TkrHitTruncationTool> s_factory;
+//const IToolFactory& TkrHitTruncationToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrHitTruncationTool);
 
 #endif

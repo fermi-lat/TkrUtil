@@ -6,7 +6,7 @@
 First version 3-Jun-2001
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.24 2006/11/02 19:34:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.25.20.1 2010/09/09 14:03:22 heather Exp $
 */
 
 
@@ -28,8 +28,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.24 200
 
 #include "facilities/Util.h"
 
-static const SvcFactory<TkrBadStripsSvc> s_factory;
-const ISvcFactory& TkrBadStripsSvcFactory = s_factory;
+//static const SvcFactory<TkrBadStripsSvc> s_factory;
+//const ISvcFactory& TkrBadStripsSvcFactory = s_factory;
+DECLARE_SERVICE_FACTORY(TkrBadStripsSvc);
 
 namespace {
     const std::string mType[2] = {"SIM", "REC"};

@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.17 2010/07/22 03:23:20 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrCalibAlg.cxx,v 1.18 2011/05/31 03:04:58 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -122,9 +122,9 @@ private:
 };
 
 /// Instantiation of a static factory to create instances of this algorithm
-static const AlgFactory<TkrCalibAlg> Factory;
-const IAlgFactory& TkrCalibAlgFactory = Factory;
-
+//static const AlgFactory<TkrCalibAlg> Factory;
+//const IAlgFactory& TkrCalibAlgFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(TkrCalibAlg);
 
 TkrCalibAlg::TkrCalibAlg(const std::string&  name, 
                          ISvcLocator*        pSvcLocator )
@@ -171,7 +171,7 @@ StatusCode TkrCalibAlg::initialize()
     }
 
     // Query the IDetDataSvc interface of the calib data service
-    sc = m_pCalibDataSvc->queryInterface(IID_IDetDataSvc, 
+    sc = m_pCalibDataSvc->queryInterface(IDetDataSvc::interfaceID(), 
         (void**) &m_detDataSvc);
     if ( !sc.isSuccess() ) {
         log << MSG::ERROR 
@@ -503,8 +503,8 @@ void TkrCalibAlg::showCalibrationInfo(const std::string type,
 
     log << MSG::INFO << "New " << type << " serial number: " << ptr->getSerNo()<< endreq;  
     log << "path: " << path << endreq;
-    log << "Vstart: " <<  (ptr->validSince()).hours()
-        << "  Vend: " << (ptr->validTill()).hours() << endreq;
+    log << "Vstart: " <<  (ptr->validSince()).hour(true)
+        << "  Vend: " << (ptr->validTill()).hour(true) << endreq;
     if(bs_ptr!=0) {
         log << "Bad type: " << bs_ptr->getBadType() 
             << " has " << bs_ptr->getBadTowerCount() << " towers with " << type << endreq;				

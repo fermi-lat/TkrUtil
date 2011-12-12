@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.12 2011/06/09 04:09:02 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrGhostTool.cxx,v 1.13 2011/07/24 20:16:04 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -89,8 +89,9 @@ private:
     bool m_useDiagInfo;
 };
 
-static ToolFactory<TkrGhostTool> s_factory;
-const IToolFactory& TkrGhostToolFactory = s_factory;
+//static ToolFactory<TkrGhostTool> s_factory;
+//const IToolFactory& TkrGhostToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrGhostTool);
 
 TkrGhostTool::TkrGhostTool(const std::string& type, 
                            const std::string& name, 

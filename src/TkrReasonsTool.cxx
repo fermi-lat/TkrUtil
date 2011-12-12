@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrReasonsTool.cxx,v 1.2 2011/07/03 17:31:56 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrReasonsTool.cxx,v 1.3 2011/07/04 00:43:54 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -123,8 +123,9 @@ private:
 
 };
 
-static ToolFactory<TkrReasonsTool> s_factory;
-const IToolFactory& TkrReasonsToolFactory = s_factory;
+//static ToolFactory<TkrReasonsTool> s_factory;
+//const IToolFactory& TkrReasonsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrReasonsTool);
 
 TkrReasonsTool::TkrReasonsTool(const std::string& type, 
                                  const std::string& name, 
