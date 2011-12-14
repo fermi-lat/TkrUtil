@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrSplitsSvc.cxx,v 1.21.140.1 2010/09/09 14:03:23 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.22 2011/12/12 20:57:49 heather Exp $
 
 */
 
@@ -73,8 +73,6 @@ StatusCode TkrSplitsSvc::initialize ()
     // Restrictions and Caveats:  None
 
     StatusCode  sc = StatusCode::SUCCESS;
-
-    Service::initialize();
 
     // Open the message log
     MsgStream log( msgSvc(), name() );

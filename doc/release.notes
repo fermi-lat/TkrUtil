@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-24-02 14-Dec-2011  hmk   remove second Service::init from TkrSplits
  TkrUtil-03-24-01 13-Dec-2011  jrb   patch SConscript
  TkrUtil-03-24-00 09-Dec-2011  hmk   Merge in Gaudi v21r7 updates
  TkrUtil-03-23-00 19-Oct-2011  lsrea 1) fix truncateCoord to handle outside edges of wafer/ladder 2 ) fix TkrHitTruncationTool to handle alternating readout configs
