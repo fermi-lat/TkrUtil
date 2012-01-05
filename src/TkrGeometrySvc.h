@@ -12,7 +12,7 @@
  * 
  * @author Leon Rochester
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrGeometrySvc.h,v 1.32.20.1 2010/09/09 14:03:22 heather Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrGeometrySvc.h,v 1.33 2011/12/12 20:57:49 heather Exp $
  */
 
 #include "GaudiKernel/Service.h"
@@ -193,7 +193,7 @@ public:
     /// Provide access to the bad strips service
     //ITkrBadStripsSvc*   getTkrBadStripsSvc()   const { return m_badStrips;}
     ITkrBadStripsSvc*   getTkrBadStripsSvc()   { 
-        if (m_badStrips) setupTkrBadStripsSvc();
+        if (!m_badStrips) setupTkrBadStripsSvc();
         return m_badStrips;}
     /// Provide access to the alignment service
     //ITkrAlignmentSvc*   getTkrAlignmentSvc()  const { return m_tkrAlign;}
