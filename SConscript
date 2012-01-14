@@ -1,5 +1,5 @@
 # -*- python -*-
-# $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/SConscript,v 1.59 2011/12/14 18:49:45 heather Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/SConscript,v 1.60 2012/01/05 23:56:32 jrb Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 # Version: TkrUtil-03-24-03
 Import('baseEnv')
@@ -9,8 +9,8 @@ progEnv = baseEnv.Clone()
 libEnv = baseEnv.Clone()
 
 libEnv.Tool('addLinkDeps', package='TkrUtil', toBuild='component')
-TkrUtil = libEnv.SharedLibrary('TkrUtil',
-                               listFiles(['src/*.cxx', 'src/Dll/*.cxx']))
+TkrUtil = libEnv.ComponentLibrary('TkrUtil',
+                                  listFiles(['src/*.cxx']))
 
 progEnv.Tool('TkrUtilLib')
 progEnv.Tool('EventLib')
