@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-24-04 16-Jan-2012    hmk mods for windows
  TkrUtil-03-24-03 05-Jan-2012    jrb fix typo affecting setup of bad strips service
  TkrUtil-03-24-02 14-Dec-2011  hmk   remove second Service::init from TkrSplits
  TkrUtil-03-24-01 13-Dec-2011  jrb   patch SConscript
