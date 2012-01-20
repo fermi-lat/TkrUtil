@@ -7,7 +7,7 @@
 * @brief This tool analyzes the digis to infer truncation
 *        
 * File and Version Information:
-*      $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Track/TkrHitTruncationTool.h,v 1.3 2011/01/19 00:44:22 lsrea Exp $
+*      $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.h,v 1.1 2011/03/26 22:32:12 lsrea Exp $
 */
 
 
@@ -24,6 +24,8 @@
 
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrSplitsSvc.h"
+#include "TkrUtil/ITkrDiagnosticTool.h"
+#include "TkrUtil/ITkrMapTool.h"
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
 namespace {
@@ -46,6 +48,8 @@ public:
         double localX);
     double getDistanceToTruncation(idents::TkrId id, Vector towerPos);
     double getDistanceToTruncation(int tower, int plane, Vector towerPos);
+    void addEmptyDigis();
+    void removeEmptyDigis();
 
 private:
     /// Pointer to the local Tracker geometry service
@@ -56,6 +60,8 @@ private:
     IDataProviderSvc*   m_dataSvc;
     ///
     IGlastDetSvc*       m_detSvc;
+    ITkrDiagnosticTool* m_diagTool;
+    ITkrMapTool*        m_mapTool;
 
     bool m_newEvent;
 
@@ -63,10 +69,13 @@ private:
 
     /// this is called by the incident service at the beginning of an event
     void handle(const Incident& inc);
+    bool m_trimDigis;
+    int  m_trimCount;
 
 };
 
 static ToolFactory<TkrHitTruncationTool> s_factory;
 const IToolFactory& TkrHitTruncationToolFactory = s_factory;
+//DECLARE_TOOL_FACTORY(TkrHitTruncationTool);
 
 #endif

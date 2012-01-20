@@ -35,6 +35,8 @@ public:
     virtual double getDistanceToTruncation(int tower, int plane, Vector towerPos) = 0;
 
     virtual double getDistanceToTruncation(idents::TkrId tkrId, Vector towerPos) = 0;
+    virtual void addEmptyDigis() = 0;
+    virtual void removeEmptyDigis() = 0;
 
 };
 #endif

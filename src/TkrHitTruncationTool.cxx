@@ -6,7 +6,7 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.1 2011/03/26 22:32:12 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.2 2011/03/30 03:07:41 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -23,6 +23,7 @@
 
 #include "TkrHitTruncationTool.h"
 #include "Event/Recon/TkrRecon/TkrTruncationInfo.h"
+#include "LdfEvent/DiagnosticData.h"
 
 // constants defined at file scope
 namespace {
@@ -50,6 +51,9 @@ TkrHitTruncationTool::TkrHitTruncationTool(const std::string& type,
 {
     //Declare the additional interface
     declareInterface<ITkrHitTruncationTool>(this);
+    //Declare jO parameters
+    //declareProperty("trimDigis", m_trimDigis=false);
+    //declareProperty("trimCount", m_trimCount=14);
 
     return;
 }
@@ -64,6 +68,25 @@ StatusCode TkrHitTruncationTool::initialize()
     //Always believe in success
     StatusCode sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
+    IToolSvc* toolSvc = 0;
+    if (sc = service("ToolSvc",toolSvc, true).isSuccess() ) {
+        m_diagTool = 0;
+        sc = toolSvc->retrieveTool("TkrDiagnosticTool", m_diagTool);
+        if (sc.isFailure()) {
+            log << MSG::ERROR << "Cannot initialize diagnostic tool" << endreq;
+            return sc;
+        }
+        sc = toolSvc->retrieveTool("TkrMapTool", m_mapTool);
+        if (sc.isSuccess()) {
+            log << MSG::INFO << "Retrieved TrkMapTool" << endreq;
+        } else {
+            log << MSG::ERROR << "Couldn't retrieve TkrMapTool" << endreq;
+            return sc;
+        }
+    } else { 
+        log << MSG::INFO << "ToolSvc not found" << endreq;
+        return sc; 
+    } 
 
     //Locate and store a pointer to the data service
     if( (sc = service("EventDataSvc", m_dataSvc)).isFailure() ) 
@@ -197,33 +220,44 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
         for(end=0; end<2; ++end) {
             // fill some stuff for the cable test
             if (stripCount[end]<maxStrips[end]) {
-                //skip it
+                // do nothing
             } else if (stripCount[end]>maxStrips[end]) {
                 TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RCOVER);
             } else  {
-                TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RC);
+                // if maxStrips is zero, this will always be satified! so check for that
+                if(maxStrips[end]>0) TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RC);
             }
         }
+        // debug:
+        //if(status>0) {
+        //    std::cout << stripCount[0] << " " << maxStrips[0] <<  " "
+        //        << stripCount[1] << " " << maxStrips[1] << " " << status << std::endl;
+        //}
    
         floatVector localX(4,0);
+        float loc0, loc1, loc2, loc3;
 
         // get the limits for the dead regions
         // tricky for -1 and nStrips (no limits) because neither is a legal strip number
         int strip = std::max(stripNumber[0], 0);
-        localX[0] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
+        loc0 = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
             (stripNumber[0]==-1 ? _stripPitch : 0);
+        localX[0] = loc0;
 
         strip = std::min(stripNumber[1], _nStrips-1);
-        localX[1] = m_detSvc->stripLocalX(strip) - 0.5*_stripPitch +
+        loc1 = m_detSvc->stripLocalX(strip) - 0.5*_stripPitch +
             (stripNumber[1]==_nStrips ? _stripPitch : 0);
+        localX[1] = loc1;
 
         strip = std::min(stripNumber[2], _nStrips-1);
-        localX[2] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch +
+        loc2 = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch +
             (stripNumber[2]==_nStrips ? _stripPitch : 0);
+        localX[2] = loc2;
 
         strip = std::max(stripNumber[3], 0);
-        localX[3] = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
+        loc3 = m_detSvc->stripLocalX(strip) + 0.5*_stripPitch -
             (stripNumber[3]==-1 ? _stripPitch : 0);
+        localX[3] = loc3;
 
         //std::cout << localX[0] << " " << localX[1] << " "  << localX[2] << " "  
         //  << localX[3] << std::endl;
@@ -255,6 +289,7 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
         int face  = id.getFace();
         int layer, view;
         m_tkrGeom->trayToLayer(tray, face, layer, view);
+        int plane = m_tkrGeom->trayToPlane(tray, face);
         TkrTruncatedPlane& trunc = iter->second;
         int end;
         const intVector& numStrips = trunc.getStripCount();
@@ -264,10 +299,21 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
             int numHits = cableHits[index];
             if (numHits<cableBufferSize) {
                 // skip it
-            } else if (numHits > cableBufferSize) {
-                trunc.setStatusBit(end, TkrTruncatedPlane::CCOVER);
             } else {
+                //std::cout << "trunc numstrps " << numStrips[end] // <==
+                //<< " numHits " << numHits << " trig " 
+                //    << m_diagTool->isSetTrigger(tower, plane, end) << " t/pl/e "
+                //    << tower << " " << plane << " " << end ;
+                if ((numStrips[end]>0) || m_diagTool->isSetTrigger(tower, plane, end)) {
+                    if (numHits > cableBufferSize) {
+                        //std::cout << " greater " << std::endl;
+                trunc.setStatusBit(end, TkrTruncatedPlane::CCOVER);
+                    } else if(cableBufferSize>0)  {
+                        //std::cout << " equal " << std::endl;
                 trunc.setStatusBit(end, TkrTruncatedPlane::CC);
+                        // "if" probably never needed, but easy to do    
+                    } // else { std::cout << "?" << std::endl; }
+                } // else { std::cout << "??" << std::endl; }
             }
         }
     }
@@ -487,4 +533,85 @@ double TkrHitTruncationTool::getDistanceToTruncation(
     double localX = (view==0 ? towerPos.x() : towerPos.y());
     double result = getDistanceToTruncation(tower, tray, face, view, localX);
     return result;
+}
+void TkrHitTruncationTool::addEmptyDigis()
+{
+    StatusCode sc = m_diagTool->getTkrDiagnosticData();
+    // add empty digis for triggers without digis
+    Event::TkrDigiCol::const_iterator ppDigi;
+    SmartDataPtr<Event::TkrDigiCol> digiCol( m_dataSvc, EventModel::Digi::TkrDigiCol );
+    SmartDataPtr<LdfEvent::DiagnosticData> diagTds(m_dataSvc, "/Event/Diagnostic");
+    if (!diagTds) return;
+    int nDiag = diagTds->getNumTkrDiagnostic();
+    unsigned nDigi = digiCol->size();
+    if(nDiag==0) return;
+    //test of elecToGeo
+    int gtcc;
+    int plane, end;
+    int layer, view;
+    /*
+    // test of elecToGeo
+    int gtrc;
+    for(gtcc=0;gtcc<8;++gtcc) {
+        for(gtrc=0;gtrc<9;++gtrc) {
+            m_mapTool->elecToGeo(gtcc, gtrc, plane, end);
+            std::cout << "test: cc " << gtcc << " rc " << gtrc
+                << " plane " << plane << " end " << end << std::endl;
+        }
+    }
+    */
+    int iDiag;
+    for(iDiag=0;iDiag<nDiag;++iDiag) {
+        LdfEvent::TkrDiagnosticData diag = diagTds->getTkrDiagnosticByIndex(iDiag);
+        int dataWord = diag.dataWord();
+        if(dataWord==0) continue;
+        gtcc = diag.gtcc();
+        int tower = diag.tower();
+        int i;
+        int bit = 1;
+        bool found;
+        for (i=0;i<9;++i) {
+            if (dataWord&bit) {
+                m_mapTool->elecToGeo(gtcc, i, plane, end);
+                m_tkrGeom->planeToLayer(plane, layer, view);
+                int index = view + 2*layer + 64*tower;
+                found = false;
+                ppDigi = digiCol->begin();
+                //int iDigi = 0;
+                for (; ppDigi!= digiCol->end()&&!found; ppDigi++) {
+                    // each digi contains the digitized hits from one layer of one tower
+                    Event::TkrDigi* pDigi = *ppDigi;
+                    int thisIndex = pDigi->getView() + 2*pDigi->getBilayer()
+                        + 64*pDigi->getTower().id();
+                    if (thisIndex==index) {
+                        found = true;
+                        break;
+                    }
+                }
+                // if no digi, add a TruncationPlane
+                if(!found) {
+                    // make a new digi
+                    int ToT[2] = {0,0};
+                    idents::GlastAxis::axis axis = (view==0 ? idents::GlastAxis::X : idents::GlastAxis::Y);
+                    Event::TkrDigi* newDigi = new Event::TkrDigi(layer, axis, idents::TowerId(tower),ToT);
+                    digiCol->push_back(newDigi);
+                    //std::cout << "adding digi " << tower << " " << layer << " " 
+                    //    << view << std::endl;
+                }
+            }
+            bit *=2;
+        }
+    }
+    std::sort(digiCol->begin(), digiCol->end(), Event::TkrDigi::digiLess());
+}
+void TkrHitTruncationTool::removeEmptyDigis()
+{
+    SmartDataPtr<Event::TkrDigiCol> digiCol( m_dataSvc, EventModel::Digi::TkrDigiCol );
+    Event::TkrDigiCol::reverse_iterator ppDigiRev;
+    for(ppDigiRev= digiCol->rbegin();ppDigiRev!=digiCol->rend();++ppDigiRev) {
+        Event::TkrDigi* pDigi = *ppDigiRev;
+        if(pDigi->getNumHits()==0) {
+            delete pDigi;
+        }
+    }
 }
