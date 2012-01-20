@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrMapTool.cxx,v 1.2 2010/11/30 19:27:28 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrMapTool.cxx,v 1.3 2011/12/12 20:57:49 heather Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -148,6 +148,6 @@ void TkrMapTool::geoToElec(int plane, int end, int& gtcc, int& gtrc)
 void TkrMapTool::elecToGeo(int gtcc, int gtrc, int& plane, int& end)
 {
     int res = elecToGeo(gtcc, gtrc);
-    plane = res/planeMult;
-    end   = res%planeMult;
+    plane = res;
+    end   = endArray[gtcc];
 }

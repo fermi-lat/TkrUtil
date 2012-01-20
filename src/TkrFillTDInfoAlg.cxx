@@ -10,7 +10,7 @@
 *
 * @author Tracy Usher, Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.3.8.1 2010/09/09 14:03:22 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.4 2011/12/12 20:57:49 heather Exp $
 */
 
 #include "GaudiKernel/DataSvc.h"
@@ -261,10 +261,12 @@ StatusCode TkrFillTDInfoAlg::execute()
                 LdfEvent::TkrDiagnosticData tkrDiagTDS 
                     = diagTds2->getTkrDiagnosticByIndex(ind);
                 int dataword = tkrDiagTDS.dataWord();
-                if (dataword!=0) nNonZero++;
+                if (dataword!=0) {
+                    nNonZero++;
                 log << ind << " " 
                     << tkrDiagTDS.tower() << " " << tkrDiagTDS.gtcc() << " " 
                     << tkrDiagTDS.dataWord() << endreq;
+                }
             }
         }
         log << numTkrDiag 
