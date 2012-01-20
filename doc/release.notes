@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-22-10-gr01 20-Jan-2012  lsrea cc cable truncation code on v19r4p1 branch
  TkrUtil-03-22-10 24-Jul-2011  lsrea fixed the collision in the ghost status bits
  TkrUtil-03-22-09 14-Jul-2011  lsrea Tracy's fix to my fix
  TkrUtil-03-22-08 10-Jul-2011  lsrea fix bug I introduced in TkrMakeClustersTool
