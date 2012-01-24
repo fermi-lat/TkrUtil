@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.12 2011/06/09 04:09:02 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.13 2011/07/24 20:16:04 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -281,6 +281,8 @@ StatusCode TkrGhostTool::flagSingles()
 
     log << MSG::DEBUG << "****************New Event****************" << endreq;
 
+    if (!clusterCol) return sc;
+
     int clusSize = clusterCol->size();
     int i;
     for (i=0;i<clusSize;++i) {
@@ -343,6 +345,8 @@ StatusCode TkrGhostTool::flagEarlyHits(Event::TkrClusterCol* clusterCol)
             pClusterCol(m_dataSvc, EventModel::TkrRecon::TkrClusterCol);
         clusterCol = pClusterCol;
     }
+
+    if(!clusterCol) return StatusCode::SUCCESS;
 
     // clear the bits to start
     int clusSize = clusterCol->size();
@@ -462,6 +466,8 @@ StatusCode TkrGhostTool::flagEarlyHits(Event::TkrClusterCol* clusterCol)
 
 void TkrGhostTool::flagToT255Hits(Event::TkrClusterCol* clusterCol)
 {
+    if(!clusterCol) return;
+
     int clusSize = clusterCol->size();
     int i;
     for (i=0;i<clusSize;++i) {
@@ -474,6 +480,8 @@ int TkrGhostTool::flagHitsFromDiag(Event::TkrClusterCol* clusterCol)
 {
     MsgStream log(msgSvc(), name());
  
+    if(!clusterCol) return 0;
+
     int clusSize = clusterCol->size();
     int nDiagBits = 0;
     int tower;
@@ -525,6 +533,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
     //    trackCol(m_dataSvc, EventModel::TkrRecon::TkrTrackCol);
 
     int trackCount = 0;
+
     unsigned int itk;
     
     //Event::TkrTrackColConPtr tcolIter = trackCol->begin();
@@ -613,6 +622,8 @@ StatusCode TkrGhostTool::flagEarlyVertices()
     SmartDataPtr<Event::TkrVertexCol> 
         vertexCol(m_dataSvc, EventModel::TkrRecon::TkrVertexCol);
 
+    if(!vertexCol) return sc;
+
     //int vertexCount = 0;
     Event::TkrVertexConPtr tcolIter = vertexCol->begin();
     for(; tcolIter!=vertexCol->end(); ++tcolIter) {
@@ -650,6 +661,7 @@ StatusCode TkrGhostTool::flagEarlyCalClusters()
 
     // Get all the tracks from the tracker.
     std::vector<Event::TkrTrack*> trackVec = m_trackVecTool->getTrackVec();
+
     unsigned int trackCount, itk;
     double minDoca;
 
