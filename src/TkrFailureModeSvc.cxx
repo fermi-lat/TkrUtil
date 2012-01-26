@@ -2,7 +2,7 @@
 // for the Tkr.
 // 
 //
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.19 2006/03/21 01:15:48 usher Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFailureModeSvc.cxx,v 1.20 2006/11/02 19:34:48 lsrea Exp $
 //
 // Author: L. Rochester (after Richard Dubois)
 
@@ -21,8 +21,9 @@ namespace {
 }
 
 // declare the service factories for the TkrFailureModeSvc
-static SvcFactory<TkrFailureModeSvc> a_factory;
-const ISvcFactory& TkrFailureModeSvcFactory = a_factory; 
+//static SvcFactory<TkrFailureModeSvc> a_factory;
+//const ISvcFactory& TkrFailureModeSvcFactory = a_factory; 
+DECLARE_SERVICE_FACTORY(TkrFailureModeSvc);
 
 TkrFailureModeSvc::TkrFailureModeSvc(const std::string& name,ISvcLocator* svc) : Service(name,svc)
 {

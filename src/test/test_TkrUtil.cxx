@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.5 2005/02/11 07:12:54 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/test/test_TkrUtil.cxx,v 1.7 2011/12/12 20:57:50 heather Exp $
 
 // Include files
 // Gaudi system includes
@@ -42,8 +42,9 @@ private:
 // expect that the xxx_load.cxx file contains a call     
 //     DLL_DECL_ALGORITHM( test_TkrUtil );
 
-static const AlgFactory<test_TkrUtil>  Factory;
-const IAlgFactory& test_TkrUtilFactory = Factory;
+//static const AlgFactory<test_TkrUtil>  Factory;
+//const IAlgFactory& test_TkrUtilFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(test_TkrUtil);
 
 //! ctor
 test_TkrUtil::test_TkrUtil(const std::string& name, ISvcLocator* pSvcLocator)

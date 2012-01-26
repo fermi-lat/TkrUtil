@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.43 2008/05/20 01:14:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.44 2009/04/03 09:44:49 kuss Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -34,8 +34,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.43 200
 #include <string.h>
 #include <cctype>
 
-static const SvcFactory<TkrAlignmentSvc> s_factory;
-const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
+//static const SvcFactory<TkrAlignmentSvc> s_factory;
+//const ISvcFactory& TkrAlignmentSvcFactory = s_factory;
+DECLARE_SERVICE_FACTORY(TkrAlignmentSvc);
 
 
 // Service parameters which can be set at run time must be declared.

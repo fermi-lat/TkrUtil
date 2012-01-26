@@ -6,7 +6,7 @@
 First version 3-Jun-2001
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.23 2006/03/21 01:15:48 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.26 2011/12/12 20:57:49 heather Exp $
 */
 
 
@@ -28,8 +28,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrBadStripsSvc.cxx,v 1.23 200
 
 #include "facilities/Util.h"
 
-static const SvcFactory<TkrBadStripsSvc> s_factory;
-const ISvcFactory& TkrBadStripsSvcFactory = s_factory;
+//static const SvcFactory<TkrBadStripsSvc> s_factory;
+//const ISvcFactory& TkrBadStripsSvcFactory = s_factory;
+DECLARE_SERVICE_FACTORY(TkrBadStripsSvc);
 
 namespace {
     const std::string mType[2] = {"SIM", "REC"};
@@ -289,7 +290,7 @@ void TkrBadStripsSvc::readFromFile(std::ifstream* file)
         int layer, view;
         m_tkrGeom->planeToLayer(plane, layer, view);
 
-        stripCol* v;
+        stripCol* v = 0;
         // my private use of getBadStrips requires non-const pointer
         // to build the vector of bad strips...
         // but public uses should return const pointer, so...

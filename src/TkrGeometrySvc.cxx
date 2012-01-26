@@ -15,8 +15,9 @@
 #include <iostream>
 #include <algorithm>
 
-static const SvcFactory<TkrGeometrySvc> s_factory;
-const ISvcFactory& TkrGeometrySvcFactory = s_factory;
+//static const SvcFactory<TkrGeometrySvc> s_factory;
+//const ISvcFactory& TkrGeometrySvcFactory = s_factory;
+DECLARE_SERVICE_FACTORY(TkrGeometrySvc);
 
 //------------------------------------------------------------------------------
 /// Service parameters which can be set at run time must be declared.
@@ -31,7 +32,7 @@ Service(name, pSvcLocator)
     declareProperty("layerSeparation", m_layerSeparation = 8.0);
     declareProperty("radLenCut", m_radLenCut = 0.10);
     declareProperty("activeOffset", m_activeOffset = 40.0);
-
+    declareProperty("doXray", m_doXray = false);
     return; 
 }
 
@@ -95,6 +96,7 @@ StatusCode TkrGeometrySvc::initialize()
         return sc;
     }
 
+
     // now we know what the layers are, so:
     makeLayerIds();
 
@@ -136,37 +138,40 @@ StatusCode TkrGeometrySvc::initialize()
 
     // Get the failure mode service 
     m_tkrFail = 0;
-    if( service( "TkrFailureModeSvc", m_tkrFail, true).isFailure() ) {
-        log << MSG::INFO << "Couldn't set up TkrFailureModeSvc" << endreq;
-        log << "Will assume it is not required"    << endreq;
-    }
+    // HMK Hack to get around circular init of TkrGeomSvc and TkrFailureModeSvc
+    // The TkrFailureModeSvc will be retrieved when a call is made to 
+    // getTkrFailureModeSvc
+    //if( service( "TkrFailureModeSvc", m_tkrFail, true).isFailure() ) {
+    //    log << MSG::INFO << "Couldn't set up TkrFailureModeSvc" << endreq;
+    //    log << "Will assume it is not required"    << endreq;
+   // }
 
     // Get the alignment service 
     m_tkrAlign = 0;
-    if( service( "TkrAlignmentSvc", m_tkrAlign, true).isFailure() ) {
-        log << MSG::ERROR << "Couldn't set up TkrAlignmentSvc" << endreq;
-        return StatusCode::FAILURE;
+//    if( service( "TkrAlignmentSvc", m_tkrAlign, true).isFailure() ) {
+//        log << MSG::ERROR << "Couldn't set up TkrAlignmentSvc" << endreq;
+//        return StatusCode::FAILURE;
         //log << "Will assume it is not required"    << endreq;
-    }
+//    }
     // Get the bad strips service
     m_badStrips = 0;
-    if( service( "TkrBadStripsSvc", m_badStrips, true).isFailure() ) {
-        log << MSG::ERROR << "Couldn't set up TkrBadStripsSvc" << endreq;
-        return StatusCode::FAILURE;
+    //if( service( "TkrBadStripsSvc", m_badStrips, true).isFailure() ) {
+    //    log << MSG::ERROR << "Couldn't set up TkrBadStripsSvc" << endreq;
+    //    return StatusCode::FAILURE;
         //log << "Will assume it is not required"    << endreq;
-    }
+    //}
     // get the splits service
     m_tkrSplits = 0;
-    if( service( "TkrSplitsSvc", m_tkrSplits, true).isFailure() ) {
-        log << MSG::ERROR << "Couldn't set up TkrSplitsSvc" << endreq;
-        return StatusCode::FAILURE;
-    }
+    //if( service( "TkrSplitsSvc", m_tkrSplits, true).isFailure() ) {
+    //    log << MSG::ERROR << "Couldn't set up TkrSplitsSvc" << endreq;
+    //    return StatusCode::FAILURE;
+   // }
     // get the ToT service
     m_tkrToT    = 0;
-    if( service( "TkrToTSvc", m_tkrToT, true).isFailure() ) {
-        log << MSG::ERROR << "Couldn't set up TkrToTSvc" << endreq;
-        return StatusCode::FAILURE;
-    }
+    //if( service( "TkrToTSvc", m_tkrToT, true).isFailure() ) {
+    //    log << MSG::ERROR << "Couldn't set up TkrToTSvc" << endreq;
+    //    return StatusCode::FAILURE;
+   // }
 
     log << MSG::INFO << "TkrGeometrySvc successfully initialized" << endreq;
     return StatusCode::SUCCESS;
@@ -178,6 +183,55 @@ StatusCode TkrGeometrySvc::finalize()
     MsgStream log(msgSvc(), name());
     log << MSG::INFO << "TkrGeometrySvc finalize called" << endreq;
     return StatusCode::SUCCESS;
+}
+
+bool TkrGeometrySvc::setupTkrFailureModeSvc() {
+    MsgStream log(msgSvc(), name());
+    if( service( "TkrFailureModeSvc", m_tkrFail, true).isFailure() ) {
+        log << MSG::INFO << "Couldn't set up TkrFailureModeSvc" << endreq;
+        log << "Will assume it is not required"    << endreq;
+        return false;
+    }
+    return true;
+
+}
+
+bool TkrGeometrySvc::setupTkrBadStripsSvc() {
+    MsgStream log(msgSvc(), name());
+    if( service( "TkrBadStripsSvc", m_badStrips, true).isFailure() ) {
+       log << MSG::ERROR << "Couldn't set up TkrBadStripsSvc" << endreq;
+       return false;
+   }
+   return true;
+}
+
+bool TkrGeometrySvc::setupTkrAlignmentSvc() {
+    MsgStream log(msgSvc(), name());
+    if( service( "TkrAlignmentSvc", m_tkrAlign, true).isFailure() ) {
+        log << MSG::ERROR << "Couldn't set up TkrAlignmentSvc" << endreq;
+        return false;
+    }
+    return true;
+
+}
+
+bool TkrGeometrySvc::setupTkrSplitsSvc() {
+    MsgStream log(msgSvc(), name());
+    if( service( "TkrSplitsSvc", m_tkrSplits, true).isFailure() ) {
+        log << MSG::ERROR << "Couldn't set up TkrSplitsSvc" << endreq;
+        return false;
+    }
+    return true;
+}
+
+bool TkrGeometrySvc::setupTkrToTSvc() {
+    MsgStream log(msgSvc(), name());
+    if( service( "TkrToTSvc", m_tkrToT, true).isFailure() ) {
+        log << MSG::ERROR << "Couldn't set up TkrToTSvc" << endreq;
+        return false;
+    }
+    return true;
+
 }
 
 HepPoint3D TkrGeometrySvc::getStripPosition(int tower, int layer, int view, 
@@ -604,7 +658,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
             break;
         }
     }
-
+    
     maxLayerNum++;
     maxTrayNum++;
 
@@ -650,6 +704,7 @@ StatusCode TkrGeometrySvc::fillPropagatorInfo()
         << " aveConv " << m_aveRadLenConv[ind] << " aveRest " << m_aveRadLenRest[ind]
         << endreq;
     }  
+            
     log<< MSG::INFO << endreq;
 
     return sc;
@@ -904,6 +959,7 @@ StatusCode TkrGeometrySvc::getVolumeInfo()
     m_isTopPlaneInLayer[lastPlane] = (m_planeToLayer[lastPlane]==m_planeToLayer[lastPlane-1]);
 
     m_numLayers[ALL]  = ++layer;
+
     return StatusCode::SUCCESS;
 }
 
@@ -1000,6 +1056,7 @@ double TkrGeometrySvc::truncateCoord( double x, double pitch,
     double xMod = xScaled + delta;
     int theFloor = (int) floor(xMod);
     elementNumber = theFloor + numElements/2;
+ 
     // if it's outside the actual element, assign the closest
     // this will not happen for real hits, but may for extrapolated hits
     // or transformed hits.
@@ -1075,3 +1132,4 @@ bool TkrGeometrySvc::inTower(int view, const Point p, int& iXTower, int& iYTower
     }
     return isInTower;
 }
+
