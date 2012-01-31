@@ -32,7 +32,6 @@ Service(name, pSvcLocator)
     declareProperty("layerSeparation", m_layerSeparation = 8.0);
     declareProperty("radLenCut", m_radLenCut = 0.10);
     declareProperty("activeOffset", m_activeOffset = 40.0);
-    declareProperty("doXray", m_doXray = false);
     return; 
 }
 
