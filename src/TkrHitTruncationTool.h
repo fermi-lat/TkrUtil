@@ -7,7 +7,7 @@
 * @brief This tool analyzes the digis to infer truncation
 *        
 * File and Version Information:
-*      $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.h,v 1.1 2011/03/26 22:32:12 lsrea Exp $
+*      $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.h,v 1.1.34.1 2012/01/20 01:55:28 lsrea Exp $
 */
 
 
@@ -50,6 +50,9 @@ public:
     double getDistanceToTruncation(int tower, int plane, Vector towerPos);
     void addEmptyDigis();
     void removeEmptyDigis();
+    StatusCode trimDigis();
+    void removeEmptyTruncs();
+    void setTrimCount(int trimCount) { m_trimCount = trimCount; }
 
 private:
     /// Pointer to the local Tracker geometry service
@@ -65,12 +68,19 @@ private:
 
     bool m_newEvent;
 
+    bool m_trimDigis;
+    int  m_trimCount;
+
     Event::TkrTruncationInfo::TkrTruncationMap* m_truncMap;
+    Event::TkrDigiCol*                          m_digiCol;
+    Event::TkrTruncationInfo*                   m_truncationInfo;
 
     /// this is called by the incident service at the beginning of an event
     void handle(const Incident& inc);
-    bool m_trimDigis;
-    int  m_trimCount;
+
+    void doRCLoop();
+    StatusCode setPointers();
+    StatusCode newEvent();
 
 };
 
