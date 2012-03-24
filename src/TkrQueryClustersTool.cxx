@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.17 2005/10/07 23:08:58 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.21.70.1 2012/02/02 17:35:20 usher Exp $
 
 // Include files
 
@@ -46,9 +46,7 @@ public:
         const std::string& name, 
         const IInterface* parent);
     
-    virtual ~TkrQueryClustersTool() {
-        if(!m_nullVec) delete m_nullVec;
-    }
+    virtual ~TkrQueryClustersTool() {}
 
     StatusCode initialize();
     
@@ -89,12 +87,28 @@ public:
 
     const Event::TkrClusterVec  getClustersReverseLayer(int view, int layer) const;
     const Event::TkrClusterVec  getClusters(int view, int layer) const;
-    const Event::TkrClusterVec& getClusters(const idents::TkrId& tkrId) const;
+    const Event::TkrClusterVec  getClusters(const idents::TkrId& tkrId) const;
     const Event::TkrClusterVec  getBadClusters(int view, int layer) const;
-    const Event::TkrClusterVec& getBadClusters(const idents::TkrId& tkrId) const;
+    const Event::TkrClusterVec  getBadClusters(const idents::TkrId& tkrId) const;
+
+    Event::TkrClusterVec getFilteredClusters(const Event::TkrClusterVec& inVec) const;
+
 
     /// actual width of a cluster, including gaps
     double clusterWidth(Event::TkrCluster* cluster) const;
+
+    const void setFilter(filterType type) const {
+        if (type==ALL) {
+            m_useGhostHits = true;
+            m_useNormalHits = true;
+        } else if (type==NORMAL) {
+            m_useGhostHits = false;
+            m_useNormalHits = true;
+        } else {
+            m_useGhostHits = true;
+            m_useNormalHits = false;
+        }
+    }
 
 private:
     Event::TkrCluster* nearestClusterOutsideX(int v, int layer, 
@@ -110,11 +124,14 @@ private:
 
 
     const Event::TkrClusterVec getClustersX(int view, int layer, clusterType type) const;
-    const Event::TkrClusterVec& getClustersX(const idents::TkrId& tkrId, clusterType type) const;
+    const Event::TkrClusterVec getClustersX(const idents::TkrId& tkrId, clusterType type) const;
 
     /// Checks that a layer number is in the correct range, and sets some variables
     bool validLayer(int layer, clusterType type=STANDARDCLUSTERS) const;
     void initIdMap() const;
+
+    mutable bool m_useGhostHits;
+    mutable bool m_useNormalHits;
 
     // some pointers to services
     
@@ -136,7 +153,7 @@ private:
     /// THE table of life
     mutable TkrViewLayerIdMap m_ViewLayerIdMap;
     /// something to return if there are no clusters
-    Event::TkrClusterVec* m_nullVec;
+    Event::TkrClusterVec      m_nullVec;
 };
 
 // Static factory for instantiation of algtool objects
@@ -160,12 +177,14 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
     //   the active area of one tower will be matched with hits in another tower along
     //   the unmeasured direction.
 
-    declareProperty("towerFactor",              m_towerFactor = 0.55 );
+    declareProperty("towerFactor",       m_towerFactor = 0.55 );
 
+    declareProperty("useGhostHits",  m_useGhostHits  = true );
+    declareProperty("useNormalHits", m_useNormalHits = true );
 
     //m_pClus     = 0;
     m_idClusMap = 0;
-    m_nullVec   = 0;
+    m_nullVec.clear();
     m_ViewLayerIdMap.clear();
 }
 
@@ -187,7 +206,6 @@ StatusCode TkrQueryClustersTool::initialize()
 
         m_pBadStrips = m_tkrGeom->getTkrBadStripsSvc();
         m_badIdClusMap = 0;
-        m_nullVec = new Event::TkrClusterVec;
 
         // test distance (in unmeasured view)
         m_testDistance = m_towerFactor*m_tkrGeom->towerPitch();
@@ -242,7 +260,7 @@ bool TkrQueryClustersTool::validLayer(int layer, clusterType type) const
     }
 
     // check for valid layer
-    return (layer>=0 && layer < m_tkrGeom->numLayers());
+    return (m_idClusMap && layer>=0 && layer < m_tkrGeom->numLayers());
 };
 
 const Event::TkrClusterVec TkrQueryClustersTool::getClustersReverseLayer(
@@ -268,9 +286,7 @@ const Event::TkrClusterVec TkrQueryClustersTool::getBadClusters(
 const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
     int view, int layer, clusterType type) const
 {
-    Event::TkrClusterVec clusVec;
-
-    if (!validLayer(layer, type)) return clusVec;
+    if (!validLayer(layer, type)) return m_nullVec;
 
     if (m_ViewLayerIdMap.size() == 0) initIdMap();
 
@@ -286,11 +302,14 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
     {
         idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
                                                          EventModel::TkrRecon::TkrIdClusterMap);
+        if (!idClusMap) return m_nullVec;
     }
     else {
-        if(!m_badIdClusMap) return clusVec;
+        if(!m_badIdClusMap) return m_nullVec;
         idClusMap = m_badIdClusMap;
     }
+
+    Event::TkrClusterVec clusVec;
 
     TkrViewLayerIdMap::const_iterator clusIdIter = clusIdRange.first;
     for(; clusIdIter != clusIdRange.second; clusIdIter++)
@@ -303,37 +322,77 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
         clusVec.insert(clusVec.end(),newClus.begin(),newClus.end());
     }
 
-    return clusVec;
+    return (type==STANDARDCLUSTERS ? getFilteredClusters(clusVec) : clusVec);
 }
     
-const Event::TkrClusterVec& TkrQueryClustersTool::getClusters(
+const Event::TkrClusterVec TkrQueryClustersTool::getClusters(
     const idents::TkrId& tkrId) const
 {
     return getClustersX(tkrId, STANDARDCLUSTERS);
 }
 
-const Event::TkrClusterVec& TkrQueryClustersTool::getBadClusters(
+const Event::TkrClusterVec TkrQueryClustersTool::getBadClusters(
     const idents::TkrId& tkrId) const
 {
     return getClustersX(tkrId, BADCLUSTERS);
 }
 
-const Event::TkrClusterVec& TkrQueryClustersTool::getClustersX(
+const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
     const idents::TkrId& tkrId, clusterType type) const
 {
      if(type==STANDARDCLUSTERS) {
         m_idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
             EventModel::TkrRecon::TkrIdClusterMap);
-        return (*m_idClusMap)[tkrId];
+        if (!m_idClusMap) return m_nullVec;
+        Event::TkrClusterVec outVec = getFilteredClusters((*m_idClusMap)[tkrId]);
+        return outVec;
+
      } else {
          if (m_pBadStrips->getBadIdClusterMap()){
              int size = (m_pBadStrips->getBadIdClusterMap())->size();
-             return ( size ? (*(m_pBadStrips->getBadIdClusterMap()))[tkrId] : *m_nullVec);
+             return ( size ? (*(m_pBadStrips->getBadIdClusterMap()))[tkrId] : m_nullVec);
          } else {
-             return *m_nullVec;
+             return m_nullVec;
          }
      }
 }
+
+Event::TkrClusterVec TkrQueryClustersTool::getFilteredClusters( const Event::TkrClusterVec& inVec)
+ const {
+    // This method filters the clusters suppplied to the client, depending on the state of the
+    // member variables m_useGhostHits and m_useNormalHits (Defaut: true).
+    // the method (setFilter(filterType) with filterType = ALL, NORMAL or GHOSTS does the right thing.
+    //
+    // The test for ghost hits is to OR the status word with maskZAPGHOSTS, which has
+    // every ghost bit set.
+    
+
+    // a test
+    //setFilter(GHOSTS);
+
+     //std::cout << "this is a test" << std::endl;
+    
+
+    Event::TkrClusterVec outVec;
+
+    unsigned inVecSize = inVec.size();
+
+    if((m_useNormalHits&&m_useGhostHits) || inVecSize==0) { 
+        outVec = inVec; 
+    } else {
+        unsigned i;
+        for (i=0;i<inVecSize;++i) {
+            int status = inVec[i]->getStatusWord();
+            if((m_useGhostHits && (status&Event::TkrCluster::maskZAPGHOSTS)!=0)
+                || (m_useNormalHits && (status&Event::TkrCluster::maskZAPGHOSTS)==0)) {
+                    outVec.push_back(inVec[i]);
+            }
+        }
+    }
+        
+    return outVec;
+}
+
 
 Point TkrQueryClustersTool::nearestHitOutside(
     int view, int layer, double inDistance, 
@@ -543,4 +602,5 @@ double TkrQueryClustersTool::clusterWidth(Event::TkrCluster* cluster) const
     double width = size*m_tkrGeom->siStripPitch() 
         + nGaps*(2*m_tkrGeom->siDeadDistance() + m_tkrGeom->ladderGap());
     return width;
+
 }
