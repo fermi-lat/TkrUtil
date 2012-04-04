@@ -6,7 +6,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.4 2011/05/31 03:04:58 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrDiagnosticTool.cxx,v 1.5.2.2 2012/02/06 19:22:46 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -204,24 +204,25 @@ StatusCode TkrDiagnosticTool::getTkrDiagnosticData()
     int ind;
     int numTkrDiag = diagTds->getNumTkrDiagnostic();
     //int numCalDiag = diagTds->getNumCalDiagnostic();
-    log << MSG::DEBUG;
+    int nNonZero = 0;
+    log << MSG::VERBOSE;
     if(log.isActive()) {
-        int nNonZero = 0;
         if (numTkrDiag>0) {
             for (ind = 0; ind < numTkrDiag; ind++) {
                 LdfEvent::TkrDiagnosticData tkrDiagTds = diagTds->getTkrDiagnosticByIndex(ind);
                 int dataword = tkrDiagTds.dataWord();
-                if (dataword!=0) nNonZero++;
-                std::cout << "TkrDiagData: " << ind << " " 
+                if (dataword!=0){
+                   nNonZero++;
+                   log << MSG::VERBOSE << "TkrDiagData: " << ind << " " 
                     << tkrDiagTds.tower() << " " << tkrDiagTds.gtcc() << " " 
-                    << dataword << std::endl;
+                    << dataword << endreq;
+                }
             }
         }
-        log << numTkrDiag 
-            << " Tkr diagnostic records found, " 
-            << nNonZero << " non-zero";
     }
-    log << endreq;
+
+    log << MSG::DEBUG << numTkrDiag 
+        << " Tkr diagnostic records found, " << nNonZero << " non-zero" << endreq;
 
     if(numTkrDiag==0) return StatusCode::FAILURE;
 

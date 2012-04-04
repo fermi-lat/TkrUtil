@@ -6,7 +6,7 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.2.32.1 2012/01/20 01:55:28 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.4.2.2 2012/02/06 19:22:46 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -729,3 +729,4 @@ void TkrHitTruncationTool::removeEmptyTruncs()
     numRCTrunc += m_truncationInfo->getNumRCTruncated();
     numCCTrunc += m_truncationInfo->getNumCCTruncated();
 }
+
