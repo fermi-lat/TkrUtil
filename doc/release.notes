@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-22-10-gr05 18-Apr-2012  lsrea mods for truncation
  TkrUtil-03-22-10-gr04 03-Feb-2012  lsrea mods to TkrHitTruncationTool for 'software truncation'
  TkrUtil-03-22-10-gr03  2-Feb-2012 TU Check for valid idClusMap pointer in query clusters tool to prevent crash
  TkrUtil-03-22-10-gr02 23-Jan-2012  lsrea Fix for no clusterCol bug
