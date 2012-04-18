@@ -6,7 +6,7 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.2.32.1 2012/01/20 01:55:28 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.2.32.2 2012/02/03 19:30:15 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -206,15 +206,12 @@ StatusCode TkrHitTruncationTool::analyzeDigis()
                 }
                 if ((nStrips>0&&numHits>=cableBufferSize)) {
                     if (numHits > cableBufferSize) {
-                        //std::cout << " greater " << std::endl;
                         trunc.setStatusBit(end, TkrTruncatedPlane::CCOVER);
                     } else if(cableBufferSize>0)  {
-                        //std::cout << " equal " << std::endl;
                         trunc.setStatusBit(end, TkrTruncatedPlane::CC);
-                        // "if" probably never needed, but easy to do    
-                    } // else { std::cout << "?" << std::endl; }
-                } // else { std::cout << "??" << std::endl; }
             }
+        }
+    }
         }
     }
     return sc;
@@ -510,11 +507,8 @@ void TkrHitTruncationTool::doRCLoop()
             int thisStripCount = stripCount[end];
             if (thisStripCount<maxStrips[end]) {
                 // do nothing
-            } else if (stripCount[end]>maxStrips[end]) {
+            } else if (maxStrips[end]>0) {
                 TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RCOVER);
-            } else  {
-                // if maxStrips is zero, this will always be satified! so check for that
-                if(maxStrips[end]>0) TkrTruncatedPlane::addStatusBit(status, end, TkrTruncatedPlane::RC);
             }
         }
 
@@ -654,6 +648,7 @@ void TkrHitTruncationTool::removeEmptyTruncs()
  
     if (!m_truncationInfo || !m_truncMap) {
         log << MSG::DEBUG << "no info to start with! " << endreq;
+        return;
     }
 
     std::vector<TkrTruncationInfo::TkrTruncationMap::iterator> iterVec;
