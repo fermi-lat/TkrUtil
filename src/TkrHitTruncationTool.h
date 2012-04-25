@@ -7,7 +7,7 @@
 * @brief This tool analyzes the digis to infer truncation
 *        
 * File and Version Information:
-*      $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.h,v 1.3 2012/01/20 19:22:56 lsrea Exp $
+*      $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.h,v 1.4 2012/04/25 04:54:10 heather Exp $
 */
 
 
@@ -67,9 +67,6 @@ private:
     ITkrMapTool*        m_mapTool;
 
     bool m_newEvent;
-
-    bool m_trimDigis;
-    int  m_trimCount;
 
     Event::TkrTruncationInfo::TkrTruncationMap* m_truncMap;
     Event::TkrDigiCol*                          m_digiCol;
