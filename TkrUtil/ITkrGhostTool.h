@@ -6,21 +6,15 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.7 2010/04/08 20:54:04 lsrea Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrGhostTool.h,v 1.8.28.1 2012/04/18 21:20:39 lsrea Exp $
  */
 #ifndef ITkrGhostTool_h
 #define ITkrGhostTool_h
 
-//namespace {
-//    // set the fields in the indices
-//    const int viewMult  = 1;
-//    const int layerMult = 2;
-//    const int towerMult = 1000;
-//}
 
 #include "GaudiKernel/IAlgTool.h"
 
-#include "TkrUtil/TkrTowerBits.h"
+
 
 static const InterfaceID IID_ITkrGhostTool("ITkrGhostTool", 3 , 0);
 class ITkrGhostTool : virtual public IAlgTool
@@ -31,9 +25,9 @@ public:
 
     virtual StatusCode getTkrVector(unsigned short& tkrVector) = 0;
     virtual StatusCode calculateTkrVector(
-        Event::TkrClusterCol* pCol, unsigned short& towerBits) = 0;
+        Event::TkrClusterCol* pCol, unsigned short& trigBits) = 0;
     virtual StatusCode calculateTkrVector(
-        Event::TkrDigiCol* pCol, unsigned short& towerBits) = 0;
+        Event::TkrDigiCol* pCol, unsigned short& trigBits) = 0;
     virtual StatusCode flagSingles()   = 0;
     virtual StatusCode flagEarlyHits(Event::TkrClusterCol* col=0) = 0;
     virtual StatusCode flagEarlyTracks() = 0;

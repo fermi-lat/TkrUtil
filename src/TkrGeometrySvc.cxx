@@ -1118,7 +1118,6 @@ double TkrGeometrySvc::truncateCoord( double x, double pitch,
     if(deltaN!=0) {
         theFloor += deltaN;
     }
- 
     // if it's outside the actual element, assign the closest
     // this will not happen for real hits, but may for extrapolated hits
     // or transformed hits.

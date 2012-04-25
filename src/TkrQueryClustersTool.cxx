@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.21.8.1 2010/09/09 14:03:23 heather Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.22 2011/12/12 20:57:49 heather Exp $
 
 // Include files
 
@@ -46,9 +46,7 @@ public:
         const std::string& name, 
         const IInterface* parent);
     
-    virtual ~TkrQueryClustersTool() {
-        if(!m_nullVec) delete m_nullVec;
-    }
+    virtual ~TkrQueryClustersTool() {}
 
     StatusCode initialize();
     
@@ -155,7 +153,7 @@ private:
     /// THE table of life
     mutable TkrViewLayerIdMap m_ViewLayerIdMap;
     /// something to return if there are no clusters
-    Event::TkrClusterVec* m_nullVec;
+    Event::TkrClusterVec      m_nullVec;
 };
 
 // Static factory for instantiation of algtool objects
@@ -187,7 +185,7 @@ TkrQueryClustersTool::TkrQueryClustersTool(const std::string& type,
 
     //m_pClus     = 0;
     m_idClusMap = 0;
-    m_nullVec   = 0;
+    m_nullVec.clear();
     m_ViewLayerIdMap.clear();
 }
 
@@ -209,7 +207,6 @@ StatusCode TkrQueryClustersTool::initialize()
 
         m_pBadStrips = m_tkrGeom->getTkrBadStripsSvc();
         m_badIdClusMap = 0;
-        m_nullVec = new Event::TkrClusterVec;
 
         // test distance (in unmeasured view)
         m_testDistance = m_towerFactor*m_tkrGeom->towerPitch();
@@ -264,7 +261,7 @@ bool TkrQueryClustersTool::validLayer(int layer, clusterType type) const
     }
 
     // check for valid layer
-    return (layer>=0 && layer < m_tkrGeom->numLayers());
+    return (m_idClusMap && layer>=0 && layer < m_tkrGeom->numLayers());
 };
 
 const Event::TkrClusterVec TkrQueryClustersTool::getClustersReverseLayer(
@@ -290,9 +287,7 @@ const Event::TkrClusterVec TkrQueryClustersTool::getBadClusters(
 const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
     int view, int layer, clusterType type) const
 {
-    Event::TkrClusterVec clusVec;
-
-    if (!validLayer(layer, type)) return clusVec;
+    if (!validLayer(layer, type)) return m_nullVec;
 
     if (m_ViewLayerIdMap.size() == 0) initIdMap();
 
@@ -308,11 +303,14 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
     {
         idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
                                                          EventModel::TkrRecon::TkrIdClusterMap);
+        if (!idClusMap) return m_nullVec;
     }
     else {
-        if(!m_badIdClusMap) return clusVec;
+        if(!m_badIdClusMap) return m_nullVec;
         idClusMap = m_badIdClusMap;
     }
+
+    Event::TkrClusterVec clusVec;
 
     TkrViewLayerIdMap::const_iterator clusIdIter = clusIdRange.first;
     for(; clusIdIter != clusIdRange.second; clusIdIter++)
@@ -346,16 +344,16 @@ const Event::TkrClusterVec TkrQueryClustersTool::getClustersX(
      if(type==STANDARDCLUSTERS) {
         m_idClusMap = SmartDataPtr<Event::TkrIdClusterMap>(m_pEventSvc, 
             EventModel::TkrRecon::TkrIdClusterMap);
-        //return (*m_idClusMap)[tkrId];
+        if (!m_idClusMap) return m_nullVec;
         Event::TkrClusterVec outVec = getFilteredClusters((*m_idClusMap)[tkrId]);
         return outVec;
 
      } else {
          if (m_pBadStrips->getBadIdClusterMap()){
              int size = (m_pBadStrips->getBadIdClusterMap())->size();
-             return ( size ? (*(m_pBadStrips->getBadIdClusterMap()))[tkrId] : *m_nullVec);
+             return ( size ? (*(m_pBadStrips->getBadIdClusterMap()))[tkrId] : m_nullVec);
          } else {
-             return *m_nullVec;
+             return m_nullVec;
          }
      }
 }

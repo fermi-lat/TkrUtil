@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-26-00 24-Apr-2012 heather Merge GlastReleasev19r4p1 branch
  TkrUtil-03-25-01 20-Jan-2012  lsrea mods for cable truncation
  TkrUtil-03-25-00 20-Jan-2012  lsrea mods for cable truncation
  TkrUtil-03-24-04 16-Jan-2012    hmk mods for windows
@@ -12,6 +13,13 @@
  TkrUtil-03-24-01 13-Dec-2011  jrb   patch SConscript
  TkrUtil-03-24-00 09-Dec-2011  hmk   Merge in Gaudi v21r7 updates
  TkrUtil-03-23-00 19-Oct-2011  lsrea 1) fix truncateCoord to handle outside edges of wafer/ladder 2 ) fix TkrHitTruncationTool to handle alternating readout configs
+ -- End GlastReleasev19r4p1 branch
+ TkrUtil-03-22-10-gr05 18-Apr-2012  lsrea mods for truncation
+ TkrUtil-03-22-10-gr04 03-Feb-2012  lsrea mods to TkrHitTruncationTool for 'software truncation'
+ TkrUtil-03-22-10-gr03  2-Feb-2012 TU Check for valid idClusMap pointer in query clusters tool to prevent crash
+ TkrUtil-03-22-10-gr02 23-Jan-2012  lsrea Fix for no clusterCol bug
+ TkrUtil-03-22-10-gr01 20-Jan-2012  lsrea cc cable truncation code on v19r4p1 branch
+ -- End GlastReleasev19r4p1 branch
  TkrUtil-03-22-10 24-Jul-2011  lsrea fixed the collision in the ghost status bits
  TkrUtil-03-22-09 14-Jul-2011  lsrea Tracy's fix to my fix
  TkrUtil-03-22-08 10-Jul-2011  lsrea fix bug I introduced in TkrMakeClustersTool

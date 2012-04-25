@@ -10,7 +10,7 @@
 *
 * @author Tracy Usher, Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.4 2011/12/12 20:57:49 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrFillTDInfoAlg.cxx,v 1.5 2012/01/20 19:22:56 lsrea Exp $
 */
 
 #include "GaudiKernel/DataSvc.h"
@@ -77,6 +77,10 @@ Algorithm(name, pSvcLocator)
     // 1 -> all ghosts
     // 2 -> mix of normal and ghosts
     declareProperty("testMode" , m_testMode=0);
+}
+
+namespace {
+    enum testMode {SKIP = -1, NORMAL, ALLGHOSTS, HALFGHOSTS};
 }
 
 using namespace Event;
@@ -149,7 +153,7 @@ StatusCode TkrFillTDInfoAlg::execute()
     MsgStream log(msgSvc(), name());
 
     // skip all this if mode==-1
-    if(m_testMode==-1) return StatusCode::SUCCESS;
+    if(m_testMode==SKIP) return StatusCode::SUCCESS;
 
     // Recover a pointer to the raw digi objects, if none, nothing to do
     m_TkrDigiCol = SmartDataPtr<TkrDigiCol>(eventSvc(), EventModel::Digi::TkrDigiCol);
@@ -189,7 +193,7 @@ StatusCode TkrFillTDInfoAlg::execute()
     // and add them to the existing words
     // skip this step for testMode==1
 
-    if(m_testMode!=1) {
+    if(m_testMode!=ALLGHOSTS) {
         Event::TkrDigiCol::const_iterator ppDigi = m_TkrDigiCol->begin();
         int count = 0;
         for (; ppDigi!= m_TkrDigiCol->end(); ppDigi++) {
@@ -227,7 +231,7 @@ StatusCode TkrFillTDInfoAlg::execute()
                     int index = tower*nCc + inverseOrder[gtcc];
                     // mode 0 -> set all the bits
                     // mode 1 -> set ~half of the bits
-                    if(m_testMode==0 || (m_testMode==2&&count%2==0)) {
+                    if(m_testMode==NORMAL || (m_testMode==HALFGHOSTS&&count%2==0)) {
                         dataWord 
                             |= m_diagTds->getTkrDiagnosticByIndex(index).dataWord();
                         m_diagTds->setTkrDataWordByIndex(index, dataWord);
@@ -271,7 +275,7 @@ StatusCode TkrFillTDInfoAlg::execute()
         }
         log << numTkrDiag 
             << " Tkr diagnostic records found, " 
-            << nNonZero << " non-zero";
+            << nNonZero << " have bits set";
     }
     log << endreq;
 
