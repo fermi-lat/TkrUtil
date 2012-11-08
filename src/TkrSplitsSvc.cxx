@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrSplitsSvc.cxx,v 1.22 2011/12/12 20:57:49 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrSplitsSvc.cxx,v 1.23 2011/12/14 18:49:45 heather Exp $
 
 */
 
@@ -42,7 +42,7 @@ TkrSplitsSvc::TkrSplitsSvc(const std::string& name,ISvcLocator* svc)
 
     // declare the properties
 
-    declareProperty("splitsFile",       m_splitsFile="");
+	declareProperty("splitsFile",       m_splitsFile="$(TKRUTILJOBOPTIONSPATH)/test/splits_flight.xml");
     // set this to correspond to the actual LAT configuration
     declareProperty("defaultMaxStrips", m_defaultMaxStrips=14);
     declareProperty("maxStripsFile",    m_maxStripsFile="");
