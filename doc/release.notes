@@ -4,7 +4,7 @@
 @verbatim
  * EOH *
 
-  08-Dec-2012 Ph.Bruel: implementation of the best energy estimation in TkrEnergyTool.cxx
+ TkrUtil-03-28-00 08-Dec-2012 bruel: implementation of the best energy estimation in TkrEnergyTool.cxx
  TkrUtil-03-27-01 08-Nov-2012  lsrea implement flight splits; needs more works later
  TkrUtil-03-27-00 20-Aug-2012    jrb for Windows no-install-headers
  TkrUtil-03-26-01 25-Apr-2012 hmk Patch merge
