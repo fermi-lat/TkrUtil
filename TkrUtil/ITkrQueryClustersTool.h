@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.15 2005/11/13 00:55:30 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrQueryClustersTool.h,v 1.16 2010/04/04 16:19:06 lsrea Exp $
 */
 
 
@@ -74,6 +74,8 @@ public:
     virtual double clusterWidth(Event::TkrCluster* cluster) const = 0;
 
     virtual const void setFilter( filterType type)    const = 0;
+
+    virtual int GetStripsInfoForNewEvtEnergyCorr(int *Tkr_StripsPerLyr) = 0;
 };
 
 #endif  // _H_ITkrQueryClustersTool

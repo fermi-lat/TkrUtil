@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.22 2011/12/12 20:57:49 heather Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.23 2012/04/25 04:54:10 heather Exp $
 
 // Include files
 
@@ -109,6 +109,8 @@ public:
             m_useNormalHits = false;
         }
     }
+
+  int GetStripsInfoForNewEvtEnergyCorr(int *Tkr_StripsPerLyr);
 
 private:
     Event::TkrCluster* nearestClusterOutsideX(int v, int layer, 
@@ -601,4 +603,31 @@ double TkrQueryClustersTool::clusterWidth(Event::TkrCluster* cluster) const
         + nGaps*(2*m_tkrGeom->siDeadDistance() + m_tkrGeom->ladderGap());
     return width;
 
+}
+
+//
+// Ph.Bruel: the following code has been copied from TkrHitValsTool.cxx in order to be able to calculate NewEvtEnergyCorr in TkrEnergyTool
+//
+int TkrQueryClustersTool::GetStripsInfoForNewEvtEnergyCorr(int *Tkr_StripsPerLyr)
+{
+  int i;
+  for(i=0;i<18;++i) Tkr_StripsPerLyr[i] = 0;
+  
+  // Recover Track associated info. 
+  SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+    
+  //Make sure we have valid cluster data
+  if (!pClusters) return 0;
+  if(pClusters->size()==0) return 0;
+  
+  bool isMarked;
+  Event::TkrClusterColConItr iter = pClusters->begin();
+  for(; iter!=pClusters->end();++iter) 
+    {
+      Event::TkrCluster* clust = *iter;
+      if(clust->isSet(Event::TkrCluster::maskZAPGHOSTS)) continue;
+      Tkr_StripsPerLyr[clust->getLayer()] += (int)clust->size();
+    }
+
+  return 0;
 }
