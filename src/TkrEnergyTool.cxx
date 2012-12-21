@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.6 2012/12/08 10:36:51 bruel Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.7 2012/12/13 15:46:38 bruel Exp $
  */
 
 #include "GaudiKernel/AlgTool.h"
@@ -74,7 +74,7 @@ private:
   int UB2zdirn;
   double UB2zdir[9];
   double UB2zdirbinwidth;
-  double UB2val[6];
+  double UB2val[9];
   double UB2par[2][18][8][6];
 };
 
