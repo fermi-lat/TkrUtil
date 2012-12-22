@@ -69,13 +69,13 @@ private:
   double gaplossparam0[18];
   double gaplossparam1[18];
 
-  double UB2logemin;
-  double UB2logemax;
+  double UB2logemin[3];
+  double UB2logemax[3];
   int UB2zdirn;
   double UB2zdir[9];
   double UB2zdirbinwidth;
   double UB2val[9];
-  double UB2par[2][18][8][6];
+  double UB2par[3][18][8][6];
 };
 
 //static ToolFactory<TkrEnergyTool> s_factory;
@@ -180,8 +180,12 @@ StatusCode TkrEnergyTool::initialize()
 
     // Ph.Bruel: UB2. Introduced when unbias NewEvtEnergyCorr and EvtEnergyCorr (after correction of removal leakage correction)
     // UB2 loge boudaries set to the center of the lowest and highest energy bins of the unbias analyses
-    UB2logemin = 1.0; 
-    UB2logemax = 4.0;
+    UB2logemin[0] = 1.0; 
+    UB2logemax[0] = 4.0;
+    UB2logemin[1] = 1.0; 
+    UB2logemax[1] = 4.0;
+    UB2logemin[2] = 2.75; 
+    UB2logemax[2] = 5.00;
     UB2zdirn = 8;
     UB2zdirbinwidth = 0.1;
     for(int i=0;i<=UB2zdirn;++i) UB2zdir[i] = -0.95+UB2zdirbinwidth*i;
@@ -462,6 +466,135 @@ StatusCode TkrEnergyTool::initialize()
    UB2par[1][17][5][0]=3.482902e+00; UB2par[1][17][5][1]=-7.664491e+00; UB2par[1][17][5][2]=7.126493e+00; UB2par[1][17][5][3]=-2.877840e+00; UB2par[1][17][5][4]=5.326174e-01; UB2par[1][17][5][5]=-3.712906e-02;
    UB2par[1][17][6][0]=4.783046e+00; UB2par[1][17][6][1]=-1.120836e+01; UB2par[1][17][6][2]=1.063453e+01; UB2par[1][17][6][3]=-4.440312e+00; UB2par[1][17][6][4]=8.531457e-01; UB2par[1][17][6][5]=-6.176752e-02;
    UB2par[1][17][7][0]=4.783046e+00; UB2par[1][17][7][1]=-1.120836e+01; UB2par[1][17][7][2]=1.063453e+01; UB2par[1][17][7][3]=-4.440312e+00; UB2par[1][17][7][4]=8.531457e-01; UB2par[1][17][7][5]=-6.176752e-02;
+
+   UB2par[2][2][0][0]=9.998756e-01; UB2par[2][2][0][1]=-1.244226e-04;
+   UB2par[2][2][1][0]=1.007746e+00; UB2par[2][2][1][1]=2.271169e-03;
+   UB2par[2][2][2][0]=1.013753e+00; UB2par[2][2][2][1]=4.400102e-03;
+   UB2par[2][2][3][0]=9.974145e-01; UB2par[2][2][3][1]=1.875531e-03;
+   UB2par[2][2][4][0]=9.946176e-01; UB2par[2][2][4][1]=3.620695e-03;
+   UB2par[2][2][5][0]=9.983828e-01; UB2par[2][2][5][1]=3.487181e-03;
+   UB2par[2][2][6][0]=9.785508e-01; UB2par[2][2][6][1]=1.471967e-03;
+   UB2par[2][2][7][0]=9.785508e-01; UB2par[2][2][7][1]=1.471967e-03;
+   UB2par[2][3][0][0]=1.003201e+00; UB2par[2][3][0][1]=2.306857e-03;
+   UB2par[2][3][1][0]=1.009041e+00; UB2par[2][3][1][1]=5.005484e-03;
+   UB2par[2][3][2][0]=1.010480e+00; UB2par[2][3][2][1]=6.672522e-03;
+   UB2par[2][3][3][0]=9.976688e-01; UB2par[2][3][3][1]=6.195976e-03;
+   UB2par[2][3][4][0]=9.957765e-01; UB2par[2][3][4][1]=7.153876e-03;
+   UB2par[2][3][5][0]=9.933731e-01; UB2par[2][3][5][1]=8.358109e-03;
+   UB2par[2][3][6][0]=9.791636e-01; UB2par[2][3][6][1]=9.645891e-03;
+   UB2par[2][3][7][0]=9.791636e-01; UB2par[2][3][7][1]=9.645891e-03;
+   UB2par[2][4][0][0]=1.002612e+00; UB2par[2][4][0][1]=3.686907e-03;
+   UB2par[2][4][1][0]=1.008200e+00; UB2par[2][4][1][1]=6.155735e-03;
+   UB2par[2][4][2][0]=1.006751e+00; UB2par[2][4][2][1]=8.607059e-03;
+   UB2par[2][4][3][0]=9.985937e-01; UB2par[2][4][3][1]=9.842822e-03;
+   UB2par[2][4][4][0]=9.924803e-01; UB2par[2][4][4][1]=1.060933e-02;
+   UB2par[2][4][5][0]=9.836799e-01; UB2par[2][4][5][1]=1.118353e-02;
+   UB2par[2][4][6][0]=9.685052e-01; UB2par[2][4][6][1]=1.153618e-02;
+   UB2par[2][4][7][0]=9.685052e-01; UB2par[2][4][7][1]=1.153618e-02;
+   UB2par[2][5][0][0]=9.993778e-01; UB2par[2][5][0][1]=4.086919e-03;
+   UB2par[2][5][1][0]=1.004513e+00; UB2par[2][5][1][1]=7.616465e-03;
+   UB2par[2][5][2][0]=1.004512e+00; UB2par[2][5][2][1]=1.064278e-02;
+   UB2par[2][5][3][0]=9.936895e-01; UB2par[2][5][3][1]=1.130739e-02;
+   UB2par[2][5][4][0]=9.888657e-01; UB2par[2][5][4][1]=1.313947e-02;
+   UB2par[2][5][5][0]=9.776391e-01; UB2par[2][5][5][1]=1.437895e-02;
+   UB2par[2][5][6][0]=9.607296e-01; UB2par[2][5][6][1]=1.202973e-02;
+   UB2par[2][5][7][0]=9.607296e-01; UB2par[2][5][7][1]=1.202973e-02;
+   UB2par[2][6][0][0]=9.966637e-01; UB2par[2][6][0][1]=6.326611e-03;
+   UB2par[2][6][1][0]=1.004468e+00; UB2par[2][6][1][1]=1.093060e-02;
+   UB2par[2][6][2][0]=1.001327e+00; UB2par[2][6][2][1]=1.337524e-02;
+   UB2par[2][6][3][0]=9.963099e-01; UB2par[2][6][3][1]=1.540435e-02;
+   UB2par[2][6][4][0]=9.844940e-01; UB2par[2][6][4][1]=1.664423e-02;
+   UB2par[2][6][5][0]=9.712453e-01; UB2par[2][6][5][1]=1.640343e-02;
+   UB2par[2][6][6][0]=9.511229e-01; UB2par[2][6][6][1]=1.501369e-02;
+   UB2par[2][6][7][0]=9.511229e-01; UB2par[2][6][7][1]=1.501369e-02;
+   UB2par[2][7][0][0]=9.966637e-01; UB2par[2][7][0][1]=6.326611e-03;
+   UB2par[2][7][1][0]=1.004468e+00; UB2par[2][7][1][1]=1.093060e-02;
+   UB2par[2][7][2][0]=1.001327e+00; UB2par[2][7][2][1]=1.337524e-02;
+   UB2par[2][7][3][0]=9.963099e-01; UB2par[2][7][3][1]=1.540435e-02;
+   UB2par[2][7][4][0]=9.844940e-01; UB2par[2][7][4][1]=1.664423e-02;
+   UB2par[2][7][5][0]=9.712453e-01; UB2par[2][7][5][1]=1.640343e-02;
+   UB2par[2][7][6][0]=9.511229e-01; UB2par[2][7][6][1]=1.501369e-02;
+   UB2par[2][7][7][0]=9.511229e-01; UB2par[2][7][7][1]=1.501369e-02;
+   UB2par[2][8][0][0]=9.991571e-01; UB2par[2][8][0][1]=8.918705e-03;
+   UB2par[2][8][1][0]=1.003963e+00; UB2par[2][8][1][1]=1.329114e-02;
+   UB2par[2][8][2][0]=1.001717e+00; UB2par[2][8][2][1]=1.519614e-02;
+   UB2par[2][8][3][0]=9.907165e-01; UB2par[2][8][3][1]=1.666835e-02;
+   UB2par[2][8][4][0]=9.781283e-01; UB2par[2][8][4][1]=1.767932e-02;
+   UB2par[2][8][5][0]=9.671014e-01; UB2par[2][8][5][1]=1.727924e-02;
+   UB2par[2][8][6][0]=9.443637e-01; UB2par[2][8][6][1]=1.855524e-02;
+   UB2par[2][8][7][0]=9.443637e-01; UB2par[2][8][7][1]=1.855525e-02;
+   UB2par[2][9][0][0]=9.991571e-01; UB2par[2][9][0][1]=8.918705e-03;
+   UB2par[2][9][1][0]=1.003963e+00; UB2par[2][9][1][1]=1.329114e-02;
+   UB2par[2][9][2][0]=1.001717e+00; UB2par[2][9][2][1]=1.519614e-02;
+   UB2par[2][9][3][0]=9.907165e-01; UB2par[2][9][3][1]=1.666835e-02;
+   UB2par[2][9][4][0]=9.781283e-01; UB2par[2][9][4][1]=1.767932e-02;
+   UB2par[2][9][5][0]=9.671014e-01; UB2par[2][9][5][1]=1.727924e-02;
+   UB2par[2][9][6][0]=9.443637e-01; UB2par[2][9][6][1]=1.855524e-02;
+   UB2par[2][9][7][0]=9.443637e-01; UB2par[2][9][7][1]=1.855525e-02;
+   UB2par[2][10][0][0]=9.965135e-01; UB2par[2][10][0][1]=1.032083e-02;
+   UB2par[2][10][1][0]=1.003783e+00; UB2par[2][10][1][1]=1.563989e-02;
+   UB2par[2][10][2][0]=9.967430e-01; UB2par[2][10][2][1]=1.643657e-02;
+   UB2par[2][10][3][0]=9.866829e-01; UB2par[2][10][3][1]=1.779283e-02;
+   UB2par[2][10][4][0]=9.771008e-01; UB2par[2][10][4][1]=2.070549e-02;
+   UB2par[2][10][5][0]=9.588268e-01; UB2par[2][10][5][1]=1.802305e-02;
+   UB2par[2][10][6][0]=9.434549e-01; UB2par[2][10][6][1]=1.330256e-02;
+   UB2par[2][10][7][0]=9.434549e-01; UB2par[2][10][7][1]=1.330256e-02;
+   UB2par[2][11][0][0]=9.965135e-01; UB2par[2][11][0][1]=1.032083e-02;
+   UB2par[2][11][1][0]=1.003783e+00; UB2par[2][11][1][1]=1.563989e-02;
+   UB2par[2][11][2][0]=9.967430e-01; UB2par[2][11][2][1]=1.643657e-02;
+   UB2par[2][11][3][0]=9.866829e-01; UB2par[2][11][3][1]=1.779283e-02;
+   UB2par[2][11][4][0]=9.771008e-01; UB2par[2][11][4][1]=2.070549e-02;
+   UB2par[2][11][5][0]=9.588268e-01; UB2par[2][11][5][1]=1.802305e-02;
+   UB2par[2][11][6][0]=9.434549e-01; UB2par[2][11][6][1]=1.330256e-02;
+   UB2par[2][11][7][0]=9.434549e-01; UB2par[2][11][7][1]=1.330256e-02;
+   UB2par[2][12][0][0]=9.961386e-01; UB2par[2][12][0][1]=1.147354e-02;
+   UB2par[2][12][1][0]=1.005906e+00; UB2par[2][12][1][1]=1.838539e-02;
+   UB2par[2][12][2][0]=9.936782e-01; UB2par[2][12][2][1]=1.872676e-02;
+   UB2par[2][12][3][0]=9.813275e-01; UB2par[2][12][3][1]=2.014975e-02;
+   UB2par[2][12][4][0]=9.765661e-01; UB2par[2][12][4][1]=2.379850e-02;
+   UB2par[2][12][5][0]=9.532637e-01; UB2par[2][12][5][1]=2.107804e-02;
+   UB2par[2][12][6][0]=9.465004e-01; UB2par[2][12][6][1]=-1.097671e-02;
+   UB2par[2][12][7][0]=9.465004e-01; UB2par[2][12][7][1]=-1.097671e-02;
+   UB2par[2][13][0][0]=9.961386e-01; UB2par[2][13][0][1]=1.147354e-02;
+   UB2par[2][13][1][0]=1.005906e+00; UB2par[2][13][1][1]=1.838539e-02;
+   UB2par[2][13][2][0]=9.936782e-01; UB2par[2][13][2][1]=1.872676e-02;
+   UB2par[2][13][3][0]=9.813275e-01; UB2par[2][13][3][1]=2.014975e-02;
+   UB2par[2][13][4][0]=9.765661e-01; UB2par[2][13][4][1]=2.379850e-02;
+   UB2par[2][13][5][0]=9.532637e-01; UB2par[2][13][5][1]=2.107804e-02;
+   UB2par[2][13][6][0]=9.465004e-01; UB2par[2][13][6][1]=-1.097671e-02;
+   UB2par[2][13][7][0]=9.465004e-01; UB2par[2][13][7][1]=-1.097671e-02;
+   UB2par[2][14][0][0]=9.954464e-01; UB2par[2][14][0][1]=1.279427e-02;
+   UB2par[2][14][1][0]=1.001686e+00; UB2par[2][14][1][1]=1.989297e-02;
+   UB2par[2][14][2][0]=9.961128e-01; UB2par[2][14][2][1]=2.135345e-02;
+   UB2par[2][14][3][0]=9.818164e-01; UB2par[2][14][3][1]=2.337861e-02;
+   UB2par[2][14][4][0]=9.721932e-01; UB2par[2][14][4][1]=2.652124e-02;
+   UB2par[2][14][5][0]=9.507111e-01; UB2par[2][14][5][1]=2.178727e-02;
+   UB2par[2][14][6][0]=9.787320e-01; UB2par[2][14][6][1]=6.754815e-03;
+   UB2par[2][14][7][0]=9.787320e-01; UB2par[2][14][7][1]=6.754815e-03;
+   UB2par[2][15][0][0]=9.954464e-01; UB2par[2][15][0][1]=1.279427e-02;
+   UB2par[2][15][1][0]=1.001686e+00; UB2par[2][15][1][1]=1.989297e-02;
+   UB2par[2][15][2][0]=9.961128e-01; UB2par[2][15][2][1]=2.135345e-02;
+   UB2par[2][15][3][0]=9.818164e-01; UB2par[2][15][3][1]=2.337861e-02;
+   UB2par[2][15][4][0]=9.721932e-01; UB2par[2][15][4][1]=2.652124e-02;
+   UB2par[2][15][5][0]=9.507111e-01; UB2par[2][15][5][1]=2.178727e-02;
+   UB2par[2][15][6][0]=9.787320e-01; UB2par[2][15][6][1]=6.754815e-03;
+   UB2par[2][15][7][0]=9.787320e-01; UB2par[2][15][7][1]=6.754815e-03;
+   UB2par[2][16][0][0]=9.954889e-01; UB2par[2][16][0][1]=1.469025e-02;
+   UB2par[2][16][1][0]=9.962365e-01; UB2par[2][16][1][1]=1.995037e-02;
+   UB2par[2][16][2][0]=9.882333e-01; UB2par[2][16][2][1]=2.219731e-02;
+   UB2par[2][16][3][0]=9.770941e-01; UB2par[2][16][3][1]=2.564271e-02;
+   UB2par[2][16][4][0]=9.608747e-01; UB2par[2][16][4][1]=2.699806e-02;
+   UB2par[2][16][5][0]=9.492431e-01; UB2par[2][16][5][1]=2.289600e-02;
+   UB2par[2][16][6][0]=9.827603e-01; UB2par[2][16][6][1]=4.128575e-03;
+   UB2par[2][16][7][0]=9.827603e-01; UB2par[2][16][7][1]=4.128575e-03;
+   UB2par[2][17][0][0]=9.954889e-01; UB2par[2][17][0][1]=1.469025e-02;
+   UB2par[2][17][1][0]=9.962365e-01; UB2par[2][17][1][1]=1.995037e-02;
+   UB2par[2][17][2][0]=9.882333e-01; UB2par[2][17][2][1]=2.219731e-02;
+   UB2par[2][17][3][0]=9.770941e-01; UB2par[2][17][3][1]=2.564271e-02;
+   UB2par[2][17][4][0]=9.608747e-01; UB2par[2][17][4][1]=2.699806e-02;
+   UB2par[2][17][5][0]=9.492431e-01; UB2par[2][17][5][1]=2.289600e-02;
+   UB2par[2][17][6][0]=9.827603e-01; UB2par[2][17][6][1]=4.128575e-03;
+   UB2par[2][17][7][0]=9.827603e-01; UB2par[2][17][7][1]=4.128575e-03;
     
     return sc;
 }
@@ -697,34 +830,48 @@ double TkrEnergyTool::getEvtEnergyEstimation(const Event::TkrTrack* track)
     }
 
   double NewEvtEnergyCorr = (CalEnergyCorr+Tkr1StripsEnergyCorr)/0.85;
+
+  // Unbias NewEvtEnergyCorr
   double corfactor = GetEnergyUB2Correction(0,ifirstlayer,Tkr_1_zdir,NewEvtEnergyCorr);
   double NewEvtEnergyCorrUB2 = NewEvtEnergyCorr*corfactor;
+
+  // Unbias CalNewcfpEnergy
+  corfactor = GetEnergyUB2Correction(2,ifirstlayer,Tkr_1_zdir,CalNewCfpEnergy);
+  double CalNewCfpEnergyUB2 = CalNewCfpEnergy*corfactor;
 
   // Building the event energy from NewEvtEnergyCorrUB2 and CalNewCfpEnergy as shown in Ph.Bruel presentation Energy reconstruction (slide 12) at the pass8 workshop in Washington (2012)
   double logeraw,logerawmin,logerawmax;
   double logerawdelta = 0.1;
-  double weight = -1;
   logeraw = -10;
   if(CalEnergyRaw>0) logeraw = log10(CalEnergyRaw);
 
   double E0 = NewEvtEnergyCorrUB2;
-  double E1 = CalNewCfpEnergy;
+  double E1 = CalNewCfpEnergyUB2;
+  double weight = 0;
 
   NewEvtEnergy = E0;
   if(Tkr_1_zdir<0 && E1>0)
     {
-      logerawmin = 1+Tkr_1_zdir;
-      if(logerawmin<0) logerawmin = 0;
-      logerawmin = 2.9+sqrt(logerawmin)-logerawdelta;
+      // if there is a track and the new profile energy is available, take the weighted sum (depending on the raw energy)
+      // around the region (in the logEraw,ZDir plane) where the parametric and profile methods have equivalent resolution
+      mytkr1zdir = Tkr_1_zdir;
+      if(mytkr1zdir>-0.2) mytkr1zdir = -0.2;
+      logerawmin = 2.85892e+00+2.16216e-02*ifirstlayer;
+      if(mytkr1zdir>-0.65) logerawmin += 1.78271*(mytkr1zdir+0.65);
+      logerawmin -= logerawdelta;
       logerawmax = logerawmin+2.*logerawdelta;
+      //
       if(logeraw>logerawmax)
-        NewEvtEnergy = E1;
+        {
+          NewEvtEnergy = E1;
+          weight = 1;
+        }
       else if(logeraw<logerawmin)
         NewEvtEnergy = E0;
       else
         {
           weight = (logeraw-logerawmin)/2./logerawdelta;
-          NewEvtEnergy = E0*weight+E1*(1-weight);
+          NewEvtEnergy = E0*(1-weight)+E1*weight;
         }
     }
 
@@ -733,13 +880,13 @@ double TkrEnergyTool::getEvtEnergyEstimation(const Event::TkrTrack* track)
 
 double TkrEnergyTool::GetEnergyUB2Correction(int method, int tkr1firstlayer, double tkr1zdir, double energy)
 {
-  if(energy<0) return 1;
-  if(method<0||method>=2) return 1;
+  if(energy<=0) return 1;
+  if(method<0||method>=3) return 1;
   if(tkr1firstlayer<2||tkr1firstlayer>=18) return 1;
 
   double myloge = log10(energy);
-  if(myloge<UB2logemin) myloge = UB2logemin;
-  else if(myloge>UB2logemax) myloge = UB2logemax;
+  if(myloge<UB2logemin[method]) myloge = UB2logemin[method];
+  else if(myloge>UB2logemax[method]) myloge = UB2logemax[method];
 
   double corfactor = 1;
   double emean = 1;
@@ -748,13 +895,18 @@ double TkrEnergyTool::GetEnergyUB2Correction(int method, int tkr1firstlayer, dou
   double loge,myval;
   for(i=0;i<UB2zdirn;++i)
     {
-      loge = 1;
-      UB2val[i] = 0;
-      for(j=0;j<6;++j)
+      if(method<2)
         {
-          UB2val[i] += UB2par[method][tkr1firstlayer][i][j]*loge;
-          loge *= myloge;
+          loge = 1;
+          UB2val[i] = 0;
+          for(j=0;j<6;++j)
+            {
+              UB2val[i] += UB2par[method][tkr1firstlayer][i][j]*loge;
+              loge *= myloge;
+            }
         }
+      else
+        UB2val[i] = UB2par[method][tkr1firstlayer][i][0]-UB2par[method][tkr1firstlayer][i][1]*(myloge-5.)*(myloge-5.);
     }
   UB2val[UB2zdirn] = 1;
 
