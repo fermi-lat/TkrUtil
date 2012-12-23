@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-28-03 23-Dec-2012  lsrea fix suspect code for removing empty digis in TkrHitTruncationTool
  TkrUtil-03-28-02 22-Dec-2012  lsrea optimize EvtJointEnergy in TkrEenrgyTool
   22-Dec-2013 bruel Unbias of CalNewCfpEnergy and optimization of NewEvtEnergy in TkrEnergyTool.cxx
  TkrUtil-03-28-01 13-Dec-2012  lsrea unbiasing extended to costheta=0.2
