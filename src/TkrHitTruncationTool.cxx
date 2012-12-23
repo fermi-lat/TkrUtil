@@ -6,7 +6,7 @@
 *
 * @author Leon Rochester
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.4 2012/01/20 19:22:56 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrHitTruncationTool.cxx,v 1.5 2012/04/25 04:54:10 heather Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -419,14 +419,29 @@ void TkrHitTruncationTool::removeEmptyDigis()
     newEvent();
 
     //SmartDataPtr<Event::TkrDigiCol> digiCol( m_dataSvc, EventModel::Digi::TkrDigiCol );
-    Event::TkrDigiCol::reverse_iterator ppDigiRev;
-    for(ppDigiRev= m_digiCol->rbegin();ppDigiRev!=m_digiCol->rend();++ppDigiRev) {
-        Event::TkrDigi* pDigi = *ppDigiRev;
-        if(pDigi->getNumHits()==0) {
-            delete pDigi;
-        }
+	// this is bad! don't do it!
+    //Event::TkrDigiCol::reverse_iterator ppDigiRev;
+    //for(ppDigiRev= m_digiCol->rbegin();ppDigiRev!=m_digiCol->rend();++ppDigiRev) {
+    //    Event::TkrDigi* pDigi = *ppDigiRev;
+    //    if(pDigi->getNumHits()==0) {
+    //        delete pDigi;
+    //    }
+    //}
+
+    // make a list of the empty digis, and then remove them one by one, to be safe
+	std::vector<Event::TkrDigi*> tempDigiVec;
+	Event::TkrDigiCol::iterator digiItr = m_digiCol->begin();
+    for(; digiItr != m_digiCol->end(); digiItr++) {
+        Event::TkrDigi* pDigi = *digiItr;
+        if (pDigi->getNumHits()==0) tempDigiVec.push_back(pDigi);
     }
-    // test to see if the truncInfo is still there
+
+	std::vector<Event::TkrDigi*>::iterator digiItr1 = tempDigiVec.begin();
+    for(; digiItr1 != tempDigiVec.end(); digiItr1++) {
+        m_digiCol->remove(*digiItr1);
+    }
+	
+	// test to see if the truncInfo is still there
     SmartDataPtr<TkrTruncationInfo> truncInfo = SmartDataPtr<TkrTruncationInfo>(
         m_dataSvc, EventModel::TkrRecon::TkrTruncationInfo);
     if(truncInfo==0) std::cout << " the truncs are gone!!" << std::endl;
