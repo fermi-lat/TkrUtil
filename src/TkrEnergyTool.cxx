@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.7 2012/12/13 15:46:38 bruel Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.9 2012/12/22 22:40:49 bruel Exp $
  */
 
 #include "GaudiKernel/AlgTool.h"
@@ -828,6 +828,8 @@ double TkrEnergyTool::getEvtEnergyEstimation(const Event::TkrTrack* track)
             }
         }
     }
+
+  if(CalEnergyCorr<=0) CalEnergyCorr = CalEnergyRaw;
 
   double NewEvtEnergyCorr = (CalEnergyCorr+Tkr1StripsEnergyCorr)/0.85;
 
