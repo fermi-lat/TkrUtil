@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.16 2012/04/25 20:55:30 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.17 2013/02/21 19:17:27 usher Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -695,7 +695,7 @@ StatusCode TkrGhostTool::flagEarlyCalClusters()
     std::vector<Event::TkrTrack*> trackVec = m_trackVecTool->getTrackVec();
 
     // Get the vector of "raw" clusters
-    Event::CalClusterVec& calClusterVec = calClusterMap->getRawClusterVec();
+    Event::CalClusterVec calClusterVec = calClusterMap->getRawClusterVec();
 
     unsigned int trackCount, itk;
     double minDoca;
