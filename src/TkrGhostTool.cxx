@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.15 2012/04/25 04:54:10 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.16 2012/04/25 20:55:30 heather Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -18,7 +18,7 @@
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrEventParams.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
-#include "Event/Recon/CalRecon/CalCluster.h"
+#include "Event/Recon/CalRecon/CalClusterMap.h"
 #include "Event/TopLevel/DigiEvent.h"
 #include "Event/Digi/TkrDigi.h"
 
@@ -292,7 +292,7 @@ StatusCode TkrGhostTool::calculateTkrVector(
 
     for(i=0;i<_numTowers;++i) {
 
-	  towerBits[i] = tBits[i].getTriggeredBits();
+      towerBits[i] = tBits[i].getTriggeredBits();
       if(towerBits[i]>0) {trigBits |= (1<<i);}
     }
     return StatusCode::SUCCESS;
@@ -603,7 +603,7 @@ StatusCode TkrGhostTool::flagEarlyTracks()
         // this is some kind of ghost track!
         track->setStatusBit(Event::TkrTrack::GHOST);
 
-    	log << MSG::DEBUG;
+        log << MSG::DEBUG;
         bool doDebug = (log.isActive());
         log << endreq;
         if(diagCount>0){
@@ -685,22 +685,25 @@ StatusCode TkrGhostTool::flagEarlyCalClusters()
     StatusCode sc = StatusCode::SUCCESS;
 
     // Get the Cal Clusters
-    Event::CalClusterCol* calClusterCol = 
-        SmartDataPtr<Event::CalClusterCol>(m_dataSvc,EventModel::CalRecon::CalClusterCol);
+    Event::CalClusterMap* calClusterMap = 
+        SmartDataPtr<Event::CalClusterMap>(m_dataSvc,EventModel::CalRecon::CalClusterMap);
 
     // No Cal Clusters, don't do anything
-    if (!calClusterCol) return sc;
+    if (!calClusterMap || calClusterMap->getRawClusterVec().empty()) return sc;
 
     // Get all the tracks from the tracker.
     std::vector<Event::TkrTrack*> trackVec = m_trackVecTool->getTrackVec();
+
+    // Get the vector of "raw" clusters
+    Event::CalClusterVec& calClusterVec = calClusterMap->getRawClusterVec();
 
     unsigned int trackCount, itk;
     double minDoca;
 
     // Loop over the clusters an find the min DOCA to a ghost track
-    Event::CalClusterCol::const_iterator cluster ;
-    for ( cluster = calClusterCol->begin() ;          
-          cluster != calClusterCol->end() ;          
+    Event::CalClusterVec::const_iterator cluster ;
+    for ( cluster = calClusterVec.begin() ;          
+          cluster != calClusterVec.end() ;          
           cluster++) {          
         
         trackCount = 0;
