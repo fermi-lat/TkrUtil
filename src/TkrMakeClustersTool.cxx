@@ -3,7 +3,7 @@
 
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.13 2011/06/29 02:17:50 usher Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrMakeClustersTool.cxx,v 1.14 2011/12/12 20:57:49 heather Exp $
 */
 
 // Include files
@@ -79,6 +79,8 @@ private:
     ITkrBadStripsSvc* m_pBadStrips;
     /// Keep pointer to the ToT service
     ITkrToTSvc* m_pToT;
+    /// AlignmentSvc
+    ITkrAlignmentSvc* m_pAlign;
     /// Data service
     DataSvc* m_dataSvc;
     /// if STANDARDCLUSTERS, usual clustering; if BADCLUSTERS, construct bad-cluster list
@@ -88,6 +90,7 @@ private:
     bool m_test250;
     int  m_maxTrailingHits;
     int m_maxInternalBadHits;
+    bool m_useFlags;
 };
 
 // Static factory for instantiation of algtool objects
@@ -106,6 +109,8 @@ TkrMakeClustersTool::TkrMakeClustersTool(const std::string& type,
     declareProperty("test250", m_test250 = false);
     declareProperty("maxTrailingHits", m_maxTrailingHits = 3);
     declareProperty("maxInternalBadHits", m_maxInternalBadHits = 3);
+    // disable for now... I'm pretty sure that this is bad
+    //declareProperty("useFlags", m_useFlags = false);
 }
 
 StatusCode TkrMakeClustersTool::initialize()
@@ -125,6 +130,8 @@ StatusCode TkrMakeClustersTool::initialize()
     }
     m_pBadStrips = m_tkrGeom->getTkrBadStripsSvc();
     m_pToT       = m_tkrGeom->getTkrToTSvc();
+    m_pAlign     = m_tkrGeom->getTkrAlignmentSvc();
+
     IService* iService = 0;
     if ((sc = serviceLocator()->getService("EventDataSvc", iService)).isFailure())
     {
@@ -134,6 +141,9 @@ StatusCode TkrMakeClustersTool::initialize()
     m_dataSvc = dynamic_cast<DataSvc*>(iService);
 
     log << MSG::INFO << "TkrMakeClustersTool successfully initialized" << endreq;
+
+    // kill the piece of code that "aligns" in x and y
+    m_useFlags = false;
     return sc;
 }
 
@@ -285,6 +295,20 @@ StatusCode TkrMakeClustersTool::makeClusters(
                     if (_nFirstBad>1) strip0 += (_nFirstBad - 1);
                     if (_nLastBad>1)  stripf -= (_nLastBad - 1);
                     Point pos = position(tower, layer, view, strip0, stripf);
+                    
+/*
+                    // we can translate the clusters in x and y (not z)
+                    // no longer used, rotations get mixed in at the wafer level.
+                    if(m_useFlags) {
+                        HepVector3D delta = 
+                            m_pAlign->deltaReconPoint(pos, HepVector3D(0., 0., 1.), 
+                            layer, view, ITkrAlignmentSvc::XANDY);
+                        pos += Vector(delta);
+                        //HepPoint3D pos3D = pos;
+                        //pos3D += delta;
+                        //pos = Point(pos3D.x(), pos3D.y(), pos3D.z());
+                    }
+*/
 
                     // code to generate 1st order corrected ToT
                     int end;

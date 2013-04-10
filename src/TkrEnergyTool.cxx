@@ -6,7 +6,7 @@
  *
  * @author The Tracking Software Group
  *
- * $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrEnergyTool.cxx,v 1.9 2012/12/22 22:40:49 bruel Exp $
+ * $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrEnergyTool.cxx,v 1.10 2013/01/21 15:47:02 bruel Exp $
  */
 
 #include "GaudiKernel/AlgTool.h"
@@ -753,7 +753,7 @@ double TkrEnergyTool::getEvtEnergyEstimation(const Event::TkrTrack* track)
   
   double x,xtow,lambda;
   int itow;
-  double mytkr1zdir,gaplossparam;
+  double mytkr1zdir;
 
   int ifirstlayer = m_tkrGeom->getLayer(track->front()->getTkrId());
 
@@ -894,7 +894,7 @@ double TkrEnergyTool::GetEnergyUB2Correction(int method, int tkr1firstlayer, dou
   double emean = 1;
 
   int i,j;
-  double loge,myval;
+  double loge;
   for(i=0;i<UB2zdirn;++i)
     {
       if(method<2)

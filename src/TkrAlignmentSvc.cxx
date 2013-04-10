@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.47.8.1 2010/09/09 14:03:22 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.48 2011/12/12 20:57:49 heather Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -66,6 +66,7 @@ Service(name, pSvcLocator)
     declareProperty("recScale",     m_recScale=1.0);
     declareProperty("simScaleVec",  m_simScaleVec);
     declareProperty("recScaleVec",  m_recScaleVec);
+    //declareProperty("useFlags",     m_useFlags = false);
 
     return;
 }
@@ -167,6 +168,8 @@ StatusCode TkrAlignmentSvc::initialize()
         return StatusCode::FAILURE;
     }
     if (m_recFile!="") m_fileFlag = m_fileFlag|(1<<REC_SHIFT);
+
+    m_useFlags = false;
 
     return sc;
 }
@@ -847,7 +850,9 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer) const
 
     // apply scaling
     // which scale?
+    // No! too late to scale, rotations and displacements are mixed by now!
 
+/*
     double scale;
     std::vector<double> scaleVec;
 
@@ -865,6 +870,7 @@ void TkrAlignmentSvc::calculateWaferConsts(AlignmentConsts& thisWafer) const
     rotX   *= scale*scaleVec[3];
     rotY   *= scale*scaleVec[4];
     rotZ   *= scale*scaleVec[5];
+*/
 
     m_waferConsts = AlignmentConsts(deltaX, deltaY, deltaZ,
         rotX, rotY, rotZ);
@@ -978,8 +984,11 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
 }
 
 HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepVector3D& dir, 
-                                             int layer, int view, alignTask task, 
-                                             const AlignmentConsts* consts) const
+                                             int layer, int view, 
+                                             unsigned flags,
+                                             alignTask task, 
+                                             const AlignmentConsts* consts
+                                             ) const
 {   
     // alignTask can have the values NULLTASK, APPLYCONSTS, pr FINDTOWERCONSTS.
     //   if NULLTASK, a zero vector is returned
@@ -1030,7 +1039,7 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
     const AlignmentConsts* alConsts = (task==APPLYCONSTS ? getConsts(REC, volId): &m_faceConsts);
 
     applyDelta(localPoint.x(), localPoint.y(), alphaX, alphaY, alConsts,
-        deltaPointX, deltaPointY);
+        deltaPointX, deltaPointY, flags);
 
     // for now, limit delta to m_maxDelta (default is 5 mm, modifiable in jobOptions
     // later fix transformation for special cases
@@ -1045,16 +1054,17 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
     return -deltaPoint;
 }
 
-void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
-                                     int layer, int view, alignTask task, 
-                                     const AlignmentConsts* consts) const
-{
-    HepVector3D deltaPoint = deltaReconPoint(point, dir, layer, view, task, consts);
-
-    //now subtract(??) this delta from the global point
-    point += deltaPoint;
-    return;
-}
+//void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
+//                                     int layer, int view, alignTask task, 
+//                                     const AlignmentConsts* consts,
+//                                     const unsigned flags) const
+//{
+//    HepVector3D deltaPoint = deltaReconPoint(point, dir, layer, view, task, consts, flags);
+//
+//    //now subtract(??) this delta from the global point
+//    point += deltaPoint;
+//    return;
+//}
 
 HepPoint3D TkrAlignmentSvc::getTowerCoordinates(
     const HepPoint3D& globalPoint, int& nXTower, int& nYTower) const
@@ -1159,15 +1169,31 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
 void TkrAlignmentSvc::applyDelta(double pointX, double pointY, 
                                  double alphaX, double alphaY,
                                  const AlignmentConsts* alConsts, 
-                                 double& deltaPointX, double& deltaPointY) const
+                                 double& deltaPointX, double& deltaPointY,
+                                 unsigned int flags) const
 {
+    
+  /*
+    double deltaX = ((flags&XANDY)!=0 || !m_useFlags ? alConsts->getDeltaX() : 0.0);
+    double deltaY = ((flags&XANDY)!=0 || !m_useFlags ? alConsts->getDeltaY() : 0.0);
+    double deltaZ = ((flags&ANGLE)!=0 || !m_useFlags ? alConsts->getDeltaZ() : 0.0);
+
+    double rotX =   ((flags&ANGLE)!=0 || !m_useFlags ? alConsts->getRotX() : 0.0);
+    double rotY =   ((flags&ANGLE)!=0 || !m_useFlags ? alConsts->getRotY() : 0.0);
+    double rotZ =   ((flags&ROTZ)!=0  || !m_useFlags ? alConsts->getRotZ() : 0.0);
+  */
+
     double deltaX = alConsts->getDeltaX();
     double deltaY = alConsts->getDeltaY();
     double deltaZ = alConsts->getDeltaZ();
 
-    double rotX = alConsts->getRotX();
-    double rotY = alConsts->getRotY();
-    double rotZ = alConsts->getRotZ();
+    double rotX =   alConsts->getRotX();
+    double rotY =   alConsts->getRotY();
+    double rotZ =   alConsts->getRotZ();
+
+	//std::cout << "TkrAlignmentSvc::applyDelta, dx/y/z/ drotx/y/z "
+    //    << deltaX << " " << deltaY << " " << deltaZ << " " << rotX << " " << rotY << " " << rotZ << std::endl;
+
 
     double rotTerm = deltaZ + rotX*pointY - rotY*pointX; 
 
@@ -1175,6 +1201,8 @@ void TkrAlignmentSvc::applyDelta(double pointX, double pointY,
         + alphaX*rotTerm;
     deltaPointY = - deltaY - rotZ*pointX
         + alphaY*rotTerm;
+
+    //std::cout << "   deltaPointX/Y " << deltaPointX << " " << deltaPointY << std::endl;
 }
 
 void TkrAlignmentSvc::update(CalibData::TkrTowerAlignCalib* pTowerAlign, 

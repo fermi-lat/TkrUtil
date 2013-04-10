@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.23 2012/04/25 04:54:10 heather Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrQueryClustersTool.cxx,v 1.24 2012/12/08 10:36:51 bruel Exp $
 
 // Include files
 
@@ -620,7 +620,6 @@ int TkrQueryClustersTool::GetStripsInfoForNewEvtEnergyCorr(int *Tkr_StripsPerLyr
   if (!pClusters) return 0;
   if(pClusters->size()==0) return 0;
   
-  bool isMarked;
   Event::TkrClusterColConItr iter = pClusters->begin();
   for(; iter!=pClusters->end();++iter) 
     {
