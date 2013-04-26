@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrAlignmentSvc.h,v 1.22 2010/02/26 01:55:41 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.23 2013/04/10 23:15:43 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -158,13 +158,11 @@ public:
     
     HepVector3D deltaReconPoint(const HepPoint3D& point, const HepVector3D& dir, 
         int layer, int view, 
-        unsigned flags,
         alignTask task, 
         const AlignmentConsts* consts
     ) const;
   //  void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
-  //      int layer, int view, alignTask task, const AlignmentConsts* consts,
-  //      const unsigned flags) const;
+  //      int layer, int view, alignTask task, const AlignmentConsts* consts) const;
 
     /// Get the volId and the local coordinates for the point to be aligned
     idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
@@ -204,8 +202,7 @@ private:
     void applyDelta(
         double pointX, double pointY, double alphaX, double alphaY,
         const AlignmentConsts* alConsts, 
-        double& deltaPointX, double& deltaPointY,
-        unsigned int flags = USEALL
+        double& deltaPointX, double& deltaPointY
         ) const;
 
     /// set the const mode
@@ -333,7 +330,6 @@ private:
     int m_nLadders;
     int m_nWafers;
 
-    bool m_useFlags;
 };
 
 

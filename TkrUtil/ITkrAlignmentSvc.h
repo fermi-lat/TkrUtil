@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.21 2008/05/20 01:14:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.22 2013/04/10 23:15:43 lsrea Exp $
 */
 
 
@@ -37,13 +37,6 @@ static const InterfaceID IID_ITkrAlignmentSvc("ITkrAlignmentSvc", 8, 0);
 namespace {
     enum alignTask {NULLTASK= 0, APPLYCONSTS=1, FINDTOWERCONSTS=2, FINDWAFERCONSTS=3};
 
-	// bits in the flags word: 
-	// 0  0  X  X | X  X  X  X
-	//
-	//       r  r   r  d  d  d
-	//       o  o   o  z  y  x
-	//       t  t   t
-	//       z  y   x
 
 }
 
@@ -132,7 +125,6 @@ public:
    
     enum calibType {SIM=0, REC, NCALIBTYPES, UNKNOWN_TYPE};
 
-	enum alignMode {XANDY=0x3, ROTZ=0x20, ANGLE=0x1c, USEALL=0x3f};
 
     /// retrieve the alignment consts for element tower, layer, view, ladder, wafer
     virtual const AlignmentConsts* getConsts(calibType type, int tower, 
@@ -148,17 +140,14 @@ public:
     /// move the recon hit by the alignment consts
   //  virtual void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
   //      int layer, int view, alignTask task = APPLYCONSTS, 
-  //      const AlignmentConsts* consts = 0,
-  //      const unsigned flags = USEALL) const = 0;
+  //      const AlignmentConsts* consts = 0) const = 0;
 
     /// move the recon hit by the alignment consts
     virtual HepVector3D deltaReconPoint(
         const HepPoint3D& point, const HepVector3D& dir, 
         int layer, int view, 
-        unsigned flags = USEALL, 
         alignTask task = APPLYCONSTS, 
-        const AlignmentConsts* consts = 0 
-    ) const = 0;
+        const AlignmentConsts* consts = 0) const = 0;
 
     /// Get the volId and the local coordinates for the point to be aligned
     //virtual idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
@@ -178,6 +167,5 @@ public:
 
 };
 
-typedef bool useFlags [6];
 
 #endif

@@ -4,7 +4,7 @@
 @brief handles Tkr alignment
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.49 2013/04/10 23:15:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.cxx,v 1.50 2013/04/25 17:31:36 lsrea Exp $
 */
 
 #include "GaudiKernel/MsgStream.h"
@@ -168,7 +168,6 @@ StatusCode TkrAlignmentSvc::initialize()
     }
     if (m_recFile!="") m_fileFlag = m_fileFlag|(1<<REC_SHIFT);
 
-    m_useFlags = false;
 
     return sc;
 }
@@ -984,7 +983,6 @@ void TkrAlignmentSvc::moveMCHit(idents::VolumeIdentifier id, HepPoint3D& entry,
 
 HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepVector3D& dir, 
                                              int layer, int view, 
-                                             unsigned flags,
                                              alignTask task, 
                                              const AlignmentConsts* consts
                                              ) const
@@ -1038,7 +1036,7 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
     const AlignmentConsts* alConsts = (task==APPLYCONSTS ? getConsts(REC, volId): &m_faceConsts);
 
     applyDelta(localPoint.x(), localPoint.y(), alphaX, alphaY, alConsts,
-        deltaPointX, deltaPointY, flags);
+        deltaPointX, deltaPointY);
 
     // for now, limit delta to m_maxDelta (default is 5 mm, modifiable in jobOptions
     // later fix transformation for special cases
@@ -1055,10 +1053,9 @@ HepVector3D TkrAlignmentSvc::deltaReconPoint(const HepPoint3D& point, const HepV
 
 //void TkrAlignmentSvc::moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
 //                                     int layer, int view, alignTask task, 
-//                                     const AlignmentConsts* consts,
-//                                     const unsigned flags) const
+//                                     const AlignmentConsts* consts) const
 //{
-//    HepVector3D deltaPoint = deltaReconPoint(point, dir, layer, view, task, consts, flags);
+//    HepVector3D deltaPoint = deltaReconPoint(point, dir, layer, view, task, consts);
 //
 //    //now subtract(??) this delta from the global point
 //    point += deltaPoint;
@@ -1168,19 +1165,9 @@ HepVector3D TkrAlignmentSvc::getDelta(int view, const HepPoint3D& point,
 void TkrAlignmentSvc::applyDelta(double pointX, double pointY, 
                                  double alphaX, double alphaY,
                                  const AlignmentConsts* alConsts, 
-                                 double& deltaPointX, double& deltaPointY,
-                                 unsigned int flags) const
+                                 double& deltaPointX, double& deltaPointY) const
 {
     
-  /*
-    double deltaX = ((flags&XANDY)!=0 || !m_useFlags ? alConsts->getDeltaX() : 0.0);
-    double deltaY = ((flags&XANDY)!=0 || !m_useFlags ? alConsts->getDeltaY() : 0.0);
-    double deltaZ = ((flags&ANGLE)!=0 || !m_useFlags ? alConsts->getDeltaZ() : 0.0);
-
-    double rotX =   ((flags&ANGLE)!=0 || !m_useFlags ? alConsts->getRotX() : 0.0);
-    double rotY =   ((flags&ANGLE)!=0 || !m_useFlags ? alConsts->getRotY() : 0.0);
-    double rotZ =   ((flags&ROTZ)!=0  || !m_useFlags ? alConsts->getRotZ() : 0.0);
-  */
 
     double deltaX = alConsts->getDeltaX();
     double deltaY = alConsts->getDeltaY();
