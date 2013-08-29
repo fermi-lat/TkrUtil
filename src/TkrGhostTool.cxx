@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.18 2013/02/21 19:42:53 usher Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.19 2013/08/29 20:17:30 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -245,7 +245,7 @@ StatusCode TkrGhostTool::calculateTkrVector(
     int clusSize = clusterCol->size();
     for (i=0;i<clusSize;++i) {
         Event::TkrCluster* clus = (*clusterCol)[i];
-        // NO! NO! //clus->clearStatusBits(Event::TkrCluster::maskZAPGHOSTS);
+        // NO!! NO!! //clus->clearStatusBits(Event::TkrCluster::maskZAPGHOSTS);
         int tower = clus->tower();
         tBits[tower].setBit(clus);
     }
