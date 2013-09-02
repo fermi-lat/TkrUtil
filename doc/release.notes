@@ -4,6 +4,7 @@
 @verbatim
  * EOH *
 
+ TkrUtil-03-28-09 02-Sep-2013  lsrea if track deghosting is on, a 1-ghost-hit is not a ghost track
  TkrUtil-03-28-08 29-Aug-2013  lsrea fixed a bug that erased the diagnostic ghost bits
  TkrUtil-03-28-07 26-Apr-2013  lsrea TkrAlignmentSvc cleanup
  TkrUtil-03-28-06 25-Apr-2013  lsrea restore scaling option in TkrAlignmentSvc... use with caution!
