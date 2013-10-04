@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.16 2008/05/20 01:14:20 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.16.336.1 2012/01/26 17:36:15 heather Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -401,10 +401,10 @@ StatusCode TkrCalibAlg::execute( ) {
     type = "internal alignment";
     CalibData::TkrInternalAlignCalib* pInternalAlign = 0;
 
-    if(m_towerAlignFlavor!="ideal" && m_towerAlignFlavor!="") {
+    if(m_internalAlignFlavor!="ideal" && m_internalAlignFlavor!="") {
 
         fullPath = m_pCalibPathSvc->getCalibPath(
-            ICalibPathSvc::Calib_TKR_InternalAlign, m_towerAlignFlavor );
+            ICalibPathSvc::Calib_TKR_InternalAlign, m_internalAlignFlavor );
         m_pCalibDataSvc->retrieveObject(fullPath, pObject);
         pInternalAlign = dynamic_cast<CalibData::TkrInternalAlignCalib*> (pObject);
         if (!pInternalAlign) { return failedAccess(type); }
@@ -445,8 +445,30 @@ void TkrCalibAlg::showCalibrationInfo(const std::string type,
 
     log << MSG::INFO << "New " << type << " serial number: " << ptr->getSerNo()<< endreq;  
     log << "path: " << path << endreq;
-    log << "Vstart: " <<  (ptr->validSince()).hour(true)
-        << "  Vend: " << (ptr->validTill()).hour(true) << endreq;
+    
+    // there's gotta be a better way, but...
+
+    int itime;
+	Gaudi::Time valid = ptr->validSince();
+	std::string times[2];
+    char buffer[80];
+    int year, month, day, hour, minute, second;
+
+    for (itime=0;itime<2;++itime) {
+      year = valid.year(true);
+      month = valid.month(true);
+      day = valid.day(true);
+      hour = valid.hour(true);
+      minute = valid.minute(true);
+      second = valid.second(true);
+      sprintf(buffer, "%04i-%02i-%02i %02i:%02i:%02i", year, month, day, hour, minute, second);
+	  times[itime] = buffer;
+	  valid = ptr->validTill();
+    }
+    
+    log << "Vstart: " <<  times[0] << "  Vend: " << times[1] << endreq;
+
+
     if(bs_ptr!=0) {
         log << "Bad type: " << bs_ptr->getBadType() 
             << " has " << bs_ptr->getBadTowerCount() << " towers with " << type << endreq;				
