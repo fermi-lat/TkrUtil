@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.16.336.1 2012/01/26 17:36:15 heather Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.16.336.2 2013/10/04 18:33:01 lsrea Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -455,13 +455,14 @@ void TkrCalibAlg::showCalibrationInfo(const std::string type,
     int year, month, day, hour, minute, second;
 
     for (itime=0;itime<2;++itime) {
-      year = valid.year(true);
-      month = valid.month(true);
-      day = valid.day(true);
-      hour = valid.hour(true);
-      minute = valid.minute(true);
-      second = valid.second(true);
-      sprintf(buffer, "%04i-%02i-%02i %02i:%02i:%02i", year, month, day, hour, minute, second);
+      year = valid.year(false);
+      month = valid.month(false);
+      day = valid.day(false);
+      hour = valid.hour(false);
+      minute = valid.minute(false);
+      second = valid.second(false);
+      // Gaudi convention is january==0, december==11 !!!
+      sprintf(buffer, "%04i-%02i-%02i %02i:%02i:%02i", year, month+1, day, hour, minute, second);
 	  times[itime] = buffer;
 	  valid = ptr->validTill();
     }
