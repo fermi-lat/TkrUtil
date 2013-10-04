@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrReasonsTool.cxx,v 1.4 2011/12/12 20:57:49 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrReasonsTool.cxx,v 1.5 2013/10/04 17:12:17 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -58,9 +58,7 @@ namespace {
 
     double _xTower;
     double _yTower;
-    int   
-
- _tower;
+    int    _tower;
     int    _layer;
     int    _view;
     int    _tray;
