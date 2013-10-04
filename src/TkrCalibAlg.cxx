@@ -1,5 +1,5 @@
 
-//$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrCalibAlg.cxx,v 1.18 2011/05/31 03:04:58 lsrea Exp $
+//$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrCalibAlg.cxx,v 1.19 2011/12/12 20:57:49 heather Exp $
 
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/AlgFactory.h"
@@ -503,8 +503,27 @@ void TkrCalibAlg::showCalibrationInfo(const std::string type,
 
     log << MSG::INFO << "New " << type << " serial number: " << ptr->getSerNo()<< endreq;  
     log << "path: " << path << endreq;
-    log << "Vstart: " <<  (ptr->validSince()).hour(true)
-        << "  Vend: " << (ptr->validTill()).hour(true) << endreq;
+    // there's gotta be a better way, but...
+
+    int itime;
+	Gaudi::Time valid = ptr->validSince();
+	std::string times[2];
+    char buffer[80];
+    int year, month, day, hour, minute, second;
+
+    for (itime=0;itime<2;++itime) {
+      year = valid.year(true);
+      month = valid.month(true);
+      day = valid.day(true);
+      hour = valid.hour(true);
+      minute = valid.minute(true);
+      second = valid.second(true);
+      sprintf(buffer, "%04i-%02i-%02i %02i:%02i:%02i", year, month, day, hour, minute, second);
+	  times[itime] = buffer;
+	  valid = ptr->validTill();
+    }
+    
+    log << "Vstart: " <<  times[0] << "  Vend: " << times[1] << endreq;
     if(bs_ptr!=0) {
         log << "Bad type: " << bs_ptr->getBadType() 
             << " has " << bs_ptr->getBadTowerCount() << " towers with " << type << endreq;				
