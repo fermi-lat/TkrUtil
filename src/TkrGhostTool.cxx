@@ -5,7 +5,7 @@
 *
 * @author The Tracking Software Group
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.20 2013/08/29 20:21:01 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrGhostTool.cxx,v 1.21 2013/09/02 17:57:14 lsrea Exp $
 */
 
 #include "GaudiKernel/AlgTool.h"
@@ -88,6 +88,10 @@ private:
     //towerVec m_digiTrigger;
 
     bool m_useDiagInfo;
+
+    bool m_clearGhostBits;
+    int  m_minimumHitsForGhostTrack;
+
 };
 
 //static ToolFactory<TkrGhostTool> s_factory;
@@ -114,6 +118,12 @@ AlgTool(type, name, parent)
     declareInterface<ITkrGhostTool>(this);
     
     declareProperty("UseDiagnosticInfo", m_useDiagInfo=true);
+
+    // true for 20-09-02; false for 20-09-04 (default)
+    declareProperty("ClearGhostBits",    m_clearGhostBits=false);
+ 
+    // 1 for 20-09-02; 2 for 20-09-04 (default) 
+    declareProperty("MinimumHitsForGhostTrack", m_minimumHitsForGhostTrack=2);
 
     return;
 }
@@ -245,7 +255,12 @@ StatusCode TkrGhostTool::calculateTkrVector(
     int clusSize = clusterCol->size();
     for (i=0;i<clusSize;++i) {
         Event::TkrCluster* clus = (*clusterCol)[i];
-        // NO!! NO!! //clus->clearStatusBits(Event::TkrCluster::maskZAPGHOSTS);
+
+        // Clearing the bits is a bug
+        // but Pass8 reprocessing had that bug, so we allow it
+        // to be exercised
+        if(m_clearGhostBits) clus->clearStatusBits(Event::TkrCluster::maskZAPGHOSTS);
+
         int tower = clus->tower();
         tBits[tower].setBit(clus);
     }
@@ -571,7 +586,12 @@ StatusCode TkrGhostTool::flagEarlyTracks()
     //Event::TkrTrackColConPtr tcolIter = trackCol->begin();
     //for(; tcolIter!=trackCol->end(); ++tcolIter,++trackCount) {
     for(itk=0; itk<trackVec.size(); ++itk, ++trackCount) {
-        Event::TkrTrack* track = trackVec[itk];;
+        Event::TkrTrack* track = trackVec[itk];
+
+        // already marked as a ghost, skip any processing
+        if(track->isSet(Event::TkrTrack::GHOST)) continue;
+
+        // otherwise start from scratch (but clearing is prob. overkill)
         track->clearStatusBits(Event::TkrTrack::GHOST);
         track->clearStatusBits(Event::TkrTrack::TRIGGHOST);
         track->clearStatusBits(Event::TkrTrack::DIAGNOSTIC);
@@ -600,9 +620,10 @@ StatusCode TkrGhostTool::flagEarlyTracks()
             if(isDiagGhost||isGhost||is255) anyGhostCount++;
         }
 
-        if(_255Count==0&&ghostCount==0&&diagCount==0) continue;
         // just one ghost is probably a good track
-        if(anyGhostCount==1) continue;
+        // but Pass8 reprocessing called this a ghost
+        // so we allow this option for backward compatibility
+        if(anyGhostCount<m_minimumHitsForGhostTrack) continue;
 
         // this is some kind of ghost track!
         track->setStatusBit(Event::TkrTrack::GHOST);
