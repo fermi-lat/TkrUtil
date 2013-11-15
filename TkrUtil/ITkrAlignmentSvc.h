@@ -2,7 +2,7 @@
 @brief AlignmentConsts class & Abstract interface to TkrAlignmentSvc (q.v.) 
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.22 2013/04/10 23:15:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/TkrUtil/ITkrAlignmentSvc.h,v 1.23 2013/04/26 18:08:25 lsrea Exp $
 */
 
 
@@ -138,11 +138,6 @@ public:
         HepVector3D dir=HepVector3D(0.0, 0.0, 0.0)) const = 0;
 
     /// move the recon hit by the alignment consts
-  //  virtual void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
-  //      int layer, int view, alignTask task = APPLYCONSTS, 
-  //      const AlignmentConsts* consts = 0) const = 0;
-
-    /// move the recon hit by the alignment consts
     virtual HepVector3D deltaReconPoint(
         const HepPoint3D& point, const HepVector3D& dir, 
         int layer, int view, 
@@ -164,6 +159,11 @@ public:
         CalibData::TkrInternalAlignCalib* pInternalAlign) = 0;
     /// set SIM/REC type
     virtual void SetCalibType(calibType type) const = 0;
+
+    /// move the recon hit by the alignment consts
+    virtual void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task = APPLYCONSTS, 
+        const AlignmentConsts* consts = 0) const = 0;
 
 };
 
