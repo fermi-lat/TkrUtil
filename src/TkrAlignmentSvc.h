@@ -5,7 +5,7 @@
  First version 23-Jan-2003
  @author Leon Rochester
 
- $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.23 2013/04/10 23:15:43 lsrea Exp $
+ $Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrAlignmentSvc.h,v 1.24 2013/04/26 18:08:25 lsrea Exp $
 */
 
 #ifndef TKRALIGNMENTSVC_H
@@ -161,9 +161,7 @@ public:
         alignTask task, 
         const AlignmentConsts* consts
     ) const;
-  //  void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
-  //      int layer, int view, alignTask task, const AlignmentConsts* consts) const;
-
+	
     /// Get the volId and the local coordinates for the point to be aligned
     idents::VolumeIdentifier getGeometryInfo(int layer, int view, 
         const HepPoint3D& globalPoint, HepPoint3D& alignmentPoint) const;
@@ -189,6 +187,8 @@ public:
     void update(CalibData::TkrTowerAlignCalib* pTowerAlign, 
         CalibData::TkrInternalAlignCalib* pInternalAlign);
 
+    void moveReconPoint(HepPoint3D& point, const HepVector3D& dir, 
+        int layer, int view, alignTask task, const AlignmentConsts* consts) const;
     
 private:   
     
