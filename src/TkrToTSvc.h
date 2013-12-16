@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/TkrUtil/src/TkrToTSvc.h,v 1.13 2006/08/03 00:46:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrToTSvc.h,v 1.14 2006/11/02 19:34:48 lsrea Exp $
 
 */
 #ifndef TkrToTSvc_H
@@ -105,6 +105,10 @@ private:
     int    m_maxToT;
     /// flag to use default values if not in calibration file (otherwise use zeros)
     bool   m_useDefaultIfMissing;
+
+    // Philippe's correction
+    double m_linCorr;
+    double m_quadCorr;
 
     /// pointer to geometry service
     ITkrGeometrySvc* m_tkrGeom;

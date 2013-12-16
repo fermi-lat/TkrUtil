@@ -4,7 +4,7 @@
 @brief keeps track of the left-right splits of the tracker planes
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrToTSvc.cxx,v 1.19.618.1 2010/09/09 14:03:23 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/TkrUtil/src/TkrToTSvc.cxx,v 1.20 2011/12/12 20:57:49 heather Exp $
 
 */
 
@@ -61,6 +61,10 @@ TkrToTSvc::TkrToTSvc(const std::string& name,ISvcLocator* svc)
     declareProperty("useSingleTowerConsts" , m_useSingleTowerConsts  = false);
     declareProperty("baseTower",             m_baseTower             = 0);
     declareProperty("useDefaultIfMissing"  , m_useDefaultIfMissing   = false);
+
+    // for Philippe's correction
+    declareProperty("linearMipCorrection"     , m_linCorr = 1.0);
+    declareProperty("quadraticMipCorrection"  , m_quadCorr = 0.0);
 }
 
 StatusCode  TkrToTSvc::queryInterface (const InterfaceID& riid, void **ppvIF)
@@ -226,14 +230,23 @@ int TkrToTSvc::getRawToT(double eDep, int tower, int layer, int view, int strip)
     double gain, quad, threshold, muonScale;
     getConsts(id, strip, threshold, gain, quad, muonScale);
 
-    double charge    = eDep/m_mevPerMip*m_fCPerMip; // in fCs
+    double mips   = eDep/m_mevPerMip;
+    double charge = mips*m_fCPerMip; // in fCs
+
+    // this correction is to be applied to the charge before converting to ToT.
+    // Since this method is called only in simulation, data should be unaffected.
+    // The factor is 1.0 by default, and can be modified in the jO by:
+    // TkrToTSvc.linearCorrection = x.xx;
+    // TkrToTSvc.quadraticCorrection = y.yy;
+
+    double mipsCorr = (m_linCorr + m_quadCorr*mips);
 
     // consts are for ToT -> charge
     // Here is the inverse:
 
     if(gain==0 || muonScale==0) { return 0; }
 
-    double term = (charge/muonScale-threshold)/gain;
+    double term = (charge*mipsCorr/muonScale-threshold)/gain;
     double test = quad/gain;
     double time;
     if (fabs(test)>1.e-6) {
